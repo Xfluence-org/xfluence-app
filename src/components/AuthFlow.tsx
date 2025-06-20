@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Facebook, Google, Apple } from 'lucide-react';
+import { Facebook, Mail, Apple } from 'lucide-react';
 
 const AuthFlow = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -151,7 +151,7 @@ const AuthFlow = () => {
                       <Facebook size={20} />
                     </button>
                     <button className="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center text-white hover:bg-red-600 transition-colors">
-                      <Google size={20} />
+                      <Mail size={20} />
                     </button>
                     <button className="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center text-white hover:bg-gray-800 transition-colors">
                       <Apple size={20} />
@@ -344,7 +344,7 @@ const AuthFlow = () => {
                 <Facebook size={16} />
               </button>
               <button className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white">
-                <Google size={16} />
+                <Mail size={16} />
               </button>
               <button className="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center text-white">
                 <Apple size={16} />
