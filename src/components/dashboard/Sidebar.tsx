@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +14,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard', userName = 
     { id: 'campaigns', label: 'Campaigns', icon: '📱' },
     { id: 'settings', label: 'Settings', icon: '⚙️' },
   ];
+
+  const handleLogout = () => {
+    window.location.href = '/';
+  };
 
   return (
     <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col h-screen">
@@ -41,7 +46,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard', userName = 
 
       {/* User Section */}
       <div className="p-4 border-t border-gray-200">
-        <button className="w-full text-left px-4 py-3 text-gray-600 hover:bg-gray-200 hover:text-gray-900 rounded-lg transition-all duration-200">
+        <button 
+          onClick={handleLogout}
+          className="w-full text-left px-4 py-3 text-gray-600 hover:bg-gray-200 hover:text-gray-900 rounded-lg transition-all duration-200"
+        >
           {userName} [log out →]
         </button>
       </div>
