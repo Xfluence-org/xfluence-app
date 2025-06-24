@@ -1,14 +1,26 @@
-
 import React, { useState, useMemo } from 'react';
 import Sidebar from '@/components/dashboard/Sidebar';
 import TabNavigation from '@/components/campaigns/TabNavigation';
 import CampaignSearch from '@/components/campaigns/CampaignSearch';
 import DetailedCampaignCard from '@/components/campaigns/DetailedCampaignCard';
+import TaskDetailModal from '@/components/campaigns/TaskDetailModal';
 import { DetailedCampaign, CampaignTab } from '@/types/campaigns';
+import { useTaskDetail } from '@/hooks/useTaskDetail';
 
 const CampaignsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<CampaignTab>('Active');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+
+  const {
+    taskDetail,
+    loading: taskLoading,
+    submitForReview,
+    downloadBrief,
+    sendMessage,
+    uploadFiles,
+    deleteFile
+  } = useTaskDetail(selectedTaskId);
 
   // Mock data - replace with actual API call
   const [campaigns] = useState<DetailedCampaign[]>([
@@ -170,8 +182,36 @@ const CampaignsPage: React.FC = () => {
   };
 
   const handleViewTaskDetails = (taskId: string) => {
-    console.log('View task details:', taskId);
-    // Navigate to task details or open modal
+    setSelectedTaskId(taskId);
+  };
+
+  const handleCloseTaskDetail = () => {
+    setSelectedTaskId(null);
+  };
+
+  const handleSubmitForReview = async (taskId: string) => {
+    const result = await submitForReview(taskId);
+    console.log('Submit result:', result);
+  };
+
+  const handleDownloadBrief = async (taskId: string) => {
+    const result = await downloadBrief(taskId);
+    console.log('Download result:', result);
+  };
+
+  const handleSendMessage = async (taskId: string, message: string) => {
+    const result = await sendMessage(taskId, message);
+    console.log('Message result:', result);
+  };
+
+  const handleFileUpload = async (taskId: string, files: FileList) => {
+    const result = await uploadFiles(taskId, files);
+    console.log('Upload result:', result);
+  };
+
+  const handleDeleteFile = async (taskId: string, fileId: string) => {
+    const result = await deleteFile(taskId, fileId);
+    console.log('Delete result:', result);
   };
 
   return (
@@ -225,6 +265,17 @@ const CampaignsPage: React.FC = () => {
           </section>
         </div>
       </main>
+
+      <TaskDetailModal
+        isOpen={!!selectedTaskId}
+        onClose={handleCloseTaskDetail}
+        taskDetail={taskDetail}
+        onSubmitForReview={handleSubmitForReview}
+        onDownloadBrief={handleDownloadBrief}
+        onSendMessage={handleSendMessage}
+        onFileUpload={handleFileUpload}
+        onDeleteFile={handleDeleteFile}
+      />
     </div>
   );
 };
