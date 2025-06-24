@@ -1,0 +1,53 @@
+
+import React from 'react';
+import { cn } from '@/lib/utils';
+
+interface SidebarProps {
+  activeItem?: string;
+  userName?: string;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'campaigns', userName = 'Name' }) => {
+  const menuItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+    { id: 'opportunities', label: 'Opportunities', icon: '💡' },
+    { id: 'campaigns', label: 'Campaigns', icon: '📱' },
+    { id: 'settings', label: 'Settings', icon: '⚙️' },
+  ];
+
+  return (
+    <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col h-screen">
+      {/* Logo/Brand */}
+      <div className="p-6 border-b border-gray-200">
+        <h1 className="text-2xl font-bold text-gray-900">Xfluence</h1>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 p-4 space-y-2">
+        {menuItems.map((item) => (
+          <button
+            key={item.id}
+            className={cn(
+              "w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center gap-3",
+              activeItem === item.id
+                ? "bg-gray-900 text-white shadow-lg"
+                : "text-gray-600 hover:bg-gray-200 hover:text-gray-900"
+            )}
+          >
+            <span className="text-lg">{item.icon}</span>
+            <span className="font-medium">{item.label}</span>
+          </button>
+        ))}
+      </nav>
+
+      {/* User Section */}
+      <div className="p-4 border-t border-gray-200">
+        <button className="w-full text-left px-4 py-3 text-gray-600 hover:bg-gray-200 hover:text-gray-900 rounded-lg transition-all duration-200">
+          {userName} [log out →]
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default Sidebar;

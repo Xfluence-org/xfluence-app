@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +30,12 @@ const AuthFlow = () => {
     });
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // For now, just redirect to dashboard after form submission
+    window.location.href = '/dashboard';
+  };
+
   return (
     <div className="min-h-screen flex overflow-hidden">
       {/* Left Panel - Form Section (45% width) */}
@@ -51,7 +56,7 @@ const AuthFlow = () => {
             </div>
 
             {/* Form */}
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmit}>
               {!isLogin && (
                 <>
                   <div className="space-y-2">
@@ -61,7 +66,7 @@ const AuthFlow = () => {
                         <SelectValue placeholder="Type" className="text-[#6c757d]" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="individual">Individual</SelectItem>
+                        <SelectItem value="influencer">Influencer</SelectItem>
                         <SelectItem value="agency">Agency/Brand</SelectItem>
                       </SelectContent>
                     </Select>
@@ -275,7 +280,7 @@ const AuthFlow = () => {
             </h2>
           </div>
 
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={handleSubmit}>
             {!isLogin && (
               <>
                 <Select value={formData.type} onValueChange={(value) => handleInputChange('type', value)}>
@@ -283,7 +288,7 @@ const AuthFlow = () => {
                     <SelectValue placeholder="Type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="individual">Individual</SelectItem>
+                    <SelectItem value="influencer">Influencer</SelectItem>
                     <SelectItem value="agency">Agency/Brand</SelectItem>
                   </SelectContent>
                 </Select>
