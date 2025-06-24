@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { cn } from '@/lib/utils';
 
@@ -7,7 +6,7 @@ interface SidebarProps {
   userName?: string;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'campaigns', userName = 'Name' }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard', userName = 'Name' }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
     { id: 'opportunities', label: 'Opportunities', icon: '💡' },

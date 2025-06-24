@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Sidebar from '@/components/dashboard/Sidebar';
 import InvitationCard from '@/components/dashboard/InvitationCard';
@@ -60,7 +59,7 @@ const InfluencerDashboard: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar activeItem="campaigns" userName="Name" />
+      <Sidebar activeItem="dashboard" userName="Name" />
       
       <main className="flex-1 overflow-y-auto">
         <div className="p-8">
