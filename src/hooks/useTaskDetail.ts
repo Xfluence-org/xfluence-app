@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { TaskDetail } from '@/types/taskDetail';
 
@@ -17,43 +16,150 @@ export const useTaskDetail = (taskId: string | null) => {
       
       try {
         // Mock API call - replace with actual endpoint
-        const mockTaskDetail: TaskDetail = {
-          id: taskId,
-          title: 'Posts',
-          platform: 'Instagram',
-          brand: 'Nike',
-          dueDate: '29/06/2025',
-          status: {
-            contentRequirement: true,
-            contentReview: true,
-            publishContent: false,
-            contentAnalytics: false,
-            currentStep: 'contentReview'
-          },
-          description: 'Share 3 stories showing behind-the-scenes content of your workout routine',
-          deliverables: [
-            '2 Instagram stories',
-            '1 tiktok story',
-            'swipe-up link',
-            'brand mention'
-          ],
-          aiScore: 85,
-          feedbacks: [
-            {
-              id: '1',
-              from: 'Nike',
-              message: 'Consider adding more dynamic movement to increase engagement.',
-              timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-            }
-          ],
-          uploads: [
-            {
-              id: '1',
-              filename: 'insta_story.mp4',
-              uploadedAt: new Date().toISOString()
-            }
-          ]
-        };
+        // Generate different mock data based on taskId to show different task types
+        let mockTaskDetail: TaskDetail;
+        
+        if (taskId === 'task1') {
+          mockTaskDetail = {
+            id: taskId,
+            title: 'Posts',
+            platform: 'Instagram',
+            brand: 'Nike',
+            dueDate: '29/06/2025',
+            status: {
+              contentRequirement: true,
+              contentReview: true,
+              publishContent: false,
+              contentAnalytics: false,
+              currentStep: 'contentReview'
+            },
+            description: 'Create engaging posts showcasing Nike Air Max collection with dynamic movement and urban style',
+            deliverables: [
+              '1 Instagram post',
+              'High-quality photos',
+              'Brand mention required',
+              'Use hashtag #NikeAirMax'
+            ],
+            aiScore: 85,
+            feedbacks: [
+              {
+                id: '1',
+                from: 'Nike',
+                message: 'Consider adding more dynamic movement to increase engagement.',
+                timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+              }
+            ],
+            uploads: [
+              {
+                id: '1',
+                filename: 'nike_post_draft.jpg',
+                uploadedAt: new Date().toISOString()
+              }
+            ]
+          };
+        } else if (taskId === 'task2') {
+          mockTaskDetail = {
+            id: taskId,
+            title: 'Stories',
+            platform: 'Instagram',
+            brand: 'Nike',
+            dueDate: '26/06/2025',
+            status: {
+              contentRequirement: true,
+              contentReview: true,
+              publishContent: true,
+              contentAnalytics: false,
+              currentStep: 'publishContent'
+            },
+            description: 'Share 3 stories showing behind-the-scenes content of your workout routine',
+            deliverables: [
+              '3 Instagram stories',
+              'Behind-the-scenes content',
+              'Swipe-up link',
+              'Brand mention'
+            ],
+            aiScore: 92,
+            feedbacks: [
+              {
+                id: '1',
+                from: 'Nike',
+                message: 'Perfect! Approved for publishing.',
+                timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString()
+              }
+            ],
+            uploads: [
+              {
+                id: '1',
+                filename: 'story_1.mp4',
+                uploadedAt: new Date().toISOString()
+              },
+              {
+                id: '2',
+                filename: 'story_2.mp4',
+                uploadedAt: new Date().toISOString()
+              }
+            ]
+          };
+        } else if (taskId === 'task3') {
+          mockTaskDetail = {
+            id: taskId,
+            title: 'Reels',
+            platform: 'Instagram',
+            brand: 'Nike',
+            dueDate: '29/06/2025',
+            status: {
+              contentRequirement: true,
+              contentReview: false,
+              publishContent: false,
+              contentAnalytics: false,
+              currentStep: 'contentReview'
+            },
+            description: 'Create an engaging reel showcasing Nike workout gear in action',
+            deliverables: [
+              '1 Instagram reel',
+              'High-energy workout content',
+              'Music sync required',
+              'Brand logo visible'
+            ],
+            aiScore: 78,
+            feedbacks: [
+              {
+                id: '1',
+                from: 'Nike',
+                message: 'Send in your message',
+                timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString()
+              }
+            ],
+            uploads: [
+              {
+                id: '1',
+                filename: 'workout_reel_draft.mp4',
+                uploadedAt: new Date().toISOString()
+              }
+            ]
+          };
+        } else {
+          // Default fallback
+          mockTaskDetail = {
+            id: taskId,
+            title: 'Task',
+            platform: 'Instagram',
+            brand: 'Nike',
+            dueDate: '29/06/2025',
+            status: {
+              contentRequirement: true,
+              contentReview: false,
+              publishContent: false,
+              contentAnalytics: false,
+              currentStep: 'contentRequirement'
+            },
+            description: 'Task description will be loaded here',
+            deliverables: ['Content deliverable'],
+            aiScore: 70,
+            feedbacks: [],
+            uploads: []
+          };
+        }
 
         // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 500));
