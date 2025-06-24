@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Sidebar from '@/components/dashboard/Sidebar';
 import InvitationCard from '@/components/dashboard/InvitationCard';
@@ -58,19 +59,19 @@ const InfluencerDashboard: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Sidebar activeItem="dashboard" userName="Name" />
       
       <main className="flex-1 overflow-y-auto">
         <div className="p-8">
           <header className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+            <h1 className="text-3xl font-bold text-[#1a1f2e] mb-2">Dashboard</h1>
           </header>
 
           {/* New Campaign Invitations */}
           <section className="mb-12">
-            <div className="bg-gray-100 rounded-2xl p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">New Campaign Invitations</h2>
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
+              <h2 className="text-2xl font-bold text-[#1a1f2e] mb-2">New Campaign Invitations</h2>
               <p className="text-gray-600 mb-6">Brands want to collaborate with you</p>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -88,8 +89,8 @@ const InfluencerDashboard: React.FC = () => {
 
           {/* Active Campaigns */}
           <section>
-            <div className="bg-gray-100 rounded-2xl p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Active Campaigns</h2>
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
+              <h2 className="text-2xl font-bold text-[#1a1f2e] mb-6">Active Campaigns</h2>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {activeCampaigns.map((campaign) => (

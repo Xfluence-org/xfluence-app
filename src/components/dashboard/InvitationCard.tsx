@@ -18,11 +18,11 @@ const InvitationCard: React.FC<InvitationCardProps> = ({ campaign, onAccept, onD
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all duration-200">
+    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-lg transition-all duration-200">
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h3 className="text-xl font-bold text-gray-900 mb-1">{campaign.brand}</h3>
-          <p className="text-2xl font-bold text-green-600">${campaign.amount?.toLocaleString()}</p>
+          <h3 className="text-xl font-bold text-[#1a1f2e] mb-1">{campaign.brand}</h3>
+          <p className="text-2xl font-bold text-[#1DDCD3]">${campaign.amount?.toLocaleString()}</p>
         </div>
       </div>
 
@@ -42,7 +42,7 @@ const InvitationCard: React.FC<InvitationCardProps> = ({ campaign, onAccept, onD
         </button>
         <button
           onClick={() => onAccept(campaign.id)}
-          className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-all duration-200 font-medium"
+          className="flex-1 px-4 py-2 bg-[#1DDCD3] text-white rounded-lg hover:bg-[#00D4C7] transition-all duration-200 font-medium"
         >
           Accept
         </button>

@@ -12,13 +12,13 @@ const CampaignCard: React.FC<CampaignCardProps> = ({ campaign }) => {
   const currentStep = Math.floor((campaign.progress || 0) / 25);
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all duration-200">
+    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-lg transition-all duration-200">
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h3 className="text-xl font-bold text-gray-900 mb-1">
+          <h3 className="text-xl font-bold text-[#1a1f2e] mb-1">
             {campaign.brand} - {campaign.title}
           </h3>
-          <span className="inline-block px-3 py-1 bg-gray-900 text-white text-xs rounded-full font-medium">
+          <span className="inline-block px-3 py-1 bg-[#1DDCD3] text-white text-xs rounded-full font-medium">
             in progress
           </span>
         </div>
@@ -27,7 +27,7 @@ const CampaignCard: React.FC<CampaignCardProps> = ({ campaign }) => {
       <div className="mb-4">
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm font-medium text-gray-700">Progress</span>
-          <span className="text-sm font-bold text-gray-900">{campaign.progress}% Progress</span>
+          <span className="text-sm font-bold text-[#1a1f2e]">{campaign.progress}% Progress</span>
         </div>
         <ProgressBar progress={campaign.progress || 0} />
       </div>
@@ -38,9 +38,9 @@ const CampaignCard: React.FC<CampaignCardProps> = ({ campaign }) => {
             <span
               className={`font-medium transition-colors duration-200 ${
                 index < currentStep
-                  ? 'text-green-600'
+                  ? 'text-[#1DDCD3]'
                   : index === currentStep
-                  ? 'text-gray-900'
+                  ? 'text-[#1a1f2e]'
                   : 'text-gray-400'
               }`}
             >
