@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 interface SidebarProps {
@@ -8,15 +9,21 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard', userName = 'Name' }) => {
+  const navigate = useNavigate();
+
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-    { id: 'opportunities', label: 'Opportunities', icon: '💡' },
-    { id: 'campaigns', label: 'Campaigns', icon: '📱' },
-    { id: 'settings', label: 'Settings', icon: '⚙️' },
+    { id: 'dashboard', label: 'Dashboard', icon: '📊', path: '/dashboard' },
+    { id: 'opportunities', label: 'Opportunities', icon: '💡', path: '/opportunities' },
+    { id: 'campaigns', label: 'Campaigns', icon: '📱', path: '/campaigns' },
+    { id: 'settings', label: 'Settings', icon: '⚙️', path: '/settings' },
   ];
 
+  const handleMenuClick = (item: typeof menuItems[0]) => {
+    navigate(item.path);
+  };
+
   const handleLogout = () => {
-    window.location.href = '/';
+    navigate('/');
   };
 
   return (
@@ -31,6 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard', userName = 
         {menuItems.map((item) => (
           <button
             key={item.id}
+            onClick={() => handleMenuClick(item)}
             className={cn(
               "w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center gap-3",
               activeItem === item.id
