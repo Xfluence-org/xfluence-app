@@ -21,6 +21,7 @@ export interface DetailedCampaign {
   overallProgress: number;
   tasks: Task[];
   completedTasks: number;
+  originalStatus?: string; // Store the original database status for filtering
 }
 
 export type CampaignTab = 'Active' | 'Completed' | 'Requests';

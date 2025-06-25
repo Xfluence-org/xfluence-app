@@ -82,14 +82,15 @@ export const useDashboardData = () => {
 
       console.log('Transformed data:', transformedData);
 
-      // Split into invitations and active campaigns
-      // Note: Keeping "invited" status as invitations for the dashboard
+      // Split into invitations and active campaigns according to specification:
+      // Invitations: status = 'invited' (waiting for influencer response)
       const invitationsData = transformedData.filter(campaign => 
         campaign.status === 'invited'
       );
       
+      // Active Campaigns: status IN ('accepted', 'active') (campaigns influencer is working on)
       const activeCampaignsData = transformedData.filter(campaign => 
-        campaign.status === 'accepted' || campaign.status === 'active' || campaign.status === 'completed'
+        campaign.status === 'accepted' || campaign.status === 'active'
       );
 
       console.log('Invitations:', invitationsData);

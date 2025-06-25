@@ -96,15 +96,16 @@ export const useCampaignData = () => {
           });
         };
 
-        // Map database status to display status - UPDATED to match dashboard logic
+        // Map database status to display status according to the specification
         const getDisplayStatus = (dbStatus: string): 'invited' | 'active' | 'completed' | 'pending' => {
           switch (dbStatus) {
             case 'invited':
-              return 'invited'; // Keep invited campaigns as invited for Requests tab
+              return 'invited';
+            case 'accepted':
+            case 'active':
+              return 'active'; // Both accepted and active show as active
             case 'completed':
               return 'completed';
-            case 'accepted':
-              return 'active'; // Show accepted campaigns as active
             default:
               return 'pending';
           }
@@ -128,7 +129,9 @@ export const useCampaignData = () => {
             status: task.status as 'content review' | 'post content' | 'content draft' | 'completed' | 'pending',
             progress: task.progress || 0,
             nextDeadline: task.next_deadline ? formatDate(task.next_deadline) : 'TBD'
-          }))
+          })),
+          // Store original database status for filtering
+          originalStatus: participant.status
         };
       }).filter(campaign => campaign.id); // Filter out campaigns with no ID
 
