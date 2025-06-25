@@ -1,16 +1,20 @@
+
 import React, { useState, useMemo } from 'react';
 import Sidebar from '@/components/dashboard/Sidebar';
 import TabNavigation from '@/components/campaigns/TabNavigation';
 import CampaignSearch from '@/components/campaigns/CampaignSearch';
 import DetailedCampaignCard from '@/components/campaigns/DetailedCampaignCard';
 import TaskDetailModal from '@/components/campaigns/TaskDetailModal';
-import { DetailedCampaign, CampaignTab } from '@/types/campaigns';
+import { CampaignTab } from '@/types/campaigns';
 import { useTaskDetail } from '@/hooks/useTaskDetail';
+import { useCampaignData } from '@/hooks/useCampaignData';
 
 const CampaignsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<CampaignTab>('Active');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+
+  const { data: campaigns, isLoading: loading, error } = useCampaignData();
 
   const {
     taskDetail,
@@ -22,123 +26,10 @@ const CampaignsPage: React.FC = () => {
     deleteFile
   } = useTaskDetail(selectedTaskId);
 
-  // Mock data - replace with actual API call
-  const [campaigns] = useState<DetailedCampaign[]>([
-    {
-      id: '1',
-      title: 'Air Max Campaign',
-      brand: 'Nike',
-      status: 'active',
-      taskCount: 3,
-      dueDate: '12/06/2025',
-      platforms: ['Instagram', 'TikTok'],
-      amount: 2500,
-      overallProgress: 33,
-      completedTasks: 1,
-      tasks: [
-        {
-          id: 'task1',
-          type: 'Posts',
-          deliverable: '1 Post',
-          status: 'content review',
-          progress: 50,
-          nextDeadline: '26/06/2025',
-          feedback: 'Consider adding more dynamic movement to increase engagement.'
-        },
-        {
-          id: 'task2',
-          type: 'Stories',
-          deliverable: '3 stories',
-          status: 'post content',
-          progress: 75,
-          nextDeadline: '26/06/2025',
-          feedback: 'Perfect! Approved for publishing.'
-        },
-        {
-          id: 'task3',
-          type: 'Reels',
-          deliverable: '1 reel',
-          status: 'content draft',
-          progress: 75,
-          nextDeadline: '29/06/2025',
-          feedback: 'Send in your message'
-        }
-      ]
-    },
-    {
-      id: '2',
-      title: 'Summer Collection Launch',
-      brand: 'Adidas',
-      status: 'completed',
-      taskCount: 2,
-      dueDate: '15/05/2025',
-      platforms: ['Instagram', 'TikTok'],
-      amount: 3000,
-      overallProgress: 100,
-      completedTasks: 2,
-      tasks: [
-        {
-          id: 'task4',
-          type: 'Posts',
-          deliverable: '2 Posts',
-          status: 'completed',
-          progress: 100,
-          nextDeadline: 'Completed',
-          feedback: 'Excellent work! Great engagement rates.'
-        },
-        {
-          id: 'task5',
-          type: 'Stories',
-          deliverable: '5 stories',
-          status: 'completed',
-          progress: 100,
-          nextDeadline: 'Completed',
-          feedback: 'Perfect storytelling approach.'
-        }
-      ]
-    },
-    {
-      id: '3',
-      title: 'Holiday Collection',
-      brand: 'Starbucks',
-      status: 'invited',
-      taskCount: 4,
-      dueDate: '20/12/2025',
-      platforms: ['Instagram', 'TikTok', 'YouTube'],
-      amount: 4500,
-      overallProgress: 0,
-      completedTasks: 0,
-      tasks: [
-        {
-          id: 'task6',
-          type: 'Posts',
-          deliverable: '3 Posts',
-          status: 'pending',
-          progress: 0,
-          nextDeadline: 'To be confirmed',
-        },
-        {
-          id: 'task7',
-          type: 'Stories',
-          deliverable: '5 stories',
-          status: 'pending',
-          progress: 0,
-          nextDeadline: 'To be confirmed',
-        },
-        {
-          id: 'task8',
-          type: 'Reels',
-          deliverable: '2 reels',
-          status: 'pending',
-          progress: 0,
-          nextDeadline: 'To be confirmed',
-        }
-      ]
-    }
-  ]);
-
   // Filter campaigns based on active tab and search
   const filteredCampaigns = useMemo(() => {
+    if (!campaigns) return [];
+    
     let filtered = campaigns;
 
     // Filter by tab
@@ -213,6 +104,36 @@ const CampaignsPage: React.FC = () => {
     const result = await deleteFile(taskId, fileId);
     console.log('Delete result:', result);
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <Sidebar activeItem="campaigns" userName="Name" />
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-8">
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">Loading campaigns...</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <Sidebar activeItem="campaigns" userName="Name" />
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-8">
+            <div className="text-center py-12">
+              <p className="text-red-500 text-lg">Error loading campaigns. Please try again.</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">

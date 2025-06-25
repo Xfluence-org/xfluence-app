@@ -122,6 +122,69 @@ export type Database = {
           },
         ]
       }
+      campaign_tasks: {
+        Row: {
+          ai_score: number | null
+          campaign_id: string | null
+          created_at: string | null
+          deliverable_count: number | null
+          description: string | null
+          id: string
+          influencer_id: string | null
+          next_deadline: string | null
+          progress: number | null
+          status: string | null
+          task_type: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          ai_score?: number | null
+          campaign_id?: string | null
+          created_at?: string | null
+          deliverable_count?: number | null
+          description?: string | null
+          id?: string
+          influencer_id?: string | null
+          next_deadline?: string | null
+          progress?: number | null
+          status?: string | null
+          task_type: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          ai_score?: number | null
+          campaign_id?: string | null
+          created_at?: string | null
+          deliverable_count?: number | null
+          description?: string | null
+          id?: string
+          influencer_id?: string | null
+          next_deadline?: string | null
+          progress?: number | null
+          status?: string | null
+          task_type?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_tasks_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_tasks_influencer_id_fkey"
+            columns: ["influencer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           amount: number | null
@@ -219,6 +282,96 @@ export type Database = {
           user_type?: Database["public"]["Enums"]["user_type"]
         }
         Relationships: []
+      }
+      task_feedback: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          sender_id: string | null
+          sender_type: string
+          task_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          sender_id?: string | null
+          sender_type: string
+          task_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          sender_id?: string | null
+          sender_type?: string
+          task_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_feedback_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_feedback_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_uploads: {
+        Row: {
+          created_at: string | null
+          file_size: number | null
+          file_url: string
+          filename: string
+          id: string
+          mime_type: string | null
+          task_id: string | null
+          uploader_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          file_size?: number | null
+          file_url: string
+          filename: string
+          id?: string
+          mime_type?: string | null
+          task_id?: string | null
+          uploader_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          file_size?: number | null
+          file_url?: string
+          filename?: string
+          id?: string
+          mime_type?: string | null
+          task_id?: string | null
+          uploader_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_uploads_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_uploads_uploader_id_fkey"
+            columns: ["uploader_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
