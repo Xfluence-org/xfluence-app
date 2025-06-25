@@ -96,15 +96,15 @@ export const useCampaignData = () => {
           });
         };
 
-        // Map database status to display status
+        // Map database status to display status - UPDATED to match dashboard logic
         const getDisplayStatus = (dbStatus: string): 'invited' | 'active' | 'completed' | 'pending' => {
           switch (dbStatus) {
             case 'invited':
-              return 'active'; // Show invited campaigns as active in the UI
+              return 'invited'; // Keep invited campaigns as invited for Requests tab
             case 'completed':
               return 'completed';
             case 'accepted':
-              return 'active';
+              return 'active'; // Show accepted campaigns as active
             default:
               return 'pending';
           }

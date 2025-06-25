@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import Sidebar from '@/components/dashboard/Sidebar';
 import TabNavigation from '@/components/campaigns/TabNavigation';
@@ -26,23 +25,25 @@ const CampaignsPage: React.FC = () => {
     deleteFile
   } = useTaskDetail(selectedTaskId);
 
-  // Filter campaigns based on active tab and search
+  // Filter campaigns based on active tab and search - UPDATED to match dashboard logic
   const filteredCampaigns = useMemo(() => {
     if (!campaigns) return [];
     
     let filtered = campaigns;
 
-    // Filter by tab
+    // Filter by tab - Updated to match dashboard behavior
     switch (activeTab) {
       case 'Active':
+        // Show campaigns that are invited, accepted, or active (same as dashboard "active campaigns")
         filtered = filtered.filter(campaign => 
-          campaign.status === 'active'
+          campaign.status === 'active' || campaign.status === 'invited'
         );
         break;
       case 'Completed':
         filtered = filtered.filter(campaign => campaign.status === 'completed');
         break;
       case 'Requests':
+        // Only show truly invited campaigns that haven't been accepted yet
         filtered = filtered.filter(campaign => campaign.status === 'invited');
         break;
     }
