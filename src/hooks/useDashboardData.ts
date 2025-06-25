@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface Campaign {
   id: string;
@@ -24,17 +23,16 @@ export const useDashboardData = () => {
   const [activeCampaigns, setActiveCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+
+  // Using the hardcoded user ID for testing with sample data
+  const testUserId = '46ec4c99-d347-4c75-a0bb-5c409ed6c8ab';
 
   const fetchDashboardData = async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
+
+      console.log('Fetching dashboard data for user:', testUserId);
 
       // Fetch campaign participations with campaign and brand data
       const { data: participations, error: participationsError } = await supabase
@@ -55,11 +53,14 @@ export const useDashboardData = () => {
             )
           )
         `)
-        .eq('influencer_id', user.id);
+        .eq('influencer_id', testUserId);
 
       if (participationsError) {
+        console.error('Error fetching participations:', participationsError);
         throw participationsError;
       }
+
+      console.log('Fetched participations:', participations);
 
       // Transform data to match component expectations
       const transformedData = participations?.map(participation => ({
@@ -78,6 +79,8 @@ export const useDashboardData = () => {
         currentStage: participation.current_stage
       })) || [];
 
+      console.log('Transformed data:', transformedData);
+
       // Split into invitations and active campaigns
       const invitationsData = transformedData.filter(campaign => 
         campaign.status === 'invited'
@@ -86,6 +89,9 @@ export const useDashboardData = () => {
       const activeCampaignsData = transformedData.filter(campaign => 
         campaign.status === 'accepted' || campaign.status === 'active'
       );
+
+      console.log('Invitations:', invitationsData);
+      console.log('Active campaigns:', activeCampaignsData);
 
       setInvitations(invitationsData);
       setActiveCampaigns(activeCampaignsData);
@@ -99,12 +105,12 @@ export const useDashboardData = () => {
 
   useEffect(() => {
     fetchDashboardData();
-  }, [user]);
+  }, []);
 
   const acceptInvitation = async (campaignId: string) => {
-    if (!user) return { success: false, message: 'User not authenticated' };
-
     try {
+      console.log('Accepting invitation for campaign:', campaignId);
+      
       const { error } = await supabase
         .from('campaign_participants')
         .update({ 
@@ -112,9 +118,12 @@ export const useDashboardData = () => {
           accepted_at: new Date().toISOString()
         })
         .eq('campaign_id', campaignId)
-        .eq('influencer_id', user.id);
+        .eq('influencer_id', testUserId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error accepting invitation:', error);
+        throw error;
+      }
 
       // Refresh data
       await fetchDashboardData();
@@ -126,16 +135,19 @@ export const useDashboardData = () => {
   };
 
   const declineInvitation = async (campaignId: string) => {
-    if (!user) return { success: false, message: 'User not authenticated' };
-
     try {
+      console.log('Declining invitation for campaign:', campaignId);
+      
       const { error } = await supabase
         .from('campaign_participants')
         .update({ status: 'declined' })
         .eq('campaign_id', campaignId)
-        .eq('influencer_id', user.id);
+        .eq('influencer_id', testUserId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error declining invitation:', error);
+        throw error;
+      }
 
       // Refresh data
       await fetchDashboardData();
