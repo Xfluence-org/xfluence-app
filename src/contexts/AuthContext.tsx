@@ -1,4 +1,5 @@
 
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +10,7 @@ type UserType = 'Agency' | 'Brand' | 'Influencer';
 interface UserProfile {
   id: string;
   email: string;
+  name?: string;
   user_type: UserType;
 }
 
@@ -167,3 +169,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
+

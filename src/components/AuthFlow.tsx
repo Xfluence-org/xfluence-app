@@ -137,9 +137,9 @@ const AuthFlow = () => {
                         <SelectValue placeholder="Select your type" className="text-[#6c757d]" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Influencer">Influencer</SelectItem>
                         <SelectItem value="Agency">Agency</SelectItem>
                         <SelectItem value="Brand">Brand</SelectItem>
+                        <SelectItem value="Influencer">Influencer</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -361,9 +361,9 @@ const AuthFlow = () => {
                     <SelectValue placeholder="Select your type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Influencer">Influencer</SelectItem>
                     <SelectItem value="Agency">Agency</SelectItem>
                     <SelectItem value="Brand">Brand</SelectItem>
+                    <SelectItem value="Influencer">Influencer</SelectItem>
                   </SelectContent>
                 </Select>
 
