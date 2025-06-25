@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Sidebar from '@/components/dashboard/Sidebar';
@@ -23,7 +24,8 @@ const CampaignsPage: React.FC = () => {
     }
   }, [tabFromUrl]);
 
-  const { data: campaigns, isLoading: loading, error } = useCampaignData();
+  // Use the updated hook with tab filtering
+  const { data: campaigns, isLoading: loading, error } = useCampaignData(activeTab);
 
   const {
     taskDetail,
@@ -35,37 +37,13 @@ const CampaignsPage: React.FC = () => {
     deleteFile
   } = useTaskDetail(selectedTaskId);
 
-  // Filter campaigns based on active tab and search - UPDATED to follow specification
+  // Filter campaigns based on search query only (tab filtering is now done server-side)
   const filteredCampaigns = useMemo(() => {
     if (!campaigns) return [];
     
     let filtered = campaigns;
 
-    // Filter by tab according to the specification:
-    switch (activeTab) {
-      case 'Active':
-        // Show campaigns with invited, accepted, or active status (all campaigns influencer is/could be working on)
-        filtered = filtered.filter(campaign => 
-          (campaign as any).originalStatus === 'invited' || 
-          (campaign as any).originalStatus === 'accepted' || 
-          (campaign as any).originalStatus === 'active'
-        );
-        break;
-      case 'Completed':
-        // Show only completed campaigns
-        filtered = filtered.filter(campaign => 
-          (campaign as any).originalStatus === 'completed'
-        );
-        break;
-      case 'Requests':
-        // Show only invited campaigns (pending influencer response)
-        filtered = filtered.filter(campaign => 
-          (campaign as any).originalStatus === 'invited'
-        );
-        break;
-    }
-
-    // Filter by search query
+    // Filter by search query only
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(campaign =>
@@ -75,7 +53,7 @@ const CampaignsPage: React.FC = () => {
     }
 
     return filtered;
-  }, [campaigns, activeTab, searchQuery]);
+  }, [campaigns, searchQuery]);
 
   const handleTabChange = (tab: CampaignTab) => {
     setActiveTab(tab);

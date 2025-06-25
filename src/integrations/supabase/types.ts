@@ -378,6 +378,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_influencer_campaigns: {
+        Args: { tab_filter?: string }
+        Returns: {
+          campaign_id: string
+          campaign_title: string
+          brand_name: string
+          campaign_status: string
+          task_count: number
+          due_date: string
+          platforms: string[]
+          amount: number
+          overall_progress: number
+          completed_tasks: number
+          tasks: Json
+        }[]
+      }
       get_opportunities: {
         Args: {
           search_query?: string

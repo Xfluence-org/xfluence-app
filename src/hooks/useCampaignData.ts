@@ -1,90 +1,36 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { DetailedCampaign } from '@/types/campaigns';
+import { DetailedCampaign, CampaignTab } from '@/types/campaigns';
 
-export const useCampaignData = () => {
+export const useCampaignData = (tabFilter?: CampaignTab) => {
   return useQuery({
-    queryKey: ['campaigns'],
+    queryKey: ['campaigns', tabFilter],
     queryFn: async () => {
-      console.log('Fetching campaigns data...');
+      console.log('Fetching campaigns data with tab filter:', tabFilter);
       
-      // Get campaigns with their participants and tasks
-      const { data: campaignParticipants, error: participantsError } = await supabase
-        .from('campaign_participants')
-        .select(`
-          id,
-          status,
-          progress,
-          accepted_at,
-          completed_at,
-          current_stage,
-          campaigns (
-            id,
-            title,
-            due_date,
-            amount,
-            requirements,
-            brands (
-              name
-            )
-          )
-        `)
-        .eq('influencer_id', '46ec4c99-d347-4c75-a0bb-5c409ed6c8ab'); // Using test user ID
+      // Convert CampaignTab to database function parameter
+      const dbTabFilter = tabFilter ? tabFilter.toLowerCase() : 'active';
+      
+      // Call the database function to get filtered campaigns
+      const { data: campaignData, error } = await supabase.rpc('get_influencer_campaigns', {
+        tab_filter: dbTabFilter
+      });
 
-      if (participantsError) {
-        console.error('Error fetching campaign participants:', participantsError);
-        throw participantsError;
+      if (error) {
+        console.error('Error fetching campaigns:', error);
+        throw error;
       }
 
-      console.log('Raw campaign participants data:', campaignParticipants);
+      console.log('Raw campaign data from function:', campaignData);
 
-      if (!campaignParticipants || campaignParticipants.length === 0) {
-        console.log('No campaign participants found');
+      if (!campaignData || campaignData.length === 0) {
+        console.log('No campaigns found for tab:', tabFilter);
         return [];
       }
 
-      // Get all tasks for these campaigns
-      const campaignIds = campaignParticipants
-        .map(p => p.campaigns?.id)
-        .filter(Boolean);
-
-      const { data: campaignTasks, error: tasksError } = await supabase
-        .from('campaign_tasks')
-        .select(`
-          id,
-          campaign_id,
-          task_type,
-          title,
-          status,
-          progress,
-          next_deadline,
-          deliverable_count
-        `)
-        .in('campaign_id', campaignIds)
-        .eq('influencer_id', '46ec4c99-d347-4c75-a0bb-5c409ed6c8ab');
-
-      if (tasksError) {
-        console.error('Error fetching campaign tasks:', tasksError);
-        throw tasksError;
-      }
-
-      console.log('Campaign tasks:', campaignTasks);
-
       // Transform data to match DetailedCampaign interface
-      const campaigns: DetailedCampaign[] = campaignParticipants.map(participant => {
-        const campaign = participant.campaigns;
-        const tasks = campaignTasks?.filter(task => task.campaign_id === campaign?.id) || [];
-        const requirements = campaign?.requirements as any || {};
-        
-        // Calculate overall progress based on task progress
-        const overallProgress = tasks.length > 0 
-          ? Math.round(tasks.reduce((sum, task) => sum + (task.progress || 0), 0) / tasks.length)
-          : participant.progress || 0;
-
-        // Count completed tasks
-        const completedTasks = tasks.filter(task => task.status === 'completed').length;
-
+      const campaigns: DetailedCampaign[] = campaignData.map((row: any) => {
         // Format due date
         const formatDate = (dateStr: string) => {
           if (!dateStr) return 'TBD';
@@ -96,14 +42,15 @@ export const useCampaignData = () => {
           });
         };
 
-        // Map database status to display status according to the specification
+        // Map database status to display status
         const getDisplayStatus = (dbStatus: string): 'invited' | 'active' | 'completed' | 'pending' => {
           switch (dbStatus) {
             case 'invited':
+            case 'applied':
               return 'invited';
             case 'accepted':
             case 'active':
-              return 'active'; // Both accepted and active show as active
+              return 'active';
             case 'completed':
               return 'completed';
             default:
@@ -111,29 +58,32 @@ export const useCampaignData = () => {
           }
         };
 
+        // Parse tasks from JSONB
+        const tasks = Array.isArray(row.tasks) ? row.tasks.map((task: any) => ({
+          id: task.id,
+          type: task.type as 'Posts' | 'Stories' | 'Reels',
+          deliverable: task.deliverable,
+          status: task.status as 'content review' | 'post content' | 'content draft' | 'completed' | 'pending',
+          progress: task.progress || 0,
+          nextDeadline: task.nextDeadline ? formatDate(task.nextDeadline) : 'TBD',
+          feedback: task.feedback || undefined
+        })) : [];
+
         return {
-          id: campaign?.id || '',
-          title: campaign?.title || 'Untitled Campaign',
-          brand: campaign?.brands?.name || 'Unknown Brand',
-          status: getDisplayStatus(participant.status),
-          taskCount: tasks.length,
-          dueDate: formatDate(campaign?.due_date),
-          platforms: requirements.platforms || ['Instagram', 'TikTok'],
-          amount: campaign?.amount ? Math.floor(campaign.amount / 100) : 0, // Convert from cents
-          overallProgress,
-          completedTasks,
-          tasks: tasks.map(task => ({
-            id: task.id,
-            type: task.task_type as 'Posts' | 'Stories' | 'Reels',
-            deliverable: `${task.deliverable_count || 1} ${task.task_type}`,
-            status: task.status as 'content review' | 'post content' | 'content draft' | 'completed' | 'pending',
-            progress: task.progress || 0,
-            nextDeadline: task.next_deadline ? formatDate(task.next_deadline) : 'TBD'
-          })),
-          // Store original database status for filtering
-          originalStatus: participant.status
+          id: row.campaign_id,
+          title: row.campaign_title,
+          brand: row.brand_name,
+          status: getDisplayStatus(row.campaign_status),
+          taskCount: Number(row.task_count),
+          dueDate: formatDate(row.due_date),
+          platforms: row.platforms || ['Instagram', 'TikTok'],
+          amount: row.amount ? Math.floor(row.amount / 100) : 0, // Convert from cents
+          overallProgress: row.overall_progress || 0,
+          completedTasks: Number(row.completed_tasks),
+          tasks,
+          originalStatus: row.campaign_status
         };
-      }).filter(campaign => campaign.id); // Filter out campaigns with no ID
+      });
 
       console.log('Transformed campaigns:', campaigns);
       return campaigns;
