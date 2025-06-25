@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 import Sidebar from '@/components/dashboard/Sidebar';
 import InvitationCard from '@/components/dashboard/InvitationCard';
 import CampaignCard from '@/components/dashboard/CampaignCard';
@@ -11,6 +13,7 @@ const InfluencerDashboard = () => {
   const { profile } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { 
     invitations, 
     activeCampaigns, 
@@ -32,6 +35,9 @@ const InfluencerDashboard = () => {
         title: "Success",
         description: result.message,
       });
+      // Invalidate and refetch queries to update the UI
+      queryClient.invalidateQueries({ queryKey: ['dashboard-invitations'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-active-campaigns'] });
     } else {
       toast({
         title: "Error",
@@ -48,6 +54,9 @@ const InfluencerDashboard = () => {
         title: "Success",
         description: result.message,
       });
+      // Invalidate and refetch queries to update the UI
+      queryClient.invalidateQueries({ queryKey: ['dashboard-invitations'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-active-campaigns'] });
     } else {
       toast({
         title: "Error", 

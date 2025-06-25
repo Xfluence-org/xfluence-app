@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Campaign {
@@ -18,97 +19,88 @@ interface Campaign {
 }
 
 export const useDashboardData = () => {
-  const [invitations, setInvitations] = useState<Campaign[]>([]);
-  const [activeCampaigns, setActiveCampaigns] = useState<Campaign[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Fetch invitations (requests tab)
+  const { data: invitationsData = [], isLoading: invitationsLoading, error: invitationsError } = useQuery({
+    queryKey: ['dashboard-invitations'],
+    queryFn: async () => {
+      console.log('Fetching invitations for dashboard');
+      
+      const { data: campaignData, error } = await supabase.rpc('get_influencer_campaigns', {
+        tab_filter: 'requests'
+      });
 
-  // Using the hardcoded user ID for testing with sample data
-  const testUserId = '46ec4c99-d347-4c75-a0bb-5c409ed6c8ab';
-
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      console.log('Fetching dashboard data for user:', testUserId);
-
-      // Fetch campaign participations with campaign and brand data
-      const { data: participations, error: participationsError } = await supabase
-        .from('campaign_participants')
-        .select(`
-          id,
-          status,
-          progress,
-          current_stage,
-          campaigns (
-            id,
-            title,
-            amount,
-            due_date,
-            requirements,
-            brands (
-              name
-            )
-          )
-        `)
-        .eq('influencer_id', testUserId);
-
-      if (participationsError) {
-        console.error('Error fetching participations:', participationsError);
-        throw participationsError;
+      if (error) {
+        console.error('Error fetching invitations:', error);
+        throw error;
       }
 
-      console.log('Fetched participations:', participations);
+      console.log('Raw invitations data:', campaignData);
 
-      // Transform data to match component expectations, filtering out null campaigns
-      const transformedData = participations?.filter(participation => 
-        participation.campaigns !== null
-      ).map(participation => ({
-        id: participation.campaigns.id,
-        brand: participation.campaigns.brands.name,
-        title: participation.campaigns.title,
-        amount: Math.floor(participation.campaigns.amount / 100), // Convert cents to dollars
-        dueDate: new Date(participation.campaigns.due_date).toLocaleDateString('en-GB'),
-        requirements: participation.campaigns.requirements as {
-          posts?: number;
-          stories?: number;
-          reels?: number;
+      if (!campaignData || campaignData.length === 0) {
+        return [];
+      }
+
+      // Transform data to match dashboard component expectations
+      return campaignData.map((row: any) => ({
+        id: row.campaign_id,
+        brand: row.brand_name,
+        title: row.campaign_title,
+        amount: row.amount ? Math.floor(row.amount / 100) : 0, // Convert from cents
+        dueDate: row.due_date ? new Date(row.due_date).toLocaleDateString('en-GB') : 'TBD',
+        requirements: {
+          posts: 1, // Default values since we don't have this data in the function
+          stories: 1,
+          reels: 1
         },
-        progress: participation.progress,
-        status: participation.status as 'invited' | 'accepted' | 'active' | 'completed' | 'declined',
-        currentStage: participation.current_stage
-      })) || [];
-
-      console.log('Transformed data:', transformedData);
-
-      // Split into invitations and active campaigns according to specification:
-      // Invitations: status = 'invited' (waiting for influencer response)
-      const invitationsData = transformedData.filter(campaign => 
-        campaign.status === 'invited'
-      );
-      
-      // Active Campaigns: status IN ('accepted', 'active') (campaigns influencer is working on)
-      const activeCampaignsData = transformedData.filter(campaign => 
-        campaign.status === 'accepted' || campaign.status === 'active'
-      );
-
-      console.log('Invitations:', invitationsData);
-      console.log('Active campaigns:', activeCampaignsData);
-
-      setInvitations(invitationsData);
-      setActiveCampaigns(activeCampaignsData);
-    } catch (err) {
-      console.error('Error fetching dashboard data:', err);
-      setError('Failed to load dashboard data');
-    } finally {
-      setLoading(false);
+        progress: row.overall_progress || 0,
+        status: 'invited' as const,
+        currentStage: 'content_requirement'
+      }));
     }
-  };
+  });
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+  // Fetch active campaigns (active tab)
+  const { data: activeCampaignsData = [], isLoading: activeCampaignsLoading, error: activeCampaignsError } = useQuery({
+    queryKey: ['dashboard-active-campaigns'],
+    queryFn: async () => {
+      console.log('Fetching active campaigns for dashboard');
+      
+      const { data: campaignData, error } = await supabase.rpc('get_influencer_campaigns', {
+        tab_filter: 'active'
+      });
+
+      if (error) {
+        console.error('Error fetching active campaigns:', error);
+        throw error;
+      }
+
+      console.log('Raw active campaigns data:', campaignData);
+
+      if (!campaignData || campaignData.length === 0) {
+        return [];
+      }
+
+      // Transform data to match dashboard component expectations
+      return campaignData.map((row: any) => ({
+        id: row.campaign_id,
+        brand: row.brand_name,
+        title: row.campaign_title,
+        amount: row.amount ? Math.floor(row.amount / 100) : 0, // Convert from cents
+        dueDate: row.due_date ? new Date(row.due_date).toLocaleDateString('en-GB') : 'TBD',
+        requirements: {
+          posts: 1, // Default values since we don't have this data in the function
+          stories: 1,
+          reels: 1
+        },
+        progress: row.overall_progress || 0,
+        status: row.campaign_status === 'accepted' ? 'accepted' as const : 'active' as const,
+        currentStage: 'content_requirement'
+      }));
+    }
+  });
+
+  const loading = invitationsLoading || activeCampaignsLoading;
+  const error = invitationsError?.message || activeCampaignsError?.message || null;
 
   const acceptInvitation = async (campaignId: string) => {
     try {
@@ -121,15 +113,13 @@ export const useDashboardData = () => {
           accepted_at: new Date().toISOString()
         })
         .eq('campaign_id', campaignId)
-        .eq('influencer_id', testUserId);
+        .eq('influencer_id', (await supabase.auth.getUser()).data.user?.id);
 
       if (error) {
         console.error('Error accepting invitation:', error);
         throw error;
       }
 
-      // Refresh data
-      await fetchDashboardData();
       return { success: true, message: 'Invitation accepted successfully!' };
     } catch (err) {
       console.error('Error accepting invitation:', err);
@@ -145,15 +135,13 @@ export const useDashboardData = () => {
         .from('campaign_participants')
         .update({ status: 'declined' })
         .eq('campaign_id', campaignId)
-        .eq('influencer_id', testUserId);
+        .eq('influencer_id', (await supabase.auth.getUser()).data.user?.id);
 
       if (error) {
         console.error('Error declining invitation:', error);
         throw error;
       }
 
-      // Refresh data
-      await fetchDashboardData();
       return { success: true, message: 'Invitation declined' };
     } catch (err) {
       console.error('Error declining invitation:', err);
@@ -161,13 +149,18 @@ export const useDashboardData = () => {
     }
   };
 
+  const refetch = () => {
+    // Note: With React Query, we don't need manual refetch as the queries will invalidate automatically
+    console.log('Refetch called - queries will update automatically');
+  };
+
   return {
-    invitations,
-    activeCampaigns,
+    invitations: invitationsData,
+    activeCampaigns: activeCampaignsData,
     loading,
     error,
     acceptInvitation,
     declineInvitation,
-    refetch: fetchDashboardData
+    refetch
   };
 };
