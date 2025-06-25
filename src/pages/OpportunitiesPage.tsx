@@ -1,12 +1,14 @@
 
 import React, { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import Sidebar from '@/components/dashboard/Sidebar';
 import SearchBar from '@/components/opportunities/SearchBar';
 import OpportunityCard from '@/components/opportunities/OpportunityCard';
 import ApplicationModal from '@/components/opportunities/ApplicationModal';
 import FilterModal, { FilterOptions } from '@/components/opportunities/FilterModal';
-import { useOpportunities } from '@/hooks/useOpportunities';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Opportunity } from '@/types/opportunities';
 
 const OpportunitiesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,22 +23,68 @@ const OpportunitiesPage: React.FC = () => {
     deliverables: []
   });
 
-  const { opportunities, loading, error, applyToOpportunity, searchOpportunities } = useOpportunities();
   const { toast } = useToast();
 
-  // Filter logic (search is now handled by the hook)
+  // Use React Query to fetch opportunities with the new database function
+  const { data: opportunitiesData, isLoading: loading, error, refetch } = useQuery({
+    queryKey: ['opportunities', searchQuery, activeFilters],
+    queryFn: async () => {
+      console.log('Fetching opportunities with filters:', { searchQuery, activeFilters });
+      
+      const { data, error } = await supabase.rpc('get_opportunities', {
+        search_query: searchQuery,
+        category_filter: activeFilters.categories[0] || '',
+        min_compensation: activeFilters.compensationRange.min * 100, // convert to cents
+        max_compensation: activeFilters.compensationRange.max * 100,
+        platform_filter: activeFilters.platforms[0] || ''
+      });
+      
+      if (error) {
+        console.error('Error fetching opportunities:', error);
+        throw error;
+      }
+      
+      console.log('Fetched opportunities from database:', data);
+      return data;
+    }
+  });
+
+  // Transform database data to match Opportunity interface
+  const opportunities: Opportunity[] = useMemo(() => {
+    if (!opportunitiesData) return [];
+    
+    return opportunitiesData.map(opportunity => {
+      const requirements = opportunity.requirements as any || {};
+      
+      return {
+        id: opportunity.id,
+        title: opportunity.title,
+        brand: opportunity.brand_name || 'Unknown Brand',
+        compensation: {
+          min: opportunity.compensation_min ? Math.floor(opportunity.compensation_min / 100) : undefined,
+          max: opportunity.compensation_max ? Math.floor(opportunity.compensation_max / 100) : 0,
+          type: opportunity.compensation_min ? 'range' : 'fixed'
+        },
+        category: opportunity.category ? [opportunity.category] : ['General'],
+        platforms: requirements.platforms || ['Instagram', 'TikTok'],
+        deliverables: {
+          posts: requirements.posts || 1,
+          stories: requirements.stories || 0,
+          reels: requirements.reels || 0
+        },
+        postedAt: opportunity.created_at,
+        description: opportunity.description || undefined,
+        applicationDeadline: opportunity.application_deadline || undefined
+      };
+    });
+  }, [opportunitiesData]);
+
+  // Apply client-side platform filtering since database function handles basic filters
   const filteredOpportunities = useMemo(() => {
     let filtered = opportunities;
 
-    // Apply category filter
-    if (activeFilters.categories.length > 0) {
-      filtered = filtered.filter(opp =>
-        opp.category.some(cat => activeFilters.categories.includes(cat))
-      );
-    }
-
-    // Apply platform filter
-    if (activeFilters.platforms.length > 0) {
+    // Apply platform filter (additional client-side filtering)
+    if (activeFilters.platforms.length > 1) { // Only apply if multiple platforms selected
       filtered = filtered.filter(opp =>
         opp.platforms.some(platform => 
           activeFilters.platforms.some(filterPlatform => 
@@ -46,18 +94,11 @@ const OpportunitiesPage: React.FC = () => {
       );
     }
 
-    // Apply compensation filter
-    filtered = filtered.filter(opp =>
-      opp.compensation.max >= activeFilters.compensationRange.min &&
-      opp.compensation.max <= activeFilters.compensationRange.max
-    );
-
     return filtered;
-  }, [opportunities, activeFilters]);
+  }, [opportunities, activeFilters.platforms]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    searchOpportunities(query);
   };
 
   const handleFilterClick = () => {
@@ -85,22 +126,50 @@ const OpportunitiesPage: React.FC = () => {
     if (!selectedOpportunityId) return;
     
     setApplicationLoading(true);
-    const result = await applyToOpportunity(selectedOpportunityId, message);
-    setApplicationLoading(false);
     
-    if (result.success) {
+    try {
+      console.log('Submitting application for opportunity:', selectedOpportunityId);
+      
+      // Using the test user ID for now - in production this would be the current user's ID
+      const testUserId = '46ec4c99-d347-4c75-a0bb-5c409ed6c8ab';
+      
+      const { error } = await supabase
+        .from('campaign_participants')
+        .insert({
+          campaign_id: selectedOpportunityId,
+          influencer_id: testUserId,
+          status: 'applied',
+          application_message: message,
+          ai_match_score: Math.floor(Math.random() * 40) + 60 // Random score between 60-100 for demo
+        });
+        
+      if (error) {
+        console.error('Application failed:', error);
+        throw error;
+      }
+      
+      console.log('Application submitted successfully!');
+      
       toast({
         title: "Application Submitted",
-        description: result.message,
+        description: "Your application has been submitted successfully!",
       });
+      
       setIsApplicationModalOpen(false);
       setSelectedOpportunityId('');
-    } else {
+      
+      // Refetch opportunities to update the has_applied status
+      refetch();
+      
+    } catch (err) {
+      console.error('Error submitting application:', err);
       toast({
         title: "Application Failed",
-        description: result.message,
+        description: "Failed to submit application. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setApplicationLoading(false);
     }
   };
 
@@ -128,7 +197,7 @@ const OpportunitiesPage: React.FC = () => {
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
-              <p className="text-red-500 text-lg">Error: {error}</p>
+              <p className="text-red-500 text-lg">Error loading opportunities. Please try again.</p>
             </div>
           </div>
         </main>
