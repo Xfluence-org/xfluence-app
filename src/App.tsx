@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,7 +9,6 @@ import InfluencerDashboard from "./pages/InfluencerDashboard";
 import OpportunitiesPage from "./pages/OpportunitiesPage";
 import CampaignsPage from "./pages/CampaignsPage";
 import BrandDashboard from "./pages/BrandDashboard";
-import DashboardSelection from "./pages/DashboardSelection";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
