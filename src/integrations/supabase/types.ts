@@ -65,6 +65,8 @@ export type Database = {
       campaign_participants: {
         Row: {
           accepted_at: string | null
+          ai_match_score: number | null
+          application_message: string | null
           campaign_id: string | null
           completed_at: string | null
           created_at: string | null
@@ -77,6 +79,8 @@ export type Database = {
         }
         Insert: {
           accepted_at?: string | null
+          ai_match_score?: number | null
+          application_message?: string | null
           campaign_id?: string | null
           completed_at?: string | null
           created_at?: string | null
@@ -89,6 +93,8 @@ export type Database = {
         }
         Update: {
           accepted_at?: string | null
+          ai_match_score?: number | null
+          application_message?: string | null
           campaign_id?: string | null
           completed_at?: string | null
           created_at?: string | null

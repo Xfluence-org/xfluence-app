@@ -19,4 +19,5 @@ export interface Opportunity {
   description?: string;
   requirements?: string[];
   timeline?: string;
+  applicationDeadline?: string;
 }

@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import Sidebar from '@/components/dashboard/Sidebar';
 import SearchBar from '@/components/opportunities/SearchBar';
 import OpportunityCard from '@/components/opportunities/OpportunityCard';
+import ApplicationModal from '@/components/opportunities/ApplicationModal';
 import FilterModal, { FilterOptions } from '@/components/opportunities/FilterModal';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { useToast } from '@/hooks/use-toast';
@@ -10,6 +11,9 @@ import { useToast } from '@/hooks/use-toast';
 const OpportunitiesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
+  const [selectedOpportunityId, setSelectedOpportunityId] = useState<string>('');
+  const [applicationLoading, setApplicationLoading] = useState(false);
   const [activeFilters, setActiveFilters] = useState<FilterOptions>({
     categories: [],
     platforms: [],
@@ -17,23 +21,12 @@ const OpportunitiesPage: React.FC = () => {
     deliverables: []
   });
 
-  const { opportunities, loading, error, applyToOpportunity } = useOpportunities();
+  const { opportunities, loading, error, applyToOpportunity, searchOpportunities } = useOpportunities();
   const { toast } = useToast();
 
-  // Filter and search logic
+  // Filter logic (search is now handled by the hook)
   const filteredOpportunities = useMemo(() => {
     let filtered = opportunities;
-
-    // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(opp => 
-        opp.title.toLowerCase().includes(query) ||
-        opp.brand.toLowerCase().includes(query) ||
-        opp.category.some(cat => cat.toLowerCase().includes(query)) ||
-        opp.platforms.some(platform => platform.toLowerCase().includes(query))
-      );
-    }
 
     // Apply category filter
     if (activeFilters.categories.length > 0) {
@@ -60,10 +53,11 @@ const OpportunitiesPage: React.FC = () => {
     );
 
     return filtered;
-  }, [opportunities, searchQuery, activeFilters]);
+  }, [opportunities, activeFilters]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
+    searchOpportunities(query);
   };
 
   const handleFilterClick = () => {
@@ -79,16 +73,28 @@ const OpportunitiesPage: React.FC = () => {
     // Navigate to opportunity details page or open modal
   };
 
-  const handleApplyNow = async (opportunityId: string) => {
-    console.log('Apply for opportunity:', opportunityId);
+  const handleApplyNow = (opportunityId: string) => {
+    const opportunity = opportunities.find(opp => opp.id === opportunityId);
+    if (opportunity) {
+      setSelectedOpportunityId(opportunityId);
+      setIsApplicationModalOpen(true);
+    }
+  };
+
+  const handleApplicationSubmit = async (message: string) => {
+    if (!selectedOpportunityId) return;
     
-    const result = await applyToOpportunity(opportunityId);
+    setApplicationLoading(true);
+    const result = await applyToOpportunity(selectedOpportunityId, message);
+    setApplicationLoading(false);
     
     if (result.success) {
       toast({
         title: "Application Submitted",
         description: result.message,
       });
+      setIsApplicationModalOpen(false);
+      setSelectedOpportunityId('');
     } else {
       toast({
         title: "Application Failed",
@@ -97,6 +103,8 @@ const OpportunitiesPage: React.FC = () => {
       });
     }
   };
+
+  const selectedOpportunity = opportunities.find(opp => opp.id === selectedOpportunityId);
 
   if (loading) {
     return (
@@ -173,6 +181,17 @@ const OpportunitiesPage: React.FC = () => {
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
         onApplyFilters={handleApplyFilters}
+      />
+
+      <ApplicationModal
+        isOpen={isApplicationModalOpen}
+        onClose={() => {
+          setIsApplicationModalOpen(false);
+          setSelectedOpportunityId('');
+        }}
+        onSubmit={handleApplicationSubmit}
+        opportunityTitle={selectedOpportunity?.title || ''}
+        loading={applicationLoading}
       />
     </div>
   );

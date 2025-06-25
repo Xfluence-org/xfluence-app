@@ -26,6 +26,7 @@ export const useOpportunities = () => {
           compensation_max,
           requirements,
           created_at,
+          application_deadline,
           brands (
             name
           )
@@ -62,7 +63,8 @@ export const useOpportunities = () => {
             reels: requirements.reels || 0
           },
           postedAt: campaign.created_at,
-          description: campaign.description || undefined
+          description: campaign.description || undefined,
+          applicationDeadline: campaign.application_deadline || undefined
         };
       }) || [];
 
@@ -76,19 +78,33 @@ export const useOpportunities = () => {
     }
   };
 
-  const applyToOpportunity = async (opportunityId: string) => {
+  const applyToOpportunity = async (opportunityId: string, applicationMessage?: string) => {
     try {
-      console.log('Applying to opportunity:', opportunityId);
+      console.log('Applying to opportunity:', opportunityId, 'with message:', applicationMessage);
       
       // Using the test user ID for now
       const testUserId = '46ec4c99-d347-4c75-a0bb-5c409ed6c8ab';
       
+      // Check if user already applied
+      const { data: existingApplication } = await supabase
+        .from('campaign_participants')
+        .select('id')
+        .eq('campaign_id', opportunityId)
+        .eq('influencer_id', testUserId)
+        .single();
+
+      if (existingApplication) {
+        return { success: false, message: 'You have already applied to this opportunity' };
+      }
+
       const { error } = await supabase
         .from('campaign_participants')
         .insert({
           campaign_id: opportunityId,
           influencer_id: testUserId,
-          status: 'applied'
+          status: 'applied',
+          application_message: applicationMessage || null,
+          ai_match_score: Math.floor(Math.random() * 40) + 60 // Random score between 60-100 for demo
         });
 
       if (error) {
@@ -103,6 +119,77 @@ export const useOpportunities = () => {
     }
   };
 
+  const searchOpportunities = async (query: string) => {
+    try {
+      console.log('Searching opportunities with query:', query);
+      
+      if (!query.trim()) {
+        await fetchOpportunities();
+        return;
+      }
+
+      const { data: campaigns, error: campaignsError } = await supabase
+        .from('campaigns')
+        .select(`
+          id,
+          title,
+          description,
+          category,
+          compensation_min,
+          compensation_max,
+          requirements,
+          created_at,
+          application_deadline,
+          brands (
+            name
+          )
+        `)
+        .eq('is_public', true)
+        .eq('status', 'published')
+        .textSearch('title', query, { type: 'websearch' })
+        .order('created_at', { ascending: false });
+
+      if (campaignsError) {
+        console.error('Error searching opportunities:', campaignsError);
+        // Fallback to basic filtering
+        await fetchOpportunities();
+        return;
+      }
+
+      // Transform results
+      const transformedResults: Opportunity[] = campaigns?.map(campaign => {
+        const requirements = campaign.requirements as any || {};
+        
+        return {
+          id: campaign.id,
+          title: campaign.title,
+          brand: campaign.brands?.name || 'Unknown Brand',
+          compensation: {
+            min: campaign.compensation_min ? Math.floor(campaign.compensation_min / 100) : undefined,
+            max: campaign.compensation_max ? Math.floor(campaign.compensation_max / 100) : 0,
+            type: campaign.compensation_min ? 'range' : 'fixed'
+          },
+          category: campaign.category ? [campaign.category] : ['General'],
+          platforms: requirements.platforms || ['Instagram', 'TikTok'],
+          deliverables: {
+            posts: requirements.posts || 1,
+            stories: requirements.stories || 0,
+            reels: requirements.reels || 0
+          },
+          postedAt: campaign.created_at,
+          description: campaign.description || undefined,
+          applicationDeadline: campaign.application_deadline || undefined
+        };
+      }) || [];
+
+      setOpportunities(transformedResults);
+    } catch (err) {
+      console.error('Error in searchOpportunities:', err);
+      // Fallback to normal fetch
+      await fetchOpportunities();
+    }
+  };
+
   useEffect(() => {
     fetchOpportunities();
   }, []);
@@ -112,6 +199,7 @@ export const useOpportunities = () => {
     loading,
     error,
     applyToOpportunity,
+    searchOpportunities,
     refetch: fetchOpportunities
   };
 };

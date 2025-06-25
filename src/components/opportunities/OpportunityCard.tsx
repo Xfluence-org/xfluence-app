@@ -49,6 +49,22 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({
     }
   };
 
+  const formatDeadline = (deadline: string) => {
+    const deadlineDate = new Date(deadline);
+    const now = new Date();
+    const diffInDays = Math.ceil((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffInDays < 0) {
+      return 'Deadline passed';
+    } else if (diffInDays === 0) {
+      return 'Deadline today';
+    } else if (diffInDays === 1) {
+      return '1 day left';
+    } else {
+      return `${diffInDays} days left`;
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg hover:border-[#1DDCD3]/20 transition-all duration-200">
       {/* Header */}
@@ -58,6 +74,11 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({
           <p className="text-gray-600 mb-2">
             Compensation: <span className="text-[#1DDCD3] font-semibold">{formatCompensation()}</span>
           </p>
+          {opportunity.applicationDeadline && (
+            <p className="text-sm text-orange-600 font-medium">
+              {formatDeadline(opportunity.applicationDeadline)}
+            </p>
+          )}
         </div>
         <span className="text-sm text-gray-500 whitespace-nowrap ml-4">
           {formatTimeAgo(opportunity.postedAt)}
