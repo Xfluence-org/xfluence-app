@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const AuthFlow = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [formData, setFormData] = useState({
     type: '',
     name: '',
@@ -18,7 +20,7 @@ const AuthFlow = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const { signUp, signIn } = useAuth();
+  const { signUp, signIn, resetPassword } = useAuth();
   const { toast } = useToast();
 
   const handleInputChange = (field: string, value: string) => {
@@ -27,6 +29,29 @@ const AuthFlow = () => {
 
   const toggleMode = () => {
     setIsLogin(!isLogin);
+    setIsForgotPassword(false);
+    setFormData({
+      type: '',
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: ''
+    });
+  };
+
+  const showForgotPassword = () => {
+    setIsForgotPassword(true);
+    setFormData({
+      type: '',
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: ''
+    });
+  };
+
+  const backToLogin = () => {
+    setIsForgotPassword(false);
     setFormData({
       type: '',
       name: '',
@@ -41,7 +66,32 @@ const AuthFlow = () => {
     setIsLoading(true);
 
     try {
-      if (isLogin) {
+      if (isForgotPassword) {
+        if (!formData.email) {
+          toast({
+            title: "Missing Email",
+            description: "Please enter your email address.",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        const { error } = await resetPassword(formData.email);
+        
+        if (error) {
+          toast({
+            title: "Reset Password Failed",
+            description: error.message || "Failed to send reset email. Please try again.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Password Reset Email Sent",
+            description: "Please check your email for password reset instructions."
+          });
+          backToLogin();
+        }
+      } else if (isLogin) {
         const { error } = await signIn(formData.email, formData.password);
         
         if (error) {
@@ -91,8 +141,17 @@ const AuthFlow = () => {
           });
         } else {
           toast({
-            title: "Registration Successful",
-            description: "Welcome to Xfluence! You have been logged in."
+            title: "Account Created Successfully",
+            description: "Please check your email to verify your account, then login with your credentials."
+          });
+          // Switch to login mode after successful registration
+          setIsLogin(true);
+          setFormData({
+            type: '',
+            name: '',
+            email: formData.email, // Keep email for convenience
+            password: '',
+            confirmPassword: ''
           });
         }
       }
@@ -105,6 +164,18 @@ const AuthFlow = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const getFormTitle = () => {
+    if (isForgotPassword) return 'Reset Password';
+    return isLogin ? 'Login' : 'Create Account';
+  };
+
+  const getButtonText = () => {
+    if (isForgotPassword) {
+      return isLoading ? 'Sending...' : 'Send Reset Email';
+    }
+    return isLoading ? (isLogin ? 'Logging in...' : 'Creating Account...') : (isLogin ? 'Login' : 'Register');
   };
 
   return (
@@ -122,13 +193,13 @@ const AuthFlow = () => {
             {/* Form Title */}
             <div className="mt-16">
               <h2 className="text-[28px] font-bold text-[#1a1f2e] mb-8">
-                {isLogin ? 'Login' : 'Create Account'}
+                {getFormTitle()}
               </h2>
             </div>
 
             {/* Form */}
             <form className="space-y-4" onSubmit={handleSubmit}>
-              {!isLogin && (
+              {!isLogin && !isForgotPassword && (
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="type" className="text-sm font-medium text-[#6c757d]">Type</Label>
@@ -167,26 +238,28 @@ const AuthFlow = () => {
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   className={`h-12 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg px-4 text-base placeholder:text-[#6c757d] ${
-                    isLogin ? 'focus:border-[#1DDCD3]' : 'focus:border-[#9d4edd]'
+                    isLogin || isForgotPassword ? 'focus:border-[#1DDCD3]' : 'focus:border-[#9d4edd]'
                   }`}
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-[#6c757d]">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Password"
-                  value={formData.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
-                  className={`h-12 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg px-4 text-base placeholder:text-[#6c757d] ${
-                    isLogin ? 'focus:border-[#1DDCD3]' : 'focus:border-[#9d4edd]'
-                  }`}
-                />
-              </div>
+              {!isForgotPassword && (
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-sm font-medium text-[#6c757d]">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Password"
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    className={`h-12 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg px-4 text-base placeholder:text-[#6c757d] ${
+                      isLogin ? 'focus:border-[#1DDCD3]' : 'focus:border-[#9d4edd]'
+                    }`}
+                  />
+                </div>
+              )}
 
-              {!isLogin && (
+              {!isLogin && !isForgotPassword && (
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword" className="text-sm font-medium text-[#6c757d]">Confirm Password</Label>
                   <Input
@@ -200,10 +273,18 @@ const AuthFlow = () => {
                 </div>
               )}
 
-              {isLogin && (
+              {isLogin && !isForgotPassword && (
                 <div className="text-right">
-                  <button type="button" className="text-sm text-[#1DDCD3] hover:underline">
+                  <button type="button" onClick={showForgotPassword} className="text-sm text-[#1DDCD3] hover:underline">
                     Forgot password?
+                  </button>
+                </div>
+              )}
+
+              {isForgotPassword && (
+                <div className="text-right">
+                  <button type="button" onClick={backToLogin} className="text-sm text-[#1DDCD3] hover:underline">
+                    Back to login
                   </button>
                 </div>
               )}
@@ -212,16 +293,16 @@ const AuthFlow = () => {
                 type="submit" 
                 disabled={isLoading}
                 className={`w-full h-12 rounded-full font-bold text-base text-white transition-all duration-200 ${
-                  isLogin 
+                  isLogin || isForgotPassword
                     ? 'bg-[#1DDCD3] hover:bg-[#00D4C7]' 
                     : 'bg-[#9d4edd] hover:bg-[#a855f7]'
                 } disabled:opacity-50`}
               >
-                {isLoading ? (isLogin ? 'Logging in...' : 'Creating Account...') : (isLogin ? 'Login' : 'Register')}
+                {getButtonText()}
               </Button>
             </form>
 
-            {isLogin && (
+            {isLogin && !isForgotPassword && (
               <>
                 <div className="text-center text-sm text-[#6c757d]">
                   or login with
@@ -349,12 +430,12 @@ const AuthFlow = () => {
           <div className="text-center mb-8">
             <h1 className="text-lg font-medium text-[#1a1f2e] mb-2">Xfluence</h1>
             <h2 className="text-xl font-semibold text-[#1a1f2e]">
-              {isLogin ? 'Login' : 'Create Account'}
+              {getFormTitle()}
             </h2>
           </div>
 
           <form className="space-y-4" onSubmit={handleSubmit}>
-            {!isLogin && (
+            {!isLogin && !isForgotPassword && (
               <>
                 <Select value={formData.type} onValueChange={(value) => handleInputChange('type', value)}>
                   <SelectTrigger className="w-full h-12 bg-[#f8f9fa] border border-[#e9ecef]">
@@ -385,15 +466,17 @@ const AuthFlow = () => {
               className="h-12 bg-[#f8f9fa] border border-[#e9ecef]"
             />
 
-            <Input
-              type="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={(e) => handleInputChange('password', e.target.value)}
-              className="h-12 bg-[#f8f9fa] border border-[#e9ecef]"
-            />
+            {!isForgotPassword && (
+              <Input
+                type="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={(e) => handleInputChange('password', e.target.value)}
+                className="h-12 bg-[#f8f9fa] border border-[#e9ecef]"
+              />
+            )}
 
-            {!isLogin && (
+            {!isLogin && !isForgotPassword && (
               <Input
                 type="password"
                 placeholder="Confirm Password"
@@ -407,25 +490,45 @@ const AuthFlow = () => {
               type="submit" 
               disabled={isLoading}
               className={`w-full h-12 text-white rounded-full ${
-                isLogin 
+                isLogin || isForgotPassword
                   ? 'bg-[#1DDCD3] hover:bg-[#00D4C7]' 
                   : 'bg-[#9d4edd] hover:bg-[#a855f7]'
               } disabled:opacity-50`}
             >
-              {isLoading ? (isLogin ? 'Logging in...' : 'Creating Account...') : (isLogin ? 'Login' : 'Register')}
+              {getButtonText()}
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
-            <button 
-              onClick={toggleMode}
-              className="text-sm text-[#6c757d] hover:text-[#1a1f2e]"
-            >
-              {isLogin ? "Don't have an account? Register" : "Already have an account? Login"}
-            </button>
+          <div className="mt-6 text-center space-y-2">
+            {isLogin && !isForgotPassword && (
+              <button 
+                onClick={showForgotPassword}
+                className="block w-full text-sm text-[#6c757d] hover:text-[#1a1f2e]"
+              >
+                Forgot password?
+              </button>
+            )}
+            
+            {isForgotPassword && (
+              <button 
+                onClick={backToLogin}
+                className="block w-full text-sm text-[#6c757d] hover:text-[#1a1f2e]"
+              >
+                Back to login
+              </button>
+            )}
+            
+            {!isForgotPassword && (
+              <button 
+                onClick={toggleMode}
+                className="block w-full text-sm text-[#6c757d] hover:text-[#1a1f2e]"
+              >
+                {isLogin ? "Don't have an account? Register" : "Already have an account? Login"}
+              </button>
+            )}
           </div>
 
-          {isLogin && (
+          {isLogin && !isForgotPassword && (
             <div className="mt-6 flex justify-center space-x-4">
               <button className="w-10 h-10 rounded-full bg-[#f8f9fa] border border-[#e9ecef] flex items-center justify-center">
                 <Facebook size={16} className="text-[#1877f2]" />
