@@ -119,43 +119,61 @@ export type Database = {
       campaigns: {
         Row: {
           amount: number | null
+          application_deadline: string | null
           brand_id: string | null
           budget: number | null
           category: string | null
+          compensation_max: number | null
+          compensation_min: number | null
           created_at: string | null
           description: string | null
           due_date: string | null
           id: string
+          is_public: boolean | null
           requirements: Json | null
           status: string | null
+          target_engagement_rate: number | null
+          target_reach: number | null
           title: string
           updated_at: string | null
         }
         Insert: {
           amount?: number | null
+          application_deadline?: string | null
           brand_id?: string | null
           budget?: number | null
           category?: string | null
+          compensation_max?: number | null
+          compensation_min?: number | null
           created_at?: string | null
           description?: string | null
           due_date?: string | null
           id?: string
+          is_public?: boolean | null
           requirements?: Json | null
           status?: string | null
+          target_engagement_rate?: number | null
+          target_reach?: number | null
           title: string
           updated_at?: string | null
         }
         Update: {
           amount?: number | null
+          application_deadline?: string | null
           brand_id?: string | null
           budget?: number | null
           category?: string | null
+          compensation_max?: number | null
+          compensation_min?: number | null
           created_at?: string | null
           description?: string | null
           due_date?: string | null
           id?: string
+          is_public?: boolean | null
           requirements?: Json | null
           status?: string | null
+          target_engagement_rate?: number | null
+          target_reach?: number | null
           title?: string
           updated_at?: string | null
         }

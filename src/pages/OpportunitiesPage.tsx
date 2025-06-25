@@ -4,7 +4,8 @@ import Sidebar from '@/components/dashboard/Sidebar';
 import SearchBar from '@/components/opportunities/SearchBar';
 import OpportunityCard from '@/components/opportunities/OpportunityCard';
 import FilterModal, { FilterOptions } from '@/components/opportunities/FilterModal';
-import { Opportunity } from '@/types/opportunities';
+import { useOpportunities } from '@/hooks/useOpportunities';
+import { useToast } from '@/hooks/use-toast';
 
 const OpportunitiesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -16,39 +17,8 @@ const OpportunitiesPage: React.FC = () => {
     deliverables: []
   });
 
-  // Mock data - replace with actual API call
-  const [opportunities] = useState<Opportunity[]>([
-    {
-      id: '1',
-      title: 'Summer Collection Launch',
-      brand: 'Nike',
-      compensation: { max: 3000, type: 'fixed' },
-      category: ['Fitness', 'lifestyle'],
-      platforms: ['Instagram', 'Tiktok'],
-      deliverables: { posts: 2, stories: 3, reels: 1 },
-      postedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-    },
-    {
-      id: '2',
-      title: 'Starbucks - Holiday Drinks Campaign',
-      brand: 'Starbucks',
-      compensation: { max: 1500, type: 'fixed' },
-      category: ['Food', 'Drinks'],
-      platforms: ['Instagram', 'TikTok'],
-      deliverables: { posts: 1, stories: 2, reels: 3 },
-      postedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-    },
-    {
-      id: '3',
-      title: 'Adidas - Spring Collection Launch',
-      brand: 'Adidas',
-      compensation: { max: 2500, type: 'fixed' },
-      category: ['Fitness', 'lifestyle'],
-      platforms: ['Instagram', 'tiktok'],
-      deliverables: { posts: 2, stories: 3, reels: 1 },
-      postedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-    }
-  ]);
+  const { opportunities, loading, error, applyToOpportunity } = useOpportunities();
+  const { toast } = useToast();
 
   // Filter and search logic
   const filteredOpportunities = useMemo(() => {
@@ -109,10 +79,54 @@ const OpportunitiesPage: React.FC = () => {
     // Navigate to opportunity details page or open modal
   };
 
-  const handleApplyNow = (opportunityId: string) => {
+  const handleApplyNow = async (opportunityId: string) => {
     console.log('Apply for opportunity:', opportunityId);
-    // Handle application submission
+    
+    const result = await applyToOpportunity(opportunityId);
+    
+    if (result.success) {
+      toast({
+        title: "Application Submitted",
+        description: result.message,
+      });
+    } else {
+      toast({
+        title: "Application Failed",
+        description: result.message,
+        variant: "destructive",
+      });
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <Sidebar activeItem="opportunities" userName="Name" />
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-8">
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">Loading opportunities...</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <Sidebar activeItem="opportunities" userName="Name" />
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-8">
+            <div className="text-center py-12">
+              <p className="text-red-500 text-lg">Error: {error}</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
