@@ -4,6 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import InfluencerDashboard from "./pages/InfluencerDashboard";
 import OpportunitiesPage from "./pages/OpportunitiesPage";
@@ -19,15 +21,45 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/dashboard" element={<InfluencerDashboard />} />
-          <Route path="/brand-dashboard" element={<BrandDashboard />} />
-          <Route path="/opportunities" element={<OpportunitiesPage />} />
-          <Route path="/campaigns" element={<CampaignsPage />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute requiredUserType="Influencer">
+                  <InfluencerDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/brand-dashboard" 
+              element={
+                <ProtectedRoute>
+                  <BrandDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/opportunities" 
+              element={
+                <ProtectedRoute>
+                  <OpportunitiesPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/campaigns" 
+              element={
+                <ProtectedRoute>
+                  <CampaignsPage />
+                </ProtectedRoute>
+              } 
+            />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

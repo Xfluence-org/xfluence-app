@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Facebook, Mail, Apple } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 const AuthFlow = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -14,6 +16,10 @@ const AuthFlow = () => {
     password: '',
     confirmPassword: ''
   });
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { signUp, signIn } = useAuth();
+  const { toast } = useToast();
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -30,10 +36,75 @@ const AuthFlow = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Redirect directly to influencer dashboard
-    window.location.href = '/dashboard';
+    setIsLoading(true);
+
+    try {
+      if (isLogin) {
+        const { error } = await signIn(formData.email, formData.password);
+        
+        if (error) {
+          toast({
+            title: "Login Failed",
+            description: error.message || "Failed to login. Please try again.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Login Successful",
+            description: "Welcome back!"
+          });
+        }
+      } else {
+        // Validation for signup
+        if (!formData.type || !formData.name || !formData.email || !formData.password) {
+          toast({
+            title: "Missing Information",
+            description: "Please fill in all required fields.",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        if (formData.password !== formData.confirmPassword) {
+          toast({
+            title: "Password Mismatch",
+            description: "Passwords do not match.",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        const { error } = await signUp(
+          formData.email, 
+          formData.password, 
+          formData.type as 'Agency' | 'Brand' | 'Influencer',
+          formData.name
+        );
+
+        if (error) {
+          toast({
+            title: "Registration Failed",
+            description: error.message || "Failed to create account. Please try again.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Registration Successful",
+            description: "Welcome to Xfluence! You have been logged in."
+          });
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -63,11 +134,12 @@ const AuthFlow = () => {
                     <Label htmlFor="type" className="text-sm font-medium text-[#6c757d]">Type</Label>
                     <Select value={formData.type} onValueChange={(value) => handleInputChange('type', value)}>
                       <SelectTrigger className="w-full h-12 bg-[#f8f9fa] border border-[#e9ecef] rounded-lg">
-                        <SelectValue placeholder="Type" className="text-[#6c757d]" />
+                        <SelectValue placeholder="Select your type" className="text-[#6c757d]" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="influencer">Influencer</SelectItem>
-                        <SelectItem value="agency">Agency/Brand</SelectItem>
+                        <SelectItem value="Influencer">Influencer</SelectItem>
+                        <SelectItem value="Agency">Agency</SelectItem>
+                        <SelectItem value="Brand">Brand</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -138,13 +210,14 @@ const AuthFlow = () => {
 
               <Button 
                 type="submit" 
+                disabled={isLoading}
                 className={`w-full h-12 rounded-full font-bold text-base text-white transition-all duration-200 ${
                   isLogin 
                     ? 'bg-[#1DDCD3] hover:bg-[#00D4C7]' 
                     : 'bg-[#9d4edd] hover:bg-[#a855f7]'
-                }`}
+                } disabled:opacity-50`}
               >
-                {isLogin ? 'Login' : 'Register'}
+                {isLoading ? (isLogin ? 'Logging in...' : 'Creating Account...') : (isLogin ? 'Login' : 'Register')}
               </Button>
             </form>
 
@@ -285,11 +358,12 @@ const AuthFlow = () => {
               <>
                 <Select value={formData.type} onValueChange={(value) => handleInputChange('type', value)}>
                   <SelectTrigger className="w-full h-12 bg-[#f8f9fa] border border-[#e9ecef]">
-                    <SelectValue placeholder="Type" />
+                    <SelectValue placeholder="Select your type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="influencer">Influencer</SelectItem>
-                    <SelectItem value="agency">Agency/Brand</SelectItem>
+                    <SelectItem value="Influencer">Influencer</SelectItem>
+                    <SelectItem value="Agency">Agency</SelectItem>
+                    <SelectItem value="Brand">Brand</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -331,13 +405,14 @@ const AuthFlow = () => {
 
             <Button 
               type="submit" 
+              disabled={isLoading}
               className={`w-full h-12 text-white rounded-full ${
                 isLogin 
                   ? 'bg-[#1DDCD3] hover:bg-[#00D4C7]' 
                   : 'bg-[#9d4edd] hover:bg-[#a855f7]'
-              }`}
+              } disabled:opacity-50`}
             >
-              {isLogin ? 'Login' : 'Register'}
+              {isLoading ? (isLogin ? 'Logging in...' : 'Creating Account...') : (isLogin ? 'Login' : 'Register')}
             </Button>
           </form>
 
