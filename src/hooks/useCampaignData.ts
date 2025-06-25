@@ -28,15 +28,6 @@ export const useCampaignData = () => {
             brands (
               name
             )
-          ),
-          campaign_tasks (
-            id,
-            task_type,
-            title,
-            status,
-            progress,
-            next_deadline,
-            deliverable_count
           )
         `)
         .eq('influencer_id', '46ec4c99-d347-4c75-a0bb-5c409ed6c8ab'); // Using test user ID
@@ -48,10 +39,42 @@ export const useCampaignData = () => {
 
       console.log('Raw campaign participants data:', campaignParticipants);
 
+      if (!campaignParticipants || campaignParticipants.length === 0) {
+        console.log('No campaign participants found');
+        return [];
+      }
+
+      // Get all tasks for these campaigns
+      const campaignIds = campaignParticipants
+        .map(p => p.campaigns?.id)
+        .filter(Boolean);
+
+      const { data: campaignTasks, error: tasksError } = await supabase
+        .from('campaign_tasks')
+        .select(`
+          id,
+          campaign_id,
+          task_type,
+          title,
+          status,
+          progress,
+          next_deadline,
+          deliverable_count
+        `)
+        .in('campaign_id', campaignIds)
+        .eq('influencer_id', '46ec4c99-d347-4c75-a0bb-5c409ed6c8ab');
+
+      if (tasksError) {
+        console.error('Error fetching campaign tasks:', tasksError);
+        throw tasksError;
+      }
+
+      console.log('Campaign tasks:', campaignTasks);
+
       // Transform data to match DetailedCampaign interface
-      const campaigns: DetailedCampaign[] = campaignParticipants?.map(participant => {
+      const campaigns: DetailedCampaign[] = campaignParticipants.map(participant => {
         const campaign = participant.campaigns;
-        const tasks = participant.campaign_tasks || [];
+        const tasks = campaignTasks?.filter(task => task.campaign_id === campaign?.id) || [];
         const requirements = campaign?.requirements as any || {};
         
         // Calculate overall progress based on task progress
@@ -93,7 +116,7 @@ export const useCampaignData = () => {
             nextDeadline: task.next_deadline ? formatDate(task.next_deadline) : 'TBD'
           }))
         };
-      }) || [];
+      }).filter(campaign => campaign.id); // Filter out campaigns with no ID
 
       console.log('Transformed campaigns:', campaigns);
       return campaigns;
