@@ -10,8 +10,9 @@ export interface Campaign {
     stories?: number;
     reels?: number;
   };
-  status: 'invitation' | 'active' | 'completed';
+  status: 'invited' | 'accepted' | 'active' | 'completed' | 'declined';
   progress?: number;
   workflow?: string[];
   currentStep?: number;
+  currentStage?: string;
 }

@@ -15,7 +15,7 @@ interface Campaign {
     reels?: number;
   };
   progress?: number;
-  status: string;
+  status: 'invited' | 'accepted' | 'active' | 'completed' | 'declined';
   currentStage?: string;
 }
 
@@ -74,7 +74,7 @@ export const useDashboardData = () => {
           reels?: number;
         },
         progress: participation.progress,
-        status: participation.status,
+        status: participation.status as 'invited' | 'accepted' | 'active' | 'completed' | 'declined',
         currentStage: participation.current_stage
       })) || [];
 
