@@ -225,7 +225,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_opportunities: {
+        Args: {
+          search_query?: string
+          category_filter?: string
+          min_compensation?: number
+          max_compensation?: number
+          platform_filter?: string
+        }
+        Returns: {
+          id: string
+          title: string
+          brand_name: string
+          description: string
+          category: string
+          compensation_min: number
+          compensation_max: number
+          requirements: Json
+          created_at: string
+          due_date: string
+          application_deadline: string
+          has_applied: boolean
+        }[]
+      }
     }
     Enums: {
       user_type: "Agency" | "Brand" | "Influencer"

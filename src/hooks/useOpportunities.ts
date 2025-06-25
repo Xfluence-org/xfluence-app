@@ -8,63 +8,53 @@ export const useOpportunities = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchOpportunities = async () => {
+  const fetchOpportunities = async (searchQuery?: string) => {
     try {
       setLoading(true);
       setError(null);
 
-      console.log('Fetching opportunities from database...');
+      console.log('Fetching opportunities using database function...');
 
-      const { data: campaigns, error: campaignsError } = await supabase
-        .from('campaigns')
-        .select(`
-          id,
-          title,
-          description,
-          category,
-          compensation_min,
-          compensation_max,
-          requirements,
-          created_at,
-          application_deadline,
-          brands (
-            name
-          )
-        `)
-        .eq('is_public', true)
-        .eq('status', 'published')
-        .order('created_at', { ascending: false });
+      // Use the new database function for better performance
+      const { data: opportunitiesData, error: opportunitiesError } = await supabase
+        .rpc('get_opportunities', {
+          search_query: searchQuery || '',
+          category_filter: '',
+          min_compensation: 0,
+          max_compensation: 999999999,
+          platform_filter: ''
+        });
 
-      if (campaignsError) {
-        console.error('Error fetching opportunities:', campaignsError);
-        throw campaignsError;
+      if (opportunitiesError) {
+        console.error('Error fetching opportunities via function:', opportunitiesError);
+        throw opportunitiesError;
       }
 
-      console.log('Fetched campaigns:', campaigns);
+      console.log('Fetched opportunities via function:', opportunitiesData);
 
       // Transform database data to match Opportunity interface
-      const transformedOpportunities: Opportunity[] = campaigns?.map(campaign => {
-        const requirements = campaign.requirements as any || {};
+      const transformedOpportunities: Opportunity[] = opportunitiesData?.map(opportunity => {
+        const requirements = opportunity.requirements as any || {};
         
         return {
-          id: campaign.id,
-          title: campaign.title,
-          brand: campaign.brands?.name || 'Unknown Brand',
+          id: opportunity.id,
+          title: opportunity.title,
+          brand: opportunity.brand_name || 'Unknown Brand',
           compensation: {
-            min: campaign.compensation_min ? Math.floor(campaign.compensation_min / 100) : undefined,
-            max: campaign.compensation_max ? Math.floor(campaign.compensation_max / 100) : 0,
-            type: campaign.compensation_min ? 'range' : 'fixed'
+            min: opportunity.compensation_min ? Math.floor(opportunity.compensation_min / 100) : undefined,
+            max: opportunity.compensation_max ? Math.floor(opportunity.compensation_max / 100) : 0,
+            type: opportunity.compensation_min ? 'range' : 'fixed'
           },
-          category: campaign.category ? [campaign.category] : ['General'],
+          category: opportunity.category ? [opportunity.category] : ['General'],
           platforms: requirements.platforms || ['Instagram', 'TikTok'],
           deliverables: {
             posts: requirements.posts || 1,
             stories: requirements.stories || 0,
             reels: requirements.reels || 0
           },
-          postedAt: campaign.created_at,
-          description: campaign.description || undefined,
-          applicationDeadline: campaign.application_deadline || undefined
+          postedAt: opportunity.created_at,
+          description: opportunity.description || undefined,
+          applicationDeadline: opportunity.application_deadline || undefined
         };
       }) || [];
 
@@ -120,74 +110,8 @@ export const useOpportunities = () => {
   };
 
   const searchOpportunities = async (query: string) => {
-    try {
-      console.log('Searching opportunities with query:', query);
-      
-      if (!query.trim()) {
-        await fetchOpportunities();
-        return;
-      }
-
-      const { data: campaigns, error: campaignsError } = await supabase
-        .from('campaigns')
-        .select(`
-          id,
-          title,
-          description,
-          category,
-          compensation_min,
-          compensation_max,
-          requirements,
-          created_at,
-          application_deadline,
-          brands (
-            name
-          )
-        `)
-        .eq('is_public', true)
-        .eq('status', 'published')
-        .textSearch('title', query, { type: 'websearch' })
-        .order('created_at', { ascending: false });
-
-      if (campaignsError) {
-        console.error('Error searching opportunities:', campaignsError);
-        // Fallback to basic filtering
-        await fetchOpportunities();
-        return;
-      }
-
-      // Transform results
-      const transformedResults: Opportunity[] = campaigns?.map(campaign => {
-        const requirements = campaign.requirements as any || {};
-        
-        return {
-          id: campaign.id,
-          title: campaign.title,
-          brand: campaign.brands?.name || 'Unknown Brand',
-          compensation: {
-            min: campaign.compensation_min ? Math.floor(campaign.compensation_min / 100) : undefined,
-            max: campaign.compensation_max ? Math.floor(campaign.compensation_max / 100) : 0,
-            type: campaign.compensation_min ? 'range' : 'fixed'
-          },
-          category: campaign.category ? [campaign.category] : ['General'],
-          platforms: requirements.platforms || ['Instagram', 'TikTok'],
-          deliverables: {
-            posts: requirements.posts || 1,
-            stories: requirements.stories || 0,
-            reels: requirements.reels || 0
-          },
-          postedAt: campaign.created_at,
-          description: campaign.description || undefined,
-          applicationDeadline: campaign.application_deadline || undefined
-        };
-      }) || [];
-
-      setOpportunities(transformedResults);
-    } catch (err) {
-      console.error('Error in searchOpportunities:', err);
-      // Fallback to normal fetch
-      await fetchOpportunities();
-    }
+    console.log('Searching opportunities with query:', query);
+    await fetchOpportunities(query);
   };
 
   useEffect(() => {
@@ -200,6 +124,6 @@ export const useOpportunities = () => {
     error,
     applyToOpportunity,
     searchOpportunities,
-    refetch: fetchOpportunities
+    refetch: () => fetchOpportunities()
   };
 };
