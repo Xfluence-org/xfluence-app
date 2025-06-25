@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -84,12 +83,13 @@ export const useDashboardData = () => {
       console.log('Transformed data:', transformedData);
 
       // Split into invitations and active campaigns
+      // Note: Keeping "invited" status as invitations for the dashboard
       const invitationsData = transformedData.filter(campaign => 
         campaign.status === 'invited'
       );
       
       const activeCampaignsData = transformedData.filter(campaign => 
-        campaign.status === 'accepted' || campaign.status === 'active'
+        campaign.status === 'accepted' || campaign.status === 'active' || campaign.status === 'completed'
       );
 
       console.log('Invitations:', invitationsData);

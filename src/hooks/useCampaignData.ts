@@ -96,11 +96,25 @@ export const useCampaignData = () => {
           });
         };
 
+        // Map database status to display status
+        const getDisplayStatus = (dbStatus: string): 'invited' | 'active' | 'completed' | 'pending' => {
+          switch (dbStatus) {
+            case 'invited':
+              return 'active'; // Show invited campaigns as active in the UI
+            case 'completed':
+              return 'completed';
+            case 'accepted':
+              return 'active';
+            default:
+              return 'pending';
+          }
+        };
+
         return {
           id: campaign?.id || '',
           title: campaign?.title || 'Untitled Campaign',
           brand: campaign?.brands?.name || 'Unknown Brand',
-          status: participant.status as 'invited' | 'active' | 'completed' | 'pending',
+          status: getDisplayStatus(participant.status),
           taskCount: tasks.length,
           dueDate: formatDate(campaign?.due_date),
           platforms: requirements.platforms || ['Instagram', 'TikTok'],
