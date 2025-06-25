@@ -62,8 +62,10 @@ export const useDashboardData = () => {
 
       console.log('Fetched participations:', participations);
 
-      // Transform data to match component expectations
-      const transformedData = participations?.map(participation => ({
+      // Transform data to match component expectations, filtering out null campaigns
+      const transformedData = participations?.filter(participation => 
+        participation.campaigns !== null
+      ).map(participation => ({
         id: participation.campaigns.id,
         brand: participation.campaigns.brands.name,
         title: participation.campaigns.title,
