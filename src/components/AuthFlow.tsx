@@ -32,8 +32,8 @@ const AuthFlow = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // For now, just redirect to dashboard after form submission
-    window.location.href = '/dashboard';
+    // Redirect to dashboard selection instead of directly to influencer dashboard
+    window.location.href = '/dashboard-selection';
   };
 
   return (
