@@ -1,5 +1,5 @@
-
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useToast } from '@/hooks/use-toast';
@@ -10,6 +10,7 @@ import CampaignCard from '@/components/dashboard/CampaignCard';
 const InfluencerDashboard = () => {
   const { profile } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { 
     invitations, 
     activeCampaigns, 
@@ -18,6 +19,11 @@ const InfluencerDashboard = () => {
     acceptInvitation, 
     declineInvitation 
   } = useDashboardData();
+
+  const handleCampaignClick = (campaignId: string) => {
+    // Navigate to campaigns page with active tab
+    navigate('/campaigns?tab=Active');
+  };
 
   const handleAcceptInvitation = async (campaignId: string) => {
     const result = await acceptInvitation(campaignId);
@@ -133,6 +139,7 @@ const InfluencerDashboard = () => {
                   <CampaignCard
                     key={campaign.id}
                     campaign={campaign}
+                    onClick={handleCampaignClick}
                   />
                 ))}
               </div>

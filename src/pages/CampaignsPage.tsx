@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Sidebar from '@/components/dashboard/Sidebar';
 import TabNavigation from '@/components/campaigns/TabNavigation';
 import CampaignSearch from '@/components/campaigns/CampaignSearch';
@@ -9,9 +10,18 @@ import { useTaskDetail } from '@/hooks/useTaskDetail';
 import { useCampaignData } from '@/hooks/useCampaignData';
 
 const CampaignsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<CampaignTab>('Active');
+  const [searchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get('tab') as CampaignTab;
+  const [activeTab, setActiveTab] = useState<CampaignTab>(tabFromUrl || 'Active');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+
+  // Update active tab when URL changes
+  useEffect(() => {
+    if (tabFromUrl && ['Active', 'Completed', 'Requests'].includes(tabFromUrl)) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [tabFromUrl]);
 
   const { data: campaigns, isLoading: loading, error } = useCampaignData();
 

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ProgressBar from './ProgressBar';
 
@@ -20,14 +19,18 @@ interface Campaign {
 
 interface CampaignCardProps {
   campaign: Campaign;
+  onClick?: (campaignId: string) => void;
 }
 
-const CampaignCard: React.FC<CampaignCardProps> = ({ campaign }) => {
+const CampaignCard: React.FC<CampaignCardProps> = ({ campaign, onClick }) => {
   const workflowSteps = ['Content Draft', 'Brand Review', 'Post Content', 'Submit report'];
   const currentStep = Math.floor((campaign.progress || 0) / 25);
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-lg transition-all duration-200">
+    <div 
+      className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer" 
+      onClick={() => onClick?.(campaign.id)}
+    >
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-xl font-bold text-[#1a1f2e] mb-1">
