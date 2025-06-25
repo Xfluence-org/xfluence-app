@@ -28,7 +28,6 @@ export const useDashboardData = () => {
 
   const fetchDashboardData = async () => {
     if (!user) {
-      console.log('No user found, setting loading to false');
       setLoading(false);
       return;
     }
@@ -36,7 +35,6 @@ export const useDashboardData = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('Fetching dashboard data for user:', user.id);
 
       // Fetch campaign participations with campaign and brand data
       const { data: participations, error: participationsError } = await supabase
@@ -60,33 +58,25 @@ export const useDashboardData = () => {
         .eq('influencer_id', user.id);
 
       if (participationsError) {
-        console.error('Error fetching participations:', participationsError);
         throw participationsError;
       }
 
-      console.log('Raw participations data:', participations);
-
       // Transform data to match component expectations
-      const transformedData = participations?.map(participation => {
-        console.log('Processing participation:', participation);
-        return {
-          id: participation.campaigns.id,
-          brand: participation.campaigns.brands.name,
-          title: participation.campaigns.title,
-          amount: Math.floor(participation.campaigns.amount / 100), // Convert cents to dollars
-          dueDate: new Date(participation.campaigns.due_date).toLocaleDateString('en-GB'),
-          requirements: participation.campaigns.requirements as {
-            posts?: number;
-            stories?: number;
-            reels?: number;
-          },
-          progress: participation.progress,
-          status: participation.status as 'invited' | 'accepted' | 'active' | 'completed' | 'declined',
-          currentStage: participation.current_stage
-        };
-      }) || [];
-
-      console.log('Transformed data:', transformedData);
+      const transformedData = participations?.map(participation => ({
+        id: participation.campaigns.id,
+        brand: participation.campaigns.brands.name,
+        title: participation.campaigns.title,
+        amount: Math.floor(participation.campaigns.amount / 100), // Convert cents to dollars
+        dueDate: new Date(participation.campaigns.due_date).toLocaleDateString('en-GB'),
+        requirements: participation.campaigns.requirements as {
+          posts?: number;
+          stories?: number;
+          reels?: number;
+        },
+        progress: participation.progress,
+        status: participation.status as 'invited' | 'accepted' | 'active' | 'completed' | 'declined',
+        currentStage: participation.current_stage
+      })) || [];
 
       // Split into invitations and active campaigns
       const invitationsData = transformedData.filter(campaign => 
@@ -96,9 +86,6 @@ export const useDashboardData = () => {
       const activeCampaignsData = transformedData.filter(campaign => 
         campaign.status === 'accepted' || campaign.status === 'active'
       );
-
-      console.log('Invitations:', invitationsData);
-      console.log('Active campaigns:', activeCampaignsData);
 
       setInvitations(invitationsData);
       setActiveCampaigns(activeCampaignsData);
@@ -118,7 +105,6 @@ export const useDashboardData = () => {
     if (!user) return { success: false, message: 'User not authenticated' };
 
     try {
-      console.log('Accepting invitation for campaign:', campaignId);
       const { error } = await supabase
         .from('campaign_participants')
         .update({ 
@@ -143,7 +129,6 @@ export const useDashboardData = () => {
     if (!user) return { success: false, message: 'User not authenticated' };
 
     try {
-      console.log('Declining invitation for campaign:', campaignId);
       const { error } = await supabase
         .from('campaign_participants')
         .update({ status: 'declined' })
