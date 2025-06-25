@@ -19,6 +19,11 @@ const InfluencerDashboard = () => {
     declineInvitation 
   } = useDashboardData();
 
+  console.log('Dashboard render - invitations:', invitations);
+  console.log('Dashboard render - activeCampaigns:', activeCampaigns);
+  console.log('Dashboard render - loading:', loading);
+  console.log('Dashboard render - error:', error);
+
   const handleAcceptInvitation = async (campaignId: string) => {
     const result = await acceptInvitation(campaignId);
     if (result.success) {
@@ -80,6 +85,13 @@ const InfluencerDashboard = () => {
             </h1>
             <p className="text-gray-600">
               Here's what's happening with your campaigns today.
+            </p>
+          </div>
+
+          {/* Debug Information */}
+          <div className="mb-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+            <p className="text-sm text-yellow-800">
+              Debug: Found {invitations.length} invitations and {activeCampaigns.length} active campaigns
             </p>
           </div>
 
