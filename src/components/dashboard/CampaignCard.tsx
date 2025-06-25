@@ -1,7 +1,22 @@
 
 import React from 'react';
-import { Campaign } from '@/types/dashboard';
 import ProgressBar from './ProgressBar';
+
+interface Campaign {
+  id: string;
+  brand: string;
+  title: string;
+  amount: number;
+  dueDate: string;
+  requirements: {
+    posts?: number;
+    stories?: number;
+    reels?: number;
+  };
+  progress?: number;
+  status: 'invited' | 'accepted' | 'active' | 'completed' | 'declined';
+  currentStage?: string;
+}
 
 interface CampaignCardProps {
   campaign: Campaign;
