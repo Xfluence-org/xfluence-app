@@ -199,6 +199,7 @@ export type Database = {
           due_date: string | null
           id: string
           is_public: boolean | null
+          llm_campaign: Json | null
           requirements: Json | null
           status: string | null
           target_engagement_rate: number | null
@@ -219,6 +220,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           is_public?: boolean | null
+          llm_campaign?: Json | null
           requirements?: Json | null
           status?: string | null
           target_engagement_rate?: number | null
@@ -239,6 +241,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           is_public?: boolean | null
+          llm_campaign?: Json | null
           requirements?: Json | null
           status?: string | null
           target_engagement_rate?: number | null
@@ -255,6 +258,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      instagram_accounts: {
+        Row: {
+          access_token: string | null
+          created_at: string | null
+          engagement_rate: number | null
+          followers_count: number | null
+          following_count: number | null
+          id: string
+          instagram_user_id: string
+          last_synced_at: string | null
+          media_count: number | null
+          updated_at: string | null
+          user_id: string
+          username: string
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string | null
+          engagement_rate?: number | null
+          followers_count?: number | null
+          following_count?: number | null
+          id?: string
+          instagram_user_id: string
+          last_synced_at?: string | null
+          media_count?: number | null
+          updated_at?: string | null
+          user_id: string
+          username: string
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string | null
+          engagement_rate?: number | null
+          followers_count?: number | null
+          following_count?: number | null
+          id?: string
+          instagram_user_id?: string
+          last_synced_at?: string | null
+          media_count?: number | null
+          updated_at?: string | null
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
