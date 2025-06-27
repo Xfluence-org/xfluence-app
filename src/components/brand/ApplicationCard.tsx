@@ -35,10 +35,10 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-4 hover:shadow-lg transition-all duration-200">
+    <div className="interactive-card p-5">
       <div className="flex items-start gap-4">
         {/* Profile Image */}
-        <div className="w-12 h-12 bg-gray-200 rounded-full flex-shrink-0 flex items-center justify-center">
+        <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex-shrink-0 flex items-center justify-center border border-white/10">
           {application.influencer.profileImage ? (
             <img 
               src={application.influencer.profileImage} 
@@ -46,7 +46,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               className="w-full h-full rounded-full object-cover"
             />
           ) : (
-            <span className="text-gray-500 font-semibold">
+            <span className="text-white font-semibold text-sm">
               {application.influencer.name.charAt(0)}
             </span>
           )}
@@ -56,63 +56,63 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
           {/* Header */}
           <div className="flex items-start justify-between mb-2">
             <div>
-              <h4 className="font-semibold text-[#1a1f2e] truncate">
+              <h4 className="font-semibold text-white truncate">
                 {application.influencer.name}
               </h4>
-              <p className="text-sm text-gray-600">@{application.influencer.handle}</p>
+              <p className="text-sm text-muted-foreground">@{application.influencer.handle}</p>
             </div>
-            <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
+            <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
               {formatTimeAgo(application.appliedAt)}
             </span>
           </div>
 
           {/* Campaign */}
-          <p className="text-sm text-gray-600 mb-3 truncate">
-            Applied to: {application.campaignTitle}
+          <p className="text-sm text-muted-foreground mb-3 truncate">
+            Applied to: <span className="text-white">{application.campaignTitle}</span>
           </p>
 
           {/* Stats */}
           <div className="grid grid-cols-2 gap-3 mb-3 text-sm">
-            <div>
-              <span className="text-gray-500">Followers:</span>
-              <span className="font-medium text-[#1a1f2e] ml-1">
+            <div className="bg-white/5 rounded-lg p-2">
+              <span className="text-muted-foreground block text-xs">Followers</span>
+              <span className="font-semibold text-white">
                 {formatFollowers(application.influencer.followers)}
               </span>
             </div>
-            <div>
-              <span className="text-gray-500">Engagement:</span>
-              <span className="font-medium text-[#1a1f2e] ml-1">
+            <div className="bg-white/5 rounded-lg p-2">
+              <span className="text-muted-foreground block text-xs">Engagement</span>
+              <span className="font-semibold text-white">
                 {application.engagementRate}%
               </span>
             </div>
-            <div>
-              <span className="text-gray-500">Avg Views:</span>
-              <span className="font-medium text-[#1a1f2e] ml-1">
+            <div className="bg-white/5 rounded-lg p-2">
+              <span className="text-muted-foreground block text-xs">Avg Views</span>
+              <span className="font-semibold text-white">
                 {application.averageViews >= 1000 
                   ? `${(application.averageViews / 1000).toFixed(1)}K` 
                   : application.averageViews}
               </span>
             </div>
-            <div>
-              <span className="text-gray-500">AI Score:</span>
-              <span className="font-medium text-[#1DDCD3] ml-1">
+            <div className="bg-white/5 rounded-lg p-2">
+              <span className="text-muted-foreground block text-xs">AI Score</span>
+              <span className="font-semibold text-gradient">
                 {application.aiScore}/100
               </span>
             </div>
           </div>
 
           {/* Niche Tags */}
-          <div className="flex flex-wrap gap-1 mb-3">
+          <div className="flex flex-wrap gap-1 mb-4">
             {application.niche.slice(0, 3).map((tag, index) => (
               <span 
                 key={index}
-                className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
+                className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full border border-primary/20"
               >
                 {tag}
               </span>
             ))}
             {application.niche.length > 3 && (
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-muted-foreground">
                 +{application.niche.length - 3} more
               </span>
             )}
@@ -122,19 +122,19 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
           <div className="flex gap-2">
             <button
               onClick={() => onViewProfile(application.id)}
-              className="flex-1 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 text-sm font-medium"
+              className="flex-1 px-3 py-2 border border-white/20 text-muted-foreground rounded-lg hover:bg-white/5 transition-all duration-200 text-sm font-medium"
             >
               View Profile
             </button>
             <button
               onClick={() => onReject(application.id)}
-              className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 text-sm font-medium"
+              className="px-3 py-2 border border-red-500/30 text-red-400 rounded-lg hover:bg-red-500/10 transition-all duration-200 text-sm font-medium"
             >
               Reject
             </button>
             <button
               onClick={() => onApprove(application.id)}
-              className="px-3 py-2 bg-[#1DDCD3] text-white rounded-lg hover:bg-[#00D4C7] transition-all duration-200 text-sm font-medium"
+              className="px-3 py-2 bg-gradient-to-r from-primary to-accent text-white rounded-lg hover:scale-105 transition-all duration-200 text-sm font-medium shadow-lg shadow-primary/25"
             >
               Approve
             </button>

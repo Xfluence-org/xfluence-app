@@ -24,7 +24,6 @@ const InfluencerDashboard = () => {
   } = useDashboardData();
 
   const handleCampaignClick = (campaignId: string) => {
-    // Navigate to campaigns page with active tab
     navigate('/campaigns?tab=Active');
   };
 
@@ -35,7 +34,6 @@ const InfluencerDashboard = () => {
         title: "Success",
         description: result.message,
       });
-      // Invalidate and refetch queries to update the UI
       queryClient.invalidateQueries({ queryKey: ['dashboard-invitations'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-active-campaigns'] });
     } else {
@@ -54,7 +52,6 @@ const InfluencerDashboard = () => {
         title: "Success",
         description: result.message,
       });
-      // Invalidate and refetch queries to update the UI
       queryClient.invalidateQueries({ queryKey: ['dashboard-invitations'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-active-campaigns'] });
     } else {
@@ -68,50 +65,57 @@ const InfluencerDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading dashboard...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-background/80">
+        <div className="glass-card p-8 text-center">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="text-lg text-white">Loading dashboard...</div>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg text-red-600">Error: {error}</div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-background/80">
+        <div className="glass-card p-8 text-center">
+          <div className="text-lg text-red-400">Error: {error}</div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-slate-900 flex">
       <Sidebar />
       
       <main className="flex-1 ml-64 p-8">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto fade-in">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-[#1a1f2e] mb-2">
-              Welcome back, {profile?.name || 'Influencer'}!
+          <div className="mb-12">
+            <h1 className="text-4xl font-bold text-white mb-3">
+              Welcome back, <span className="text-gradient">{profile?.name || 'Influencer'}</span>!
             </h1>
-            <p className="text-gray-600">
+            <p className="text-lg text-muted-foreground">
               Here's what's happening with your campaigns today.
             </p>
           </div>
 
           {/* Campaign Invitations */}
-          <section className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-[#1a1f2e]">Campaign Invitations</h2>
+          <section className="mb-16">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-bold text-white">Campaign Invitations</h2>
               {invitations.length > 0 && (
-                <span className="px-3 py-1 bg-[#1DDCD3] text-white rounded-full text-sm font-medium">
+                <span className="status-active">
                   {invitations.length} new
                 </span>
               )}
             </div>
             
             {invitations.length === 0 ? (
-              <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-                <p className="text-gray-500">No new campaign invitations at the moment.</p>
+              <div className="glass-card p-12 text-center">
+                <div className="text-6xl mb-4">📬</div>
+                <p className="text-lg text-muted-foreground">No new campaign invitations at the moment.</p>
+                <p className="text-sm text-muted-foreground mt-2">New opportunities will appear here when available.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -129,18 +133,20 @@ const InfluencerDashboard = () => {
 
           {/* Active Campaigns */}
           <section>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-[#1a1f2e]">Active Campaigns</h2>
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-bold text-white">Active Campaigns</h2>
               {activeCampaigns.length > 0 && (
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-muted-foreground bg-white/5 px-3 py-1 rounded-full">
                   {activeCampaigns.length} active
                 </span>
               )}
             </div>
             
             {activeCampaigns.length === 0 ? (
-              <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-                <p className="text-gray-500">No active campaigns. Accept an invitation to get started!</p>
+              <div className="glass-card p-12 text-center">
+                <div className="text-6xl mb-4">🚀</div>
+                <p className="text-lg text-muted-foreground">No active campaigns. Accept an invitation to get started!</p>
+                <p className="text-sm text-muted-foreground mt-2">Your active campaigns will be displayed here.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

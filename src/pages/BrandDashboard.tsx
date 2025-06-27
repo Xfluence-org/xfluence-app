@@ -12,7 +12,6 @@ const BrandDashboard: React.FC = () => {
   const { campaigns, metrics, loading, error } = useBrandDashboardData();
   const { data: applicationsData = [], isLoading: applicationsLoading, error: applicationsError } = useBrandApplications(10);
 
-  // Transform applications data to match component expectations
   const recentApplications: InfluencerApplication[] = applicationsData.map((app: any) => ({
     id: app.application_id,
     campaignId: app.campaign_id,
@@ -53,12 +52,15 @@ const BrandDashboard: React.FC = () => {
 
   if (loading || applicationsLoading) {
     return (
-      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="flex h-screen bg-gradient-to-br from-background via-background to-slate-900">
         <BrandSidebar userName="Brand Team" />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">Loading dashboard...</p>
+              <div className="glass-card p-8 max-w-md mx-auto">
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-muted-foreground text-lg">Loading dashboard...</p>
+              </div>
             </div>
           </div>
         </main>
@@ -68,13 +70,15 @@ const BrandDashboard: React.FC = () => {
 
   if (error || applicationsError) {
     return (
-      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="flex h-screen bg-gradient-to-br from-background via-background to-slate-900">
         <BrandSidebar userName="Brand Team" />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
-              <p className="text-red-500 text-lg">Error loading dashboard</p>
-              <p className="text-gray-500 mt-2">{error || applicationsError?.message}</p>
+              <div className="glass-card p-8 max-w-md mx-auto">
+                <p className="text-red-400 text-lg">Error loading dashboard</p>
+                <p className="text-muted-foreground mt-2">{error || applicationsError?.message}</p>
+              </div>
             </div>
           </div>
         </main>
@@ -83,20 +87,22 @@ const BrandDashboard: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="flex h-screen bg-gradient-to-br from-background via-background to-slate-900">
       <BrandSidebar userName="Brand Team" />
       
       <main className="flex-1 overflow-y-auto">
-        <div className="p-8">
-          <header className="mb-8">
-            <h1 className="text-3xl font-bold text-[#1a1f2e] mb-2">Dashboard</h1>
-            <p className="text-gray-600">Welcome back! Here's an overview of your campaigns.</p>
+        <div className="p-8 fade-in">
+          <header className="mb-12">
+            <h1 className="text-4xl font-bold text-white mb-3">
+              <span className="text-gradient">Dashboard</span>
+            </h1>
+            <p className="text-lg text-muted-foreground">Welcome back! Here's an overview of your campaigns.</p>
           </header>
 
           {/* Metrics Overview */}
           <section className="mb-12">
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
-              <h2 className="text-2xl font-bold text-[#1a1f2e] mb-6">Overview</h2>
+            <div className="glass-card p-8">
+              <h2 className="text-2xl font-bold text-white mb-8">Overview</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <MetricsCard
                   title="Active Campaigns"
@@ -131,8 +137,8 @@ const BrandDashboard: React.FC = () => {
 
           {/* Active Campaigns */}
           <section className="mb-12">
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
-              <h2 className="text-2xl font-bold text-[#1a1f2e] mb-6">Active Campaigns</h2>
+            <div className="glass-card p-8">
+              <h2 className="text-2xl font-bold text-white mb-8">Active Campaigns</h2>
               {campaigns.length > 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {campaigns.map((campaign) => (
@@ -144,8 +150,9 @@ const BrandDashboard: React.FC = () => {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No campaigns found. Create your first campaign to get started!</p>
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">🚀</div>
+                  <p className="text-lg text-muted-foreground">No campaigns found. Create your first campaign to get started!</p>
                 </div>
               )}
             </div>
@@ -153,10 +160,10 @@ const BrandDashboard: React.FC = () => {
 
           {/* Recent Applications */}
           <section>
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-[#1a1f2e]">Recent Applications</h2>
-                <button className="text-gray-600 hover:text-[#1DDCD3] font-medium transition-colors duration-200">
+            <div className="glass-card p-8">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-2xl font-bold text-white">Recent Applications</h2>
+                <button className="text-muted-foreground hover:text-primary font-medium transition-colors duration-200">
                   View All →
                 </button>
               </div>
@@ -173,8 +180,9 @@ const BrandDashboard: React.FC = () => {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No recent applications found.</p>
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">📋</div>
+                  <p className="text-lg text-muted-foreground">No recent applications found.</p>
                 </div>
               )}
             </div>

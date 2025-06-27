@@ -17,14 +17,12 @@ const CampaignsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
-  // Update active tab when URL changes
   useEffect(() => {
     if (tabFromUrl && ['Active', 'Completed', 'Requests'].includes(tabFromUrl)) {
       setActiveTab(tabFromUrl);
     }
   }, [tabFromUrl]);
 
-  // Use the updated hook with tab filtering
   const { data: campaigns, isLoading: loading, error } = useCampaignData(activeTab);
 
   const {
@@ -37,13 +35,11 @@ const CampaignsPage: React.FC = () => {
     deleteFile
   } = useTaskDetail(selectedTaskId);
 
-  // Filter campaigns based on search query only (tab filtering is now done server-side)
   const filteredCampaigns = useMemo(() => {
     if (!campaigns) return [];
     
     let filtered = campaigns;
 
-    // Filter by search query only
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(campaign =>
@@ -103,12 +99,15 @@ const CampaignsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="flex h-screen bg-gradient-to-br from-background via-background to-slate-900">
         <Sidebar activeItem="campaigns" userName="Name" />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">Loading campaigns...</p>
+              <div className="glass-card p-8 max-w-md mx-auto">
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-muted-foreground text-lg">Loading campaigns...</p>
+              </div>
             </div>
           </div>
         </main>
@@ -118,12 +117,14 @@ const CampaignsPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="flex h-screen bg-gradient-to-br from-background via-background to-slate-900">
         <Sidebar activeItem="campaigns" userName="Name" />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
-              <p className="text-red-500 text-lg">Error loading campaigns. Please try again.</p>
+              <div className="glass-card p-8 max-w-md mx-auto">
+                <p className="text-red-400 text-lg">Error loading campaigns. Please try again.</p>
+              </div>
             </div>
           </div>
         </main>
@@ -132,28 +133,31 @@ const CampaignsPage: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="flex h-screen bg-gradient-to-br from-background via-background to-slate-900">
       <Sidebar activeItem="campaigns" userName="Name" />
       
       <main className="flex-1 overflow-y-auto">
-        <div className="p-8">
+        <div className="p-8 fade-in">
           <header className="mb-8">
-            <h1 className="text-3xl font-bold text-[#1a1f2e] mb-2">Campaigns</h1>
+            <h1 className="text-4xl font-bold text-white mb-2">
+              <span className="text-gradient">Campaigns</span>
+            </h1>
+            <p className="text-muted-foreground">Manage and track your campaign progress</p>
           </header>
 
           <section>
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
-              <h2 className="text-2xl font-bold text-[#1a1f2e] mb-6">My Campaigns</h2>
+            <div className="glass-card p-8">
+              <h2 className="text-2xl font-bold text-white mb-6">My Campaigns</h2>
               
               <CampaignSearch
                 searchQuery={searchQuery}
-                onSearchChange={handleSearchChange}
-                onFilterClick={handleFilterClick}
+                onSearchChange={setSearchQuery}
+                onFilterClick={() => console.log('Filter clicked')}
               />
               
               <TabNavigation 
                 activeTab={activeTab} 
-                onTabChange={handleTabChange} 
+                onTabChange={setActiveTab} 
               />
 
               <div className="space-y-6">
@@ -162,15 +166,20 @@ const CampaignsPage: React.FC = () => {
                     <DetailedCampaignCard
                       key={campaign.id}
                       campaign={campaign}
-                      onViewTaskDetails={handleViewTaskDetails}
+                      onViewTaskDetails={setSelectedTaskId}
                     />
                   ))
                 ) : (
-                  <div className="text-center py-12">
-                    <p className="text-gray-500 text-lg">
+                  <div className="text-center py-16">
+                    <div className="text-6xl mb-4">
+                      {activeTab === 'Active' && '🚀'}
+                      {activeTab === 'Completed' && '✅'}
+                      {activeTab === 'Requests' && '📨'}
+                    </div>
+                    <p className="text-lg text-muted-foreground mb-2">
                       No campaigns found in the {activeTab.toLowerCase()} section.
                     </p>
-                    <p className="text-gray-400 mt-2">
+                    <p className="text-sm text-muted-foreground">
                       {activeTab === 'Active' && "Start applying to opportunities to see active campaigns here."}
                       {activeTab === 'Completed' && "Completed campaigns will appear here once you finish them."}
                       {activeTab === 'Requests' && "Campaign invitations will appear here."}
@@ -185,7 +194,7 @@ const CampaignsPage: React.FC = () => {
 
       <TaskDetailModal
         isOpen={!!selectedTaskId}
-        onClose={handleCloseTaskDetail}
+        onClose={() => setSelectedTaskId(null)}
         taskDetail={taskDetail}
         onSubmitForReview={handleSubmitForReview}
         onDownloadBrief={handleDownloadBrief}
