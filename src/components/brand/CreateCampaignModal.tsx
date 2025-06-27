@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -75,7 +76,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
   const form = useForm<CampaignFormData>({
     resolver: zodResolver(campaignFormSchema),
     defaultValues: {
-      goals: 'Drive brand awareness and engagement.',
+      goals: '',
       campaign_description: '',
       categories: [],
       total_influencers: 5,
@@ -99,21 +100,24 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
         created_at: new Date().toISOString(),
       };
       
+      // Prepare search parameters for the edge function
+      const searchParams = {
+        goals: data.goals,
+        campaign_description: data.campaign_description,
+        categories: data.categories,
+        total_influencers: data.total_influencers,
+        follower_tiers: data.follower_tiers,
+        content_types: data.content_types,
+        budget_min: data.budget_min,
+        budget_max: data.budget_max,
+        platform: 'Instagram'
+      };
+      
       // Call the campaign planner edge function
-      console.log('Calling campaign_planner edge function...');
+      console.log('Calling campaign_planner edge function with params:', searchParams);
       const { data: plannerResponse, error: plannerError } = await supabase.functions.invoke('campaign-planner', {
         body: { 
-          searchParams: {
-            goals: data.goals,
-            campaign_description: data.campaign_description,
-            categories: data.categories,
-            total_influencers: data.total_influencers,
-            follower_tiers: data.follower_tiers,
-            content_types: data.content_types,
-            budget_min: data.budget_min,
-            budget_max: data.budget_max,
-            platform: 'Instagram'
-          },
+          searchParams: searchParams,
           campaignId: campaignData.id 
         }
       });
@@ -129,12 +133,19 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
       }
 
       console.log('Campaign planner response:', plannerResponse);
+      
+      // Set the results and move to results step
       setCampaignResults(plannerResponse);
       setCurrentStep('results');
       
       // Store campaign data in localStorage for now
       localStorage.setItem('temp_campaign', JSON.stringify(campaignData));
       localStorage.setItem('temp_campaign_results', JSON.stringify(plannerResponse));
+      
+      toast({
+        title: "Success",
+        description: "Campaign strategy generated successfully!",
+      });
       
     } catch (error) {
       console.error('Error in campaign creation:', error);
@@ -218,11 +229,6 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                         placeholder="Describe your campaign goals..."
                         className="min-h-[80px]"
                         {...field}
-                        onFocus={(e) => {
-                          if (e.target.value === 'Drive brand awareness and engagement.') {
-                            field.onChange('');
-                          }
-                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -476,7 +482,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                       Generating Strategy...
                     </>
                   ) : (
-                    'Generate Campaign Strategy'
+                    'Next'
                   )}
                 </Button>
               </div>
