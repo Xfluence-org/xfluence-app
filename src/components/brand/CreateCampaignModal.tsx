@@ -37,6 +37,7 @@ const campaignFormSchema = z.object({
   content_types: z.array(z.string()).min(1, 'At least one content type is required'),
   budget_min: z.number().min(0, 'Minimum budget must be 0 or greater'),
   budget_max: z.number().min(1, 'Maximum budget must be greater than 0'),
+  campaign_validity_days: z.number().min(1, 'Campaign must be valid for at least 1 day').max(365, 'Campaign cannot exceed 365 days'),
 });
 
 type CampaignFormData = z.infer<typeof campaignFormSchema>;
@@ -72,8 +73,21 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
       content_types: [],
       budget_min: 0,
       budget_max: 1000,
+      campaign_validity_days: 30,
     },
   });
+
+  // Calculate due date based on validity days
+  const calculateDueDate = (days: number) => {
+    const currentDate = new Date();
+    const dueDate = new Date(currentDate);
+    dueDate.setDate(currentDate.getDate() + days);
+    return dueDate;
+  };
+
+  // Watch the campaign_validity_days field to show preview
+  const validityDays = form.watch('campaign_validity_days');
+  const previewDueDate = validityDays ? calculateDueDate(validityDays) : null;
 
   const onSubmit = async (data: CampaignFormData) => {
     setIsSubmitting(true);
@@ -144,11 +158,15 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
         return;
       }
 
-      // Create temporary campaign data with brand_id
+      // Calculate due date
+      const dueDate = calculateDueDate(data.campaign_validity_days);
+
+      // Create temporary campaign data with brand_id and due_date
       const campaignData = {
         id: Date.now(),
         ...data,
         brand_id: brandId,
+        due_date: dueDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
         platform: 'Instagram',
         created_at: new Date().toISOString(),
       };
@@ -502,13 +520,6 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
               />
             </div>
 
-            <div className="space-y-4">
-              <div className="p-3 border rounded-md bg-gray-50">
-                <FormLabel className="text-sm font-medium text-gray-700">Platform</FormLabel>
-                <p className="text-sm text-gray-600 mt-1">Instagram (Beta)</p>
-              </div>
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
@@ -547,6 +558,46 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                   </FormItem>
                 )}
               />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="campaign_validity_days"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Campaign Validity (Days)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="365"
+                      placeholder="Enter number of days..."
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 30)}
+                    />
+                  </FormControl>
+                  {previewDueDate && (
+                    <p className="text-sm text-gray-600 mt-1">
+                      Campaign will end on: <span className="font-medium text-[#1a1f2e]">
+                        {previewDueDate.toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </span>
+                    </p>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="space-y-4">
+              <div className="p-3 border rounded-md bg-gray-50">
+                <FormLabel className="text-sm font-medium text-gray-700">Platform</FormLabel>
+                <p className="text-sm text-gray-600 mt-1">Instagram (Beta)</p>
+              </div>
             </div>
 
             <div className="flex justify-end space-x-4 pt-6">
