@@ -16,7 +16,7 @@ export const useCampaignDetail = (campaignId: string | null) => {
           id,
           title,
           description,
-          category,
+          categories,
           status,
           budget,
           amount,

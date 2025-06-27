@@ -12,7 +12,7 @@ interface BrandCampaignData {
   accepted: number;
   due_date: string;
   platforms: string[];
-  categories: string[]; // Updated to handle array
+  categories: string[];
   progress: number;
 }
 
@@ -53,16 +53,16 @@ export const useBrandDashboardData = () => {
     id: campaign.campaign_id,
     title: campaign.campaign_title,
     status: campaign.campaign_status as 'active' | 'draft' | 'completed' | 'paused',
-    budget: campaign.budget || 0, // Budget is now already in dollars from the database
-    spent: campaign.spent || 0, // Spent is already in dollars
+    budget: campaign.budget || 0,
+    spent: campaign.spent || 0,
     applicants: campaign.applicants,
     accepted: campaign.accepted,
     dueDate: campaign.due_date ? new Date(campaign.due_date).toLocaleDateString('en-GB') : 'TBD',
     platforms: campaign.platforms,
-    category: Array.isArray(campaign.categories) ? campaign.categories.join(', ') : campaign.categories || 'General', // Handle categories array
+    category: Array.isArray(campaign.categories) ? campaign.categories.join(', ') : 'General',
     progress: campaign.progress,
     performance: {
-      reach: Math.floor(Math.random() * 200000) + 50000, // Mock data for now
+      reach: Math.floor(Math.random() * 200000) + 50000,
       engagement: Math.random() * 2 + 3,
       clicks: Math.floor(Math.random() * 1000) + 500
     }
