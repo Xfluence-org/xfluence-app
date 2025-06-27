@@ -1,9 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import BrandSidebar from '@/components/brand/BrandSidebar';
 import MetricsCard from '@/components/brand/MetricsCard';
 import CampaignOverviewCard from '@/components/brand/CampaignOverviewCard';
 import ApplicationCard from '@/components/brand/ApplicationCard';
+import ApplicationsTab from '@/components/brand/ApplicationsTab';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InfluencerApplication } from '@/types/brandDashboard';
 import { useBrandDashboardData } from '@/hooks/useBrandDashboardData';
 import { useBrandApplications } from '@/hooks/useBrandApplications';
@@ -11,6 +13,7 @@ import { useBrandApplications } from '@/hooks/useBrandApplications';
 const BrandDashboard: React.FC = () => {
   const { campaigns, metrics, loading, error } = useBrandDashboardData();
   const { data: applicationsData = [], isLoading: applicationsLoading, error: applicationsError } = useBrandApplications(10);
+  const [activeTab, setActiveTab] = useState('overview');
 
   // Transform applications data to match component expectations
   const recentApplications: InfluencerApplication[] = applicationsData.map((app: any) => ({
@@ -90,95 +93,115 @@ const BrandDashboard: React.FC = () => {
         <div className="p-8">
           <header className="mb-8">
             <h1 className="text-3xl font-bold text-[#1a1f2e] mb-2">Dashboard</h1>
-            <p className="text-gray-600">Welcome back! Here's an overview of your campaigns.</p>
+            <p className="text-gray-600">Welcome back! Here's an overview of your campaigns and applications.</p>
           </header>
 
-          {/* Metrics Overview */}
-          <section className="mb-12">
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
-              <h2 className="text-2xl font-bold text-[#1a1f2e] mb-6">Overview</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <MetricsCard
-                  title="Active Campaigns"
-                  value={metrics.activeCampaigns}
-                  subtitle={`${metrics.totalCampaigns} total campaigns`}
-                  trend={{ value: 12, isPositive: true }}
-                  icon="📱"
-                />
-                <MetricsCard
-                  title="Total Budget"
-                  value={`$${metrics.totalBudget.toLocaleString()}`}
-                  subtitle={`$${metrics.totalSpent.toLocaleString()} spent`}
-                  trend={{ value: 8, isPositive: true }}
-                  icon="💰"
-                />
-                <MetricsCard
-                  title="Pending Applications"
-                  value={recentApplications.length}
-                  subtitle="Awaiting review"
-                  icon="📝"
-                />
-                <MetricsCard
-                  title="Total Reach"
-                  value={`${(metrics.totalReach / 1000000).toFixed(1)}M`}
-                  subtitle={`${metrics.avgEngagementRate}% avg engagement`}
-                  trend={{ value: 15, isPositive: true }}
-                  icon="📈"
-                />
-              </div>
-            </div>
-          </section>
+          {/* Main Dashboard Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2 mb-8">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="applications">Applications</TabsTrigger>
+            </TabsList>
 
-          {/* Active Campaigns */}
-          <section className="mb-12">
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
-              <h2 className="text-2xl font-bold text-[#1a1f2e] mb-6">Active Campaigns</h2>
-              {campaigns.length > 0 ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {campaigns.map((campaign) => (
-                    <CampaignOverviewCard
-                      key={campaign.id}
-                      campaign={campaign}
-                      onViewDetails={handleViewCampaignDetails}
+            <TabsContent value="overview" className="space-y-12">
+              {/* Metrics Overview */}
+              <section>
+                <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
+                  <h2 className="text-2xl font-bold text-[#1a1f2e] mb-6">Overview</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <MetricsCard
+                      title="Active Campaigns"
+                      value={metrics.activeCampaigns}
+                      subtitle={`${metrics.totalCampaigns} total campaigns`}
+                      trend={{ value: 12, isPositive: true }}
+                      icon="📱"
                     />
-                  ))}
+                    <MetricsCard
+                      title="Total Budget"
+                      value={`$${metrics.totalBudget.toLocaleString()}`}
+                      subtitle={`$${metrics.totalSpent.toLocaleString()} spent`}
+                      trend={{ value: 8, isPositive: true }}
+                      icon="💰"
+                    />
+                    <MetricsCard
+                      title="Pending Applications"
+                      value={recentApplications.length}
+                      subtitle="Awaiting review"
+                      icon="📝"
+                    />
+                    <MetricsCard
+                      title="Total Reach"
+                      value={`${(metrics.totalReach / 1000000).toFixed(1)}M`}
+                      subtitle={`${metrics.avgEngagementRate}% avg engagement`}
+                      trend={{ value: 15, isPositive: true }}
+                      icon="📈"
+                    />
+                  </div>
                 </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No campaigns found. Create your first campaign to get started!</p>
-                </div>
-              )}
-            </div>
-          </section>
+              </section>
 
-          {/* Recent Applications */}
-          <section>
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-[#1a1f2e]">Recent Applications</h2>
-                <button className="text-gray-600 hover:text-[#1DDCD3] font-medium transition-colors duration-200">
-                  View All →
-                </button>
+              {/* Active Campaigns */}
+              <section>
+                <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
+                  <h2 className="text-2xl font-bold text-[#1a1f2e] mb-6">Active Campaigns</h2>
+                  {campaigns.length > 0 ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {campaigns.map((campaign) => (
+                        <CampaignOverviewCard
+                          key={campaign.id}
+                          campaign={campaign}
+                          onViewDetails={handleViewCampaignDetails}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">No campaigns found. Create your first campaign to get started!</p>
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              {/* Recent Applications */}
+              <section>
+                <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-bold text-[#1a1f2e]">Recent Applications</h2>
+                    <button 
+                      onClick={() => setActiveTab('applications')}
+                      className="text-gray-600 hover:text-[#1DDCD3] font-medium transition-colors duration-200"
+                    >
+                      View All →
+                    </button>
+                  </div>
+                  {recentApplications.length > 0 ? (
+                    <div className="space-y-4">
+                      {recentApplications.slice(0, 3).map((application) => (
+                        <ApplicationCard
+                          key={application.id}
+                          application={application}
+                          onApprove={handleApproveApplication}
+                          onReject={handleRejectApplication}
+                          onViewProfile={handleViewProfile}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">No recent applications found.</p>
+                    </div>
+                  )}
+                </div>
+              </section>
+            </TabsContent>
+
+            <TabsContent value="applications">
+              <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
+                <h2 className="text-2xl font-bold text-[#1a1f2e] mb-6">Applications Management</h2>
+                <ApplicationsTab />
               </div>
-              {recentApplications.length > 0 ? (
-                <div className="space-y-4">
-                  {recentApplications.map((application) => (
-                    <ApplicationCard
-                      key={application.id}
-                      application={application}
-                      onApprove={handleApproveApplication}
-                      onReject={handleRejectApplication}
-                      onViewProfile={handleViewProfile}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No recent applications found.</p>
-                </div>
-              )}
-            </div>
-          </section>
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
     </div>
