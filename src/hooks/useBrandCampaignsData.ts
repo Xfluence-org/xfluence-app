@@ -31,6 +31,24 @@ export const useBrandCampaignsData = (view: CampaignView) => {
           statusFilter = 'active';
       }
 
+      // First get the brands associated with the current user
+      const { data: userBrands, error: brandsError } = await supabase
+        .from('brand_users')
+        .select('brand_id')
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+
+      if (brandsError) {
+        console.error('Error fetching user brands:', brandsError);
+        throw brandsError;
+      }
+
+      if (!userBrands || userBrands.length === 0) {
+        console.log('No brands found for current user');
+        return [];
+      }
+
+      const brandIds = userBrands.map(ub => ub.brand_id);
+
       const { data, error } = await supabase
         .from('campaigns')
         .select(`
@@ -43,11 +61,13 @@ export const useBrandCampaignsData = (view: CampaignView) => {
           category,
           created_at,
           is_public,
+          brand_id,
           brands (
             name
           )
         `)
         .eq('status', statusFilter)
+        .in('brand_id', brandIds)
         .order('created_at', { ascending: false });
 
       if (error) {
