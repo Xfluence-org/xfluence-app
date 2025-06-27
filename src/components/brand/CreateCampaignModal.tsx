@@ -105,20 +105,21 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
         campaign_description: data.campaign_description,
         categories: data.categories,
         total_influencers: data.total_influencers,
-        follower_tier: data.follower_tiers, // Use follower_tier (singular) as expected by edge function
-        content_type: data.content_types, // Use content_type (singular) as expected by edge function
+        follower_tier: data.follower_tiers, // This should contain the selected values from the form
+        content_type: data.content_types, // This should contain the selected values from the form
         budget_min: data.budget_min,
         budget_max: data.budget_max,
         platform: 'Instagram'
       };
       
+      console.log('Search params being sent to edge function:', searchParams);
+      console.log('follower_tier value:', searchParams.follower_tier);
+      console.log('content_type value:', searchParams.content_type);
+      
       // Call the campaign planner edge function
       console.log('Calling campaign_planner edge function with params:', searchParams);
       const { data: plannerResponse, error: plannerError } = await supabase.functions.invoke('campaign-planner', {
-        body: { 
-          searchParams: searchParams,
-          campaignId: campaignData.id 
-        }
+        body: searchParams // Send searchParams directly as the body
       });
 
       if (plannerError) {
