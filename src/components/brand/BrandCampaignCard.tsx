@@ -12,7 +12,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Eye, Archive, Calendar, Users } from 'lucide-react';
+import { Eye, Archive, Calendar, Users, DollarSign } from 'lucide-react';
 
 interface BrandCampaign {
   campaign_id: string;
@@ -42,17 +42,18 @@ const BrandCampaignCard: React.FC<BrandCampaignCardProps> = ({
   showArchiveButton
 }) => {
   const getStatusBadge = (status: string) => {
+    const baseClasses = "px-3 py-1 rounded-full text-white text-xs font-medium";
     switch (status.toLowerCase()) {
       case 'active':
-        return 'status-active';
+        return `${baseClasses} bg-[#1DDCD3]`;
       case 'completed':
-        return 'status-completed';
+        return `${baseClasses} bg-emerald-500`;
       case 'archived':
-        return 'bg-gray-500/20 text-gray-400 border border-gray-500/30 rounded-full px-3 py-1 text-xs font-medium';
+        return `${baseClasses} bg-gray-500`;
       case 'published':
-        return 'bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full px-3 py-1 text-xs font-medium';
+        return `${baseClasses} bg-blue-500`;
       default:
-        return 'bg-gray-500/20 text-gray-400 border border-gray-500/30 rounded-full px-3 py-1 text-xs font-medium';
+        return `${baseClasses} bg-gray-400`;
     }
   };
 
@@ -62,64 +63,64 @@ const BrandCampaignCard: React.FC<BrandCampaignCardProps> = ({
   };
 
   return (
-    <div className="interactive-card p-6">
+    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-200">
       {/* Campaign Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
-          <div className="flex items-center gap-3 mb-3">
-            <h3 className="text-xl font-bold text-white">{campaign.campaign_title}</h3>
+          <div className="flex items-center gap-3 mb-2">
+            <h3 className="text-xl font-bold text-[#1a1f2e]">{campaign.campaign_title}</h3>
             <span className={getStatusBadge(campaign.campaign_status)}>
               {campaign.campaign_status}
             </span>
           </div>
-          <p className="text-muted-foreground text-sm mb-2">
+          <p className="text-gray-600 text-sm mb-2">
             {campaign.category} • {campaign.platforms.join(', ')}
           </p>
         </div>
       </div>
 
       {/* Campaign Metrics */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-white/5 rounded-lg p-3">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-primary">💰</span>
-            <p className="text-sm text-muted-foreground">Budget</p>
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="flex items-center gap-2">
+          <DollarSign className="h-4 w-4 text-[#1DDCD3]" />
+          <div>
+            <p className="text-sm text-gray-600">Budget</p>
+            <p className="font-semibold">${campaign.budget.toLocaleString()}</p>
           </div>
-          <p className="font-semibold text-white">${campaign.budget.toLocaleString()}</p>
         </div>
-        <div className="bg-white/5 rounded-lg p-3">
-          <div className="flex items-center gap-2 mb-1">
-            <Users className="h-4 w-4 text-primary" />
-            <p className="text-sm text-muted-foreground">Applicants</p>
+        <div className="flex items-center gap-2">
+          <Users className="h-4 w-4 text-[#1DDCD3]" />
+          <div>
+            <p className="text-sm text-gray-600">Applicants</p>
+            <p className="font-semibold">{campaign.applicants} ({campaign.accepted} accepted)</p>
           </div>
-          <p className="font-semibold text-white">{campaign.applicants} ({campaign.accepted} accepted)</p>
         </div>
-        <div className="bg-white/5 rounded-lg p-3">
-          <div className="flex items-center gap-2 mb-1">
-            <Calendar className="h-4 w-4 text-primary" />
-            <p className="text-sm text-muted-foreground">Due Date</p>
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-[#1DDCD3]" />
+          <div>
+            <p className="text-sm text-gray-600">Due Date</p>
+            <p className="font-semibold">{formatDate(campaign.due_date)}</p>
           </div>
-          <p className="font-semibold text-white">{formatDate(campaign.due_date)}</p>
         </div>
-        <div className="bg-white/5 rounded-lg p-3">
-          <p className="text-sm text-muted-foreground mb-1">Progress</p>
+        <div>
+          <p className="text-sm text-gray-600">Progress</p>
           <div className="flex items-center gap-2">
-            <div className="flex-1 bg-black/20 rounded-full h-2">
+            <div className="flex-1 bg-gray-200 rounded-full h-2">
               <div 
-                className="bg-gradient-to-r from-primary to-accent h-2 rounded-full transition-all duration-300" 
+                className="bg-[#1DDCD3] h-2 rounded-full" 
                 style={{ width: `${campaign.progress}%` }}
               />
             </div>
-            <span className="text-sm font-semibold text-gradient">{campaign.progress}%</span>
+            <span className="text-sm font-semibold">{campaign.progress}%</span>
           </div>
         </div>
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-3 pt-4 border-t border-white/10">
+      <div className="flex gap-2 pt-4 border-t border-gray-100">
         <Button 
           variant="outline" 
-          className="flex-1 border-white/20 text-white hover:bg-white/10"
+          className="flex-1"
           onClick={() => onView(campaign.campaign_id)}
         >
           <Eye className="h-4 w-4 mr-2" />
@@ -129,17 +130,17 @@ const BrandCampaignCard: React.FC<BrandCampaignCardProps> = ({
         {showArchiveButton && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="outline" className="text-orange-400 border-orange-400/30 hover:bg-orange-400/10">
+              <Button variant="outline" className="text-orange-600 hover:text-orange-700">
                 <Archive className="h-4 w-4 mr-2" />
                 Archive
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="glass-card border-white/10">
+            <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle className="text-white">Archive Campaign</AlertDialogTitle>
-                <AlertDialogDescription className="text-muted-foreground">
+                <AlertDialogTitle>Archive Campaign</AlertDialogTitle>
+                <AlertDialogDescription>
                   Are you sure you want to archive "{campaign.campaign_title}"? This will:
-                  <ul className="list-disc list-inside mt-2 space-y-1">
+                  <ul className="list-disc list-inside mt-2">
                     <li>Remove it from opportunities</li>
                     <li>Auto-reject all pending applications</li>
                     <li>Move it to the archived campaigns section</li>
@@ -147,10 +148,10 @@ const BrandCampaignCard: React.FC<BrandCampaignCardProps> = ({
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel className="border-white/20 text-white hover:bg-white/10">Cancel</AlertDialogCancel>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction 
                   onClick={() => onArchive(campaign.campaign_id)}
-                  className="bg-orange-600 hover:bg-orange-700 text-white"
+                  className="bg-orange-600 hover:bg-orange-700"
                 >
                   Archive Campaign
                 </AlertDialogAction>
