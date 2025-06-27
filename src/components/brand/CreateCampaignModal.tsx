@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -22,7 +21,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 
 const campaignFormSchema = z.object({
@@ -94,9 +93,9 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
     try {
       // Create temporary campaign data
       const campaignData = {
-        id: Date.now(), // Temporary ID
+        id: Date.now(),
         ...data,
-        platform: 'Instagram', // Fixed to Instagram as Beta
+        platform: 'Instagram',
         created_at: new Date().toISOString(),
       };
       
@@ -115,38 +114,68 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
       };
       
       console.log('Request body being sent to edge function:', requestBody);
-      console.log('follower_tier value:', requestBody.searchParams.follower_tier);
-      console.log('follower_tier type:', typeof requestBody.searchParams.follower_tier);
-      console.log('follower_tier is array:', Array.isArray(requestBody.searchParams.follower_tier));
-      console.log('content_type value:', requestBody.searchParams.content_type);
-      console.log('content_type type:', typeof requestBody.searchParams.content_type);
-      console.log('content_type is array:', Array.isArray(requestBody.searchParams.content_type));
+      console.log('JSON stringified request body:', JSON.stringify(requestBody, null, 2));
       
       // Call the campaign planner edge function
-      console.log('Calling campaign_planner edge function with params:', requestBody);
+      console.log('Calling campaign_planner edge function...');
       const { data: plannerResponse, error: plannerError } = await supabase.functions.invoke('campaign-planner', {
         body: requestBody
       });
 
+      console.log('Edge function raw response:', plannerResponse);
+      console.log('Edge function error:', plannerError);
+
       if (plannerError) {
-        console.error('Campaign planner error:', plannerError);
+        console.error('Campaign planner error details:', {
+          message: plannerError.message,
+          details: plannerError.details,
+          hint: plannerError.hint,
+          code: plannerError.code
+        });
         toast({
-          title: "Error",
-          description: "Failed to generate campaign strategy. Please try again.",
+          title: "Edge Function Error",
+          description: `Failed to generate campaign strategy: ${plannerError.message}`,
           variant: "destructive"
         });
         return;
       }
 
-      console.log('Campaign planner response:', plannerResponse);
+      if (!plannerResponse) {
+        console.error('No response received from edge function');
+        toast({
+          title: "No Response",
+          description: "No response received from campaign planner. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      console.log('Campaign planner successful response:', plannerResponse);
+      
+      // Parse the response if it's a string (sometimes edge functions return stringified JSON)
+      let parsedResponse = plannerResponse;
+      if (typeof plannerResponse === 'string') {
+        try {
+          parsedResponse = JSON.parse(plannerResponse);
+          console.log('Parsed string response:', parsedResponse);
+        } catch (parseError) {
+          console.error('Failed to parse response string:', parseError);
+          toast({
+            title: "Parse Error",
+            description: "Failed to parse campaign strategy response.",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
       
       // Set the results and move to results step
-      setCampaignResults(plannerResponse);
+      setCampaignResults(parsedResponse);
       setCurrentStep('results');
       
       // Store campaign data in localStorage for now
       localStorage.setItem('temp_campaign', JSON.stringify(campaignData));
-      localStorage.setItem('temp_campaign_results', JSON.stringify(plannerResponse));
+      localStorage.setItem('temp_campaign_results', JSON.stringify(parsedResponse));
       
       toast({
         title: "Success",
@@ -156,8 +185,8 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
     } catch (error) {
       console.error('Error in campaign creation:', error);
       toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        title: "Unexpected Error",
+        description: `An unexpected error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive"
       });
     } finally {
