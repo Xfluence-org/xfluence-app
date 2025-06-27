@@ -197,6 +197,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           due_date: string | null
+          gig_extracted: Json | null
           id: string
           is_public: boolean | null
           llm_campaign: Json | null
@@ -218,6 +219,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           due_date?: string | null
+          gig_extracted?: Json | null
           id?: string
           is_public?: boolean | null
           llm_campaign?: Json | null
@@ -239,6 +241,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           due_date?: string | null
+          gig_extracted?: Json | null
           id?: string
           is_public?: boolean | null
           llm_campaign?: Json | null
@@ -267,9 +270,11 @@ export type Database = {
           followers_count: number | null
           following_count: number | null
           id: string
+          impressions: number | null
           instagram_user_id: string
           last_synced_at: string | null
           media_count: number | null
+          reach: number | null
           updated_at: string | null
           user_id: string
           username: string
@@ -281,9 +286,11 @@ export type Database = {
           followers_count?: number | null
           following_count?: number | null
           id?: string
+          impressions?: number | null
           instagram_user_id: string
           last_synced_at?: string | null
           media_count?: number | null
+          reach?: number | null
           updated_at?: string | null
           user_id: string
           username: string
@@ -295,9 +302,11 @@ export type Database = {
           followers_count?: number | null
           following_count?: number | null
           id?: string
+          impressions?: number | null
           instagram_user_id?: string
           last_synced_at?: string | null
           media_count?: number | null
+          reach?: number | null
           updated_at?: string | null
           user_id?: string
           username?: string

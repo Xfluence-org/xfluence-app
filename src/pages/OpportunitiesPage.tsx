@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Sidebar from '@/components/dashboard/Sidebar';
 import SearchBar from '@/components/opportunities/SearchBar';
@@ -29,10 +29,11 @@ const OpportunitiesPage: React.FC = () => {
   const { data: opportunitiesData, isLoading: loading, error, refetch } = useQuery({
     queryKey: ['opportunities', searchQuery, activeFilters],
     queryFn: async () => {
-      console.log('Fetching opportunities with filters:', { searchQuery, activeFilters });
+      console.log('Fetching opportunities with search query:', searchQuery);
+      console.log('Active filters:', activeFilters);
       
       const { data, error } = await supabase.rpc('get_opportunities', {
-        search_query: searchQuery,
+        search_query: searchQuery || '',
         category_filter: activeFilters.categories[0] || '',
         min_compensation: activeFilters.compensationRange.min * 100, // convert to cents
         max_compensation: activeFilters.compensationRange.max * 100,
@@ -45,7 +46,8 @@ const OpportunitiesPage: React.FC = () => {
       }
       
       console.log('Fetched opportunities from database:', data);
-      return data;
+      console.log('Number of opportunities found:', data?.length || 0);
+      return data || [];
     }
   });
 
@@ -94,12 +96,14 @@ const OpportunitiesPage: React.FC = () => {
       );
     }
 
+    console.log('Filtered opportunities count:', filtered.length);
     return filtered;
   }, [opportunities, activeFilters.platforms]);
 
-  const handleSearch = (query: string) => {
+  const handleSearch = useCallback((query: string) => {
+    console.log('Search query changed to:', query);
     setSearchQuery(query);
-  };
+  }, []);
 
   const handleFilterClick = () => {
     setIsFilterModalOpen(true);
@@ -198,6 +202,7 @@ const OpportunitiesPage: React.FC = () => {
           <div className="p-8">
             <div className="text-center py-12">
               <p className="text-red-500 text-lg">Error loading opportunities. Please try again.</p>
+              <p className="text-gray-500 mt-2">Error: {error.message}</p>
             </div>
           </div>
         </main>
@@ -213,13 +218,18 @@ const OpportunitiesPage: React.FC = () => {
         <div className="p-8">
           <header className="mb-8">
             <h1 className="text-3xl font-bold text-[#1a1f2e] mb-2">Opportunities</h1>
+            <p className="text-gray-600">
+              {searchQuery ? `Search results for "${searchQuery}"` : 'Campaigns you may like'}
+            </p>
           </header>
 
           <section>
             <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-[#1a1f2e] mb-2">New Campaigns</h2>
-                <p className="text-gray-600 mb-6">Campaigns you may like</p>
+                <p className="text-gray-600 mb-6">
+                  {filteredOpportunities.length} campaigns available
+                </p>
                 
                 <SearchBar onSearch={handleSearch} onFilterClick={handleFilterClick} />
               </div>
@@ -236,8 +246,18 @@ const OpportunitiesPage: React.FC = () => {
                   ))
                 ) : (
                   <div className="text-center py-12">
-                    <p className="text-gray-500 text-lg">No opportunities found matching your criteria.</p>
-                    <p className="text-gray-400 mt-2">Try adjusting your search or filters.</p>
+                    <p className="text-gray-500 text-lg">
+                      {searchQuery 
+                        ? `No opportunities found for "${searchQuery}"`
+                        : "No opportunities found matching your criteria."
+                      }
+                    </p>
+                    <p className="text-gray-400 mt-2">
+                      {searchQuery 
+                        ? "Try a different search term or clear your search."
+                        : "Try adjusting your search or filters."
+                      }
+                    </p>
                   </div>
                 )}
               </div>

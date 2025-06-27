@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Filter } from 'lucide-react';
 
 interface SearchBarProps {
@@ -10,10 +10,24 @@ interface SearchBarProps {
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onFilterClick }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Debounce search to avoid too many API calls
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      onSearch(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, onSearch]);
+
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
-    onSearch(query);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      onSearch(searchQuery);
+    }
   };
 
   return (
@@ -25,6 +39,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onFilterClick }) => {
           placeholder="Search campaigns, categories, platform"
           value={searchQuery}
           onChange={handleSearch}
+          onKeyDown={handleKeyDown}
           className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1DDCD3] focus:border-transparent text-[#1a1f2e] placeholder-gray-500 bg-white shadow-sm"
         />
       </div>
