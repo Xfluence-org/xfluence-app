@@ -20,7 +20,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onFilterClick }) => {
   }, [searchQuery, onSearch]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault();
     const query = e.target.value;
     setSearchQuery(query);
   };
