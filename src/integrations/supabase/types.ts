@@ -313,6 +313,47 @@ export type Database = {
         }
         Relationships: []
       }
+      llm_interactions: {
+        Row: {
+          call_type: string
+          campaign_id: string | null
+          created_at: string | null
+          id: string
+          input_messages: Json
+          raw_output: Json
+          timestamp: string
+          user_id: string | null
+        }
+        Insert: {
+          call_type: string
+          campaign_id?: string | null
+          created_at?: string | null
+          id?: string
+          input_messages: Json
+          raw_output: Json
+          timestamp?: string
+          user_id?: string | null
+        }
+        Update: {
+          call_type?: string
+          campaign_id?: string | null
+          created_at?: string | null
+          id?: string
+          input_messages?: Json
+          raw_output?: Json
+          timestamp?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "llm_interactions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
