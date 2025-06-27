@@ -83,7 +83,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const userProfile = await fetchUserProfile(session.user.id);
             setProfile(userProfile);
             
-            if (userProfile && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+            // Only redirect on actual sign-in, not on token refresh or other events
+            if (userProfile && event === 'SIGNED_IN') {
               redirectToDashboard(userProfile.user_type);
             }
           }, 0);
