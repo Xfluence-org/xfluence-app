@@ -16,14 +16,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -31,10 +25,10 @@ import * as z from 'zod';
 const campaignFormSchema = z.object({
   goals: z.string().min(1, 'Goals are required'),
   campaign_description: z.string().min(1, 'Description is required'),
-  categories: z.string().min(1, 'Category is required'),
+  categories: z.array(z.string()).min(1, 'At least one category is required'),
   total_influencers: z.number().min(1, 'Must have at least 1 influencer'),
-  follower_tier: z.string().min(1, 'Follower tier is required'),
-  content_type: z.string().min(1, 'Content type is required'),
+  follower_tiers: z.array(z.string()).min(1, 'At least one follower tier is required'),
+  content_types: z.array(z.string()).min(1, 'At least one content type is required'),
   budget_min: z.number().min(0, 'Minimum budget must be 0 or greater'),
   budget_max: z.number().min(1, 'Maximum budget must be greater than 0'),
 });
@@ -57,10 +51,10 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
     defaultValues: {
       goals: 'Drive brand awareness and engagement.',
       campaign_description: 'No description provided.',
-      categories: '',
+      categories: [],
       total_influencers: 5,
-      follower_tier: '',
-      content_type: '',
+      follower_tiers: [],
+      content_types: [],
       budget_min: 0,
       budget_max: 1000,
     },
@@ -75,6 +69,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
     const campaignData = {
       id: Date.now(), // Temporary ID
       ...data,
+      platform: 'Instagram', // Fixed to Instagram as Beta
       created_at: new Date().toISOString(),
     };
     
@@ -100,9 +95,9 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
   ];
 
   const followerTiers = [
-    { value: 'micro', label: 'Micro (1K-100K)' },
-    { value: 'mid', label: 'Mid (100K-1M)' },
-    { value: 'macro', label: 'Macro (1M+)' },
+    { value: 'nano', label: 'Nano (1K-10K)' },
+    { value: 'micro', label: 'Micro (10K-50K)' },
+    { value: 'macro', label: 'Macro (50K-100K)' },
   ];
 
   const contentTypes = [
@@ -134,6 +129,11 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                       placeholder="Describe your campaign goals..."
                       className="min-h-[80px]"
                       {...field}
+                      onFocus={(e) => {
+                        if (e.target.value === 'Drive brand awareness and engagement.') {
+                          field.onChange('');
+                        }
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -152,6 +152,11 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                       placeholder="Provide detailed campaign description..."
                       className="min-h-[100px]"
                       {...field}
+                      onFocus={(e) => {
+                        if (e.target.value === 'No description provided.') {
+                          field.onChange('');
+                        }
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -163,23 +168,44 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
               <FormField
                 control={form.control}
                 name="categories"
-                render={({ field }) => (
+                render={() => (
                   <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Categories (Multi-select)</FormLabel>
+                    <div className="grid grid-cols-2 gap-2 p-3 border rounded-md bg-background">
+                      {categories.map((category) => (
+                        <FormField
+                          key={category}
+                          control={form.control}
+                          name="categories"
+                          render={({ field }) => {
+                            return (
+                              <FormItem
+                                key={category}
+                                className="flex flex-row items-start space-x-3 space-y-0"
+                              >
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes(category)}
+                                    onCheckedChange={(checked) => {
+                                      return checked
+                                        ? field.onChange([...field.value, category])
+                                        : field.onChange(
+                                            field.value?.filter(
+                                              (value) => value !== category
+                                            )
+                                          )
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormLabel className="text-sm font-normal">
+                                  {category}
+                                </FormLabel>
+                              </FormItem>
+                            )
+                          }}
+                        />
+                      ))}
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -208,24 +234,45 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
-                name="follower_tier"
-                render={({ field }) => (
+                name="follower_tiers"
+                render={() => (
                   <FormItem>
-                    <FormLabel>Follower Tier</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select follower tier" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {followerTiers.map((tier) => (
-                          <SelectItem key={tier.value} value={tier.value}>
-                            {tier.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Follower Tiers (Multi-select)</FormLabel>
+                    <div className="space-y-2 p-3 border rounded-md bg-background">
+                      {followerTiers.map((tier) => (
+                        <FormField
+                          key={tier.value}
+                          control={form.control}
+                          name="follower_tiers"
+                          render={({ field }) => {
+                            return (
+                              <FormItem
+                                key={tier.value}
+                                className="flex flex-row items-start space-x-3 space-y-0"
+                              >
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes(tier.value)}
+                                    onCheckedChange={(checked) => {
+                                      return checked
+                                        ? field.onChange([...field.value, tier.value])
+                                        : field.onChange(
+                                            field.value?.filter(
+                                              (value) => value !== tier.value
+                                            )
+                                          )
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormLabel className="text-sm font-normal">
+                                  {tier.label}
+                                </FormLabel>
+                              </FormItem>
+                            )
+                          }}
+                        />
+                      ))}
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -233,28 +280,56 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
 
               <FormField
                 control={form.control}
-                name="content_type"
-                render={({ field }) => (
+                name="content_types"
+                render={() => (
                   <FormItem>
-                    <FormLabel>Content Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select content type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {contentTypes.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Content Types (Multi-select)</FormLabel>
+                    <div className="space-y-2 p-3 border rounded-md bg-background">
+                      {contentTypes.map((type) => (
+                        <FormField
+                          key={type.value}
+                          control={form.control}
+                          name="content_types"
+                          render={({ field }) => {
+                            return (
+                              <FormItem
+                                key={type.value}
+                                className="flex flex-row items-start space-x-3 space-y-0"
+                              >
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes(type.value)}
+                                    onCheckedChange={(checked) => {
+                                      return checked
+                                        ? field.onChange([...field.value, type.value])
+                                        : field.onChange(
+                                            field.value?.filter(
+                                              (value) => value !== type.value
+                                            )
+                                          )
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormLabel className="text-sm font-normal">
+                                  {type.label}
+                                </FormLabel>
+                              </FormItem>
+                            )
+                          }}
+                        />
+                      ))}
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-3 border rounded-md bg-gray-50">
+                <FormLabel className="text-sm font-medium text-gray-700">Platform</FormLabel>
+                <p className="text-sm text-gray-600 mt-1">Instagram (Beta)</p>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
