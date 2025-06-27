@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -50,7 +49,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
     resolver: zodResolver(campaignFormSchema),
     defaultValues: {
       goals: 'Drive brand awareness and engagement.',
-      campaign_description: 'No description provided.',
+      campaign_description: '',
       categories: [],
       total_influencers: 5,
       follower_tiers: [],
@@ -103,7 +102,6 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
   const contentTypes = [
     { value: 'post', label: 'Post' },
     { value: 'story', label: 'Story' },
-    { value: 'video', label: 'Video' },
     { value: 'reel', label: 'Reel' },
   ];
 
@@ -152,11 +150,6 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                       placeholder="Provide detailed campaign description..."
                       className="min-h-[100px]"
                       {...field}
-                      onFocus={(e) => {
-                        if (e.target.value === 'No description provided.') {
-                          field.onChange('');
-                        }
-                      }}
                     />
                   </FormControl>
                   <FormMessage />
