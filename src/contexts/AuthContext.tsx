@@ -42,7 +42,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Add refs to track state and prevent unwanted redirects
+  // ✅ Add refs to track state and prevent unwanted redirects
   const hasRedirectedRef = useRef(false);
   const isInitialLoadRef = useRef(true);
 
@@ -66,15 +66,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // More restrictive function to determine when to redirect
-  const shouldRedirectOnEvent = (event: string) => {
-    // Only redirect on actual sign-in
-    if (event === 'SIGNED_IN') return true;
-    
-    // Don't redirect on token refresh, sign out, etc.
-    return false;
-  };
-
   const shouldRedirect = (userType: UserType, currentPath: string) => {
     // Don't redirect if user is already on an appropriate page
     if (userType === 'Influencer') {
@@ -85,12 +76,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return !currentPath.startsWith('/brand-dashboard') && 
              !currentPath.startsWith('/brand/') && 
              !currentPath.startsWith('/campaign-review') &&
-             !currentPath.startsWith('/campaigns');
+             !currentPath.startsWith('/campaigns'); // ✅ Add campaigns route
     }
   };
 
   const redirectToDashboard = (userType: UserType, force: boolean = false) => {
-    // Prevent multiple redirects unless forced
+    // ✅ Prevent multiple redirects unless forced
     if (hasRedirectedRef.current && !force) {
       return;
     }
@@ -107,6 +98,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } else {
       navigate('/brand-dashboard');
     }
+  };
+
+  // ✅ More restrictive function to determine when to redirect - moved outside useEffect
+  const shouldRedirectOnEvent = (event: string) => {
+    // Only redirect on actual sign-in or initial load
+    if (event === 'SIGNED_IN') return true;
+    
+    // Redirect on initial load if user is on wrong page
+    if (isInitialLoadRef.current && event === 'INITIAL_SESSION') return true;
+    
+    // Don't redirect on token refresh, sign out, etc.
+    return false;
   };
 
   useEffect(() => {
@@ -130,13 +133,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           setProfile(userProfile);
           
-          // Only redirect on specific events and conditions
+          // ✅ Only redirect on specific events and conditions
           if (userProfile && shouldRedirectOnEvent(event)) {
             redirectToDashboard(userProfile.user_type);
           }
         } else {
           setProfile(null);
-          hasRedirectedRef.current = false; // Reset redirect flag when user logs out
+          hasRedirectedRef.current = false; // ✅ Reset redirect flag when user logs out
         }
 
         setLoading(false);
@@ -157,13 +160,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           setProfile(userProfile);
           
-          // Only redirect on initial load if user is on auth page
+          // ✅ Only redirect on initial load if user is on wrong page
           if (userProfile && isInitialLoadRef.current) {
+            // Check if user is on auth page (should redirect)
             const isOnAuthPage = location.pathname === '/' || 
                                 location.pathname === '/login' || 
                                 location.pathname === '/signup';
             
-            if (isOnAuthPage) {
+            if (isOnAuthPage || shouldRedirect(userProfile.user_type, location.pathname)) {
               redirectToDashboard(userProfile.user_type, true);
             }
           }
@@ -181,9 +185,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, []); // Remove location dependency to prevent re-runs
+  }, []); // ✅ Remove location dependency to prevent re-runs
 
-  // Reset redirect flag when location changes manually
+  // ✅ Reset redirect flag when location changes manually
   useEffect(() => {
     // Allow redirects again if user manually navigates
     if (!isInitialLoadRef.current) {
@@ -193,7 +197,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, userType: UserType, name: string) => {
     try {
-      console.log('Signing up:', { email, userType, name });
       const redirectUrl = `${window.location.origin}/`;
       
       const { error } = await supabase.auth.signUp({
@@ -210,21 +213,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { error };
     } catch (error) {
-      console.error('Sign up error:', error);
       return { error };
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('Signing in:', { email });
-      
-      // Validate inputs
-      if (!email || !password) {
-        return { error: new Error('Email and password are required') };
-      }
-
-      // Reset redirect flag before signing in
+      // ✅ Reset redirect flag before signing in
       hasRedirectedRef.current = false;
       
       const { error } = await supabase.auth.signInWithPassword({
@@ -232,13 +227,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password
       });
 
-      if (error) {
-        console.error('Sign in error:', error);
-      }
-
       return { error };
     } catch (error) {
-      console.error('Sign in error:', error);
       return { error };
     }
   };
@@ -258,7 +248,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    hasRedirectedRef.current = false; // Reset redirect flag
+    hasRedirectedRef.current = false; // ✅ Reset redirect flag
     await supabase.auth.signOut();
     navigate('/');
   };
