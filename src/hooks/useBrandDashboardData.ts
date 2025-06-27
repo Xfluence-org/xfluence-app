@@ -28,46 +28,15 @@ interface BrandMetrics {
 }
 
 export const useBrandDashboardData = () => {
-  // Fetch brand campaigns for the specific brand/agency
+  // Fetch brand campaigns using the database function
   const { data: campaignsData = [], isLoading: campaignsLoading, error: campaignsError } = useQuery({
     queryKey: ['brand-campaigns'],
     queryFn: async () => {
-      console.log('Fetching brand campaigns for dashboard');
+      console.log('Fetching brand campaigns for dashboard using get_brand_campaigns function');
       
-      // First get the brands associated with the current user
-      const { data: userBrands, error: brandsError } = await supabase
-        .from('brand_users')
-        .select('brand_id')
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
-
-      if (brandsError) {
-        console.error('Error fetching user brands:', brandsError);
-        throw brandsError;
-      }
-
-      if (!userBrands || userBrands.length === 0) {
-        console.log('No brands found for current user');
-        return [];
-      }
-
-      const brandIds = userBrands.map(ub => ub.brand_id);
-
-      // Fetch campaigns for the user's brands
-      const { data, error } = await supabase
-        .from('campaigns')
-        .select(`
-          id,
-          title,
-          status,
-          budget,
-          amount,
-          due_date,
-          category,
-          created_at,
-          brand_id
-        `)
-        .in('brand_id', brandIds)
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.rpc('get_brand_campaigns', {
+        brand_filter: 'all'
+      });
 
       if (error) {
         console.error('Error fetching brand campaigns:', error);
@@ -75,23 +44,7 @@ export const useBrandDashboardData = () => {
       }
 
       console.log('Fetched brand campaigns for dashboard:', data);
-      
-      // Transform to match expected interface
-      return (data || []).map(campaign => ({
-        campaign_id: campaign.id,
-        campaign_title: campaign.title,
-        campaign_status: campaign.status,
-        budget: campaign.budget || campaign.amount || 0,
-        spent: 0, // Mock data for now
-        applicants: 0, // This would be calculated from campaign_participants
-        accepted: 0, // This would be calculated from campaign_participants
-        due_date: campaign.due_date,
-        platforms: ['Instagram', 'TikTok'],
-        category: campaign.category || 'General',
-        progress: campaign.status === 'completed' ? 100 : 
-                 campaign.status === 'active' ? 75 : 
-                 campaign.status === 'published' ? 50 : 25
-      }));
+      return data || [];
     }
   });
 
