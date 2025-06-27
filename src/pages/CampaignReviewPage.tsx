@@ -85,6 +85,28 @@ const CampaignReviewPage = () => {
 
       const campaignData = JSON.parse(tempCampaign);
       
+      /**
+       * CAMPAIGN COLUMN POPULATION EXPLANATION:
+       * 
+       * title: Generated from campaign goals - "{campaignData.goals} Campaign"
+       * description: Uses campaignData.campaign_description from the form
+       * category: Takes the first category from campaignData.categories array
+       * amount: Budget maximum converted to cents (campaignData.budget_max * 100)
+       * budget: Same as amount - total campaign budget in cents
+       * requirements: Stores structured data with:
+       *   - total_influencers: campaignData.total_influencers
+       *   - follower_tiers: campaignData.follower_tiers array
+       *   - content_types: campaignData.content_types array  
+       *   - categories: campaignData.categories array
+       * status: Set to 'published' to make campaign live
+       * llm_campaign: Stores the complete AI strategy from llmInteraction.raw_output
+       * brand_id: Currently null - needs to be linked to current user's brand
+       * due_date: Not populated yet - could be calculated from campaign duration
+       * is_public: Not set - defaults to false, could be made true for public campaigns
+       * compensation_min/max: Not populated - could use budget_min/max from form
+       * application_deadline: Not set - could be calculated based on campaign timeline
+       */
+      
       // Create the campaign in the database
       const { data: newCampaign, error } = await supabase
         .from('campaigns')
@@ -331,18 +353,6 @@ const CampaignReviewPage = () => {
             </CardHeader>
             <CardContent>
               <p className="text-gray-700 leading-relaxed">{campaignData.justification}</p>
-            </CardContent>
-          </Card>
-
-          {/* Raw Output for Debugging */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-gray-500">Raw LLM Output (Debug)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <pre className="bg-gray-100 p-4 rounded text-xs overflow-x-auto">
-                {JSON.stringify(campaignData, null, 2)}
-              </pre>
             </CardContent>
           </Card>
         </div>
