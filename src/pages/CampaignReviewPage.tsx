@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -95,46 +94,29 @@ const CampaignReviewPage = () => {
 
       const campaignData = JSON.parse(tempCampaign);
       
-      /**
-       * CAMPAIGN COLUMN POPULATION EXPLANATION:
-       * 
-       * title: Generated from campaign goals - "{campaignData.goals} Campaign"
-       * description: Uses campaignData.campaign_description from the form
-       * category: Takes the first category from campaignData.categories array
-       * amount: Budget maximum converted to cents (campaignData.budget_max * 100)
-       * budget: Same as amount - total campaign budget in cents
-       * requirements: Stores structured data with:
-       *   - total_influencers: campaignData.total_influencers
-       *   - follower_tiers: campaignData.influencer_tiers array (updated from follower_tiers)
-       *   - content_types: campaignData.content_types array  
-       *   - categories: campaignData.categories array
-       * status: Set to 'published' to make campaign live
-       * llm_campaign: Stores the complete AI strategy from llmInteraction.raw_output
-       * brand_id: Now uses campaignData.brand_id from the form (no longer null!)
-       * due_date: Not populated yet - could be calculated from campaign duration
-       * is_public: Not set - defaults to false, could be made true for public campaigns
-       * compensation_min/max: Not populated - could use budget_min/max from form
-       * application_deadline: Not set - could be calculated based on campaign timeline
-       */
-      
-      // Create the campaign in the database
+      // Create the campaign in the database with corrected field mappings
       const { data: newCampaign, error } = await supabase
         .from('campaigns')
         .insert({
           title: `${campaignData.goals} Campaign`,
           description: campaignData.campaign_description,
-          category: campaignData.categories[0] || 'General',
+          category: campaignData.categories, // Array of categories from the form
           amount: campaignData.budget_max * 100, // Convert to cents
-          budget: campaignData.budget_max * 100,
+          budget: campaignData.budget_max * 100, // Populate from maximum budget field
+          compensation_min: campaignData.budget_min * 100, // Populate from min_budget field (converted to cents)
+          compensation_max: campaignData.budget_max * 100, // Populate from max_budget field (converted to cents)
+          due_date: campaignData.due_date, // Populate from campaign valid through field
+          application_deadline: campaignData.due_date, // Same as due_date as requested
           requirements: {
             total_influencers: campaignData.total_influencers,
-            follower_tiers: campaignData.influencer_tiers, // Updated from follower_tiers
+            follower_tiers: campaignData.influencer_tiers,
             content_types: campaignData.content_types,
             categories: campaignData.categories
           },
           status: 'published',
           llm_campaign: llmInteraction.raw_output,
-          brand_id: campaignData.brand_id // Now properly populated!
+          brand_id: campaignData.brand_id,
+          is_public: true // Make it public so it appears in opportunities
         })
         .select()
         .single();
