@@ -38,7 +38,11 @@ export const useCampaignDetail = (campaignId: string | null) => {
       console.log('Fetched campaign detail:', data);
       return {
         ...data,
-        budget: data.budget || data.amount || 0
+        budget: data.budget || data.amount || 0,
+        // Handle category array properly
+        category: Array.isArray(data.category) && data.category.length > 0 
+          ? data.category[0] 
+          : data.category || 'General'
       };
     },
     enabled: !!campaignId

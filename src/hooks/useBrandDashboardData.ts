@@ -59,7 +59,7 @@ export const useBrandDashboardData = () => {
     accepted: campaign.accepted,
     dueDate: campaign.due_date ? new Date(campaign.due_date).toLocaleDateString('en-GB') : 'TBD',
     platforms: campaign.platforms,
-    category: campaign.category,
+    category: campaign.category, // Now expecting a single category string
     progress: campaign.progress,
     performance: {
       reach: Math.floor(Math.random() * 200000) + 50000, // Mock data for now

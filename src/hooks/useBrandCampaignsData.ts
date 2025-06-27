@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -88,7 +87,9 @@ export const useBrandCampaignsData = (view: CampaignView) => {
         accepted: 0, // This would be calculated from campaign_participants
         due_date: campaign.due_date,
         platforms: ['Instagram', 'TikTok'], // Default platforms
-        category: campaign.category || 'General',
+        category: Array.isArray(campaign.category) && campaign.category.length > 0 
+          ? campaign.category[0] 
+          : 'General', // Handle array category properly
         progress: campaign.status === 'completed' ? 100 : 
                  campaign.status === 'active' ? 75 : 
                  campaign.status === 'published' ? 50 : 25
