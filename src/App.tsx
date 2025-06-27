@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import React from "react";
+import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import InfluencerDashboard from "./pages/InfluencerDashboard";
 import OpportunitiesPage from "./pages/OpportunitiesPage";
@@ -55,59 +56,61 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-            <Route path="/" element={<Index />} />
-            <Route 
-              path="/dashboard" 
-              element={
-                <AuthRoute requiredUserType="Influencer">
-                  <InfluencerDashboard />
-                </AuthRoute>
-              } 
-            />
-            <Route 
-              path="/brand-dashboard" 
-              element={
-                <AuthRoute>
-                  <BrandDashboard />
-                </AuthRoute>
-              } 
-            />
-            <Route 
-              path="/brand/campaigns" 
-              element={
-                <AuthRoute>
-                  <BrandCampaignsPage />
-                </AuthRoute>
-              } 
-            />
-            <Route 
-              path="/campaign-review" 
-              element={
-                <AuthRoute>
-                  <CampaignReviewPage />
-                </AuthRoute>
-              } 
-            />
-            <Route 
-              path="/opportunities" 
-              element={
-                <AuthRoute>
-                  <OpportunitiesPage />
-                </AuthRoute>
-              } 
-            />
-            <Route 
-              path="/campaigns" 
-              element={
-                <AuthRoute>
-                  <CampaignsPage />
-                </AuthRoute>
-              } 
-            />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+        <AuthProvider>
+          <Routes>
+              <Route path="/" element={<Index />} />
+              <Route 
+                path="/dashboard" 
+                element={
+                  <AuthRoute requiredUserType="Influencer">
+                    <InfluencerDashboard />
+                  </AuthRoute>
+                } 
+              />
+              <Route 
+                path="/brand-dashboard" 
+                element={
+                  <AuthRoute>
+                    <BrandDashboard />
+                  </AuthRoute>
+                } 
+              />
+              <Route 
+                path="/brand/campaigns" 
+                element={
+                  <AuthRoute>
+                    <BrandCampaignsPage />
+                  </AuthRoute>
+                } 
+              />
+              <Route 
+                path="/campaign-review" 
+                element={
+                  <AuthRoute>
+                    <CampaignReviewPage />
+                  </AuthRoute>
+                } 
+              />
+              <Route 
+                path="/opportunities" 
+                element={
+                  <AuthRoute>
+                    <OpportunitiesPage />
+                  </AuthRoute>
+                } 
+              />
+              <Route 
+                path="/campaigns" 
+                element={
+                  <AuthRoute>
+                    <CampaignsPage />
+                  </AuthRoute>
+                } 
+              />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
