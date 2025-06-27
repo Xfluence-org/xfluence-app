@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -106,8 +105,8 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
         campaign_description: data.campaign_description,
         categories: data.categories,
         total_influencers: data.total_influencers,
-        follower_tiers: data.follower_tiers,
-        content_types: data.content_types,
+        follower_tier: data.follower_tiers, // Use follower_tier (singular) as expected by edge function
+        content_type: data.content_types, // Use content_type (singular) as expected by edge function
         budget_min: data.budget_min,
         budget_max: data.budget_max,
         platform: 'Instagram'
@@ -183,14 +182,12 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
   ];
 
   const followerTiers = [
-    { value: 'nano', label: 'Nano (1K-10K)' },
     { value: 'micro', label: 'Micro (10K-50K)' },
-    { value: 'macro', label: 'Macro (50K-100K)' },
+    { value: 'mid', label: 'Mid (50K-100K)' },
   ];
 
   const contentTypes = [
     { value: 'post', label: 'Post' },
-    { value: 'story', label: 'Story' },
     { value: 'reel', label: 'Reel' },
   ];
 
