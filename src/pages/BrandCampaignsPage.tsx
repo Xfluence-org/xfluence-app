@@ -6,12 +6,14 @@ import { Plus } from 'lucide-react';
 import { useBrandCampaignsData } from '@/hooks/useBrandCampaignsData';
 import BrandCampaignCard from '@/components/brand/BrandCampaignCard';
 import CampaignDetailModal from '@/components/brand/CampaignDetailModal';
+import CreateCampaignModal from '@/components/brand/CreateCampaignModal';
 
 type CampaignView = 'active' | 'published' | 'completed' | 'archived';
 
 const BrandCampaignsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<CampaignView>('active');
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   
   const { 
     campaigns, 
@@ -38,8 +40,11 @@ const BrandCampaignsPage: React.FC = () => {
   };
 
   const handleCreateCampaign = () => {
-    console.log('Create campaign clicked');
-    // TODO: Implement create campaign flow
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCloseCreateModal = () => {
+    setIsCreateModalOpen(false);
   };
 
   if (loading) {
@@ -202,6 +207,11 @@ const BrandCampaignsPage: React.FC = () => {
         onClose={handleCloseCampaign}
         campaignId={selectedCampaignId}
         onUpdate={handleUpdateCampaign}
+      />
+
+      <CreateCampaignModal
+        isOpen={isCreateModalOpen}
+        onClose={handleCloseCreateModal}
       />
     </div>
   );
