@@ -5,84 +5,51 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ApplicationCard from './ApplicationCard';
 import CampaignFilter from './CampaignFilter';
 import { InfluencerApplication } from '@/types/brandDashboard';
+import { useBrandApplications } from '@/hooks/useBrandApplications';
 
-// Hardcoded dummy data for initial implementation
-const dummyApplications: InfluencerApplication[] = [
-  {
-    id: '1',
-    campaignId: 'camp1',
-    campaignTitle: 'Coca-Cola Summer Campaign',
-    influencer: {
-      name: 'Sarah Johnson',
-      handle: 'sarahjfitness',
-      followers: 125000,
-      platform: 'Instagram',
-      profileImage: undefined
-    },
-    appliedAt: '2024-01-15T10:30:00Z',
-    status: 'pending',
-    engagementRate: 4.2,
-    averageViews: 8500,
-    niche: ['Fitness', 'Lifestyle', 'Health'],
-    aiScore: 87
-  },
-  {
-    id: '2',
-    campaignId: 'camp2',
-    campaignTitle: 'Travel Promo Adventure',
-    influencer: {
-      name: 'Mike Chen',
-      handle: 'miketravels',
-      followers: 89000,
-      platform: 'Instagram'
-    },
-    appliedAt: '2024-01-14T15:45:00Z',
-    status: 'approved',
-    engagementRate: 3.8,
-    averageViews: 6200,
-    niche: ['Travel', 'Photography', 'Adventure'],
-    aiScore: 92
-  },
-  {
-    id: '3',
-    campaignId: 'camp1',
-    campaignTitle: 'Coca-Cola Summer Campaign',
-    influencer: {
-      name: 'Emma Wilson',
-      handle: 'emmastyle',
-      followers: 67000,
-      platform: 'Instagram'
-    },
-    appliedAt: '2024-01-13T09:20:00Z',
-    status: 'rejected',
-    engagementRate: 2.9,
-    averageViews: 4100,
-    niche: ['Fashion', 'Lifestyle'],
-    aiScore: 65
-  },
-  {
-    id: '4',
-    campaignId: 'camp3',
-    campaignTitle: 'Tech Innovation Showcase',
-    influencer: {
-      name: 'Alex Rodriguez',
-      handle: 'alextech',
-      followers: 156000,
-      platform: 'Instagram'
-    },
-    appliedAt: '2024-01-16T14:15:00Z',
-    status: 'pending',
-    engagementRate: 5.1,
-    averageViews: 12000,
-    niche: ['Technology', 'Innovation', 'Reviews'],
-    aiScore: 94
-  }
-];
+interface ApplicationsTabProps {
+  applications?: InfluencerApplication[];
+}
 
-const ApplicationsTab: React.FC = () => {
-  const [applications, setApplications] = useState<InfluencerApplication[]>(dummyApplications);
+const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ applications: propApplications }) => {
+  const { data: fetchedApplications = [], isLoading, error } = useBrandApplications(50);
   const [selectedCampaign, setSelectedCampaign] = useState<string>('');
   const [activeTab, setActiveTab] = useState<string>('open');
+  const [localApplications, setLocalApplications] = useState<InfluencerApplication[]>([]);
+
+  // Use prop applications if provided, otherwise use fetched applications
+  const sourceApplications = propApplications || fetchedApplications.map((app: any) => ({
+    id: app.application_id,
+    campaignId: app.campaign_id,
+    campaignTitle: app.campaign_title,
+    influencer: {
+      name: app.influencer_name,
+      handle: app.influencer_handle,
+      followers: app.followers_count,
+      platform: app.platform
+    },
+    appliedAt: app.applied_at,
+    status: app.application_status as 'pending' | 'approved' | 'rejected',
+    engagementRate: parseFloat(app.engagement_rate?.toString() || '0'),
+    averageViews: app.average_views || 0,
+    niche: Array.isArray(app.niche) ? app.niche : [],
+    aiScore: app.ai_score || 0
+  }));
+
+  // Merge source applications with local updates
+  const applications = useMemo(() => {
+    const merged = [...sourceApplications];
+    
+    // Apply local updates
+    localApplications.forEach(localApp => {
+      const index = merged.findIndex(app => app.id === localApp.id);
+      if (index !== -1) {
+        merged[index] = localApp;
+      }
+    });
+    
+    return merged;
+  }, [sourceApplications, localApplications]);
 
   // Extract unique campaigns for filter dropdown
   const availableCampaigns = useMemo(() => {
@@ -112,24 +79,26 @@ const ApplicationsTab: React.FC = () => {
 
   // Handle application status updates
   const handleApproveApplication = (applicationId: string) => {
-    setApplications(prev => 
-      prev.map(app => 
-        app.id === applicationId 
-          ? { ...app, status: 'approved' as const }
-          : app
-      )
-    );
+    const updatedApp = applications.find(app => app.id === applicationId);
+    if (updatedApp) {
+      const newApp = { ...updatedApp, status: 'approved' as const };
+      setLocalApplications(prev => {
+        const filtered = prev.filter(app => app.id !== applicationId);
+        return [...filtered, newApp];
+      });
+    }
     console.log('Application approved:', applicationId);
   };
 
   const handleRejectApplication = (applicationId: string) => {
-    setApplications(prev => 
-      prev.map(app => 
-        app.id === applicationId 
-          ? { ...app, status: 'rejected' as const }
-          : app
-      )
-    );
+    const updatedApp = applications.find(app => app.id === applicationId);
+    if (updatedApp) {
+      const newApp = { ...updatedApp, status: 'rejected' as const };
+      setLocalApplications(prev => {
+        const filtered = prev.filter(app => app.id !== applicationId);
+        return [...filtered, newApp];
+      });
+    }
     console.log('Application rejected:', applicationId);
   };
 
@@ -137,6 +106,27 @@ const ApplicationsTab: React.FC = () => {
     console.log('View profile for application:', applicationId);
     // TODO: Navigate to influencer profile page
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-8">
+          <p className="text-gray-500">Loading applications...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-8">
+          <p className="text-red-500">Error loading applications</p>
+          <p className="text-gray-500 mt-2">{error.message}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -28,10 +28,10 @@ const BrandDashboard: React.FC = () => {
     },
     appliedAt: app.applied_at,
     status: app.application_status as 'pending' | 'approved' | 'rejected',
-    engagementRate: parseFloat(app.engagement_rate.toString()),
-    averageViews: app.average_views,
-    niche: app.niche,
-    aiScore: app.ai_score
+    engagementRate: parseFloat(app.engagement_rate?.toString() || '0'),
+    averageViews: app.average_views || 0,
+    niche: Array.isArray(app.niche) ? app.niche : [],
+    aiScore: app.ai_score || 0
   }));
 
   const handleViewCampaignDetails = (campaignId: string) => {
@@ -198,7 +198,7 @@ const BrandDashboard: React.FC = () => {
             <TabsContent value="applications">
               <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
                 <h2 className="text-2xl font-bold text-[#1a1f2e] mb-6">Applications Management</h2>
-                <ApplicationsTab />
+                <ApplicationsTab applications={recentApplications} />
               </div>
             </TabsContent>
           </Tabs>
