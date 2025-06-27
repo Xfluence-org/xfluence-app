@@ -1,51 +1,27 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Search, Filter } from 'lucide-react';
 
 interface SearchBarProps {
-  onSearch: (query: string) => void;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
   onFilterClick: () => void;
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onFilterClick }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // Debounce search to avoid too many API calls
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      onSearch(searchQuery);
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, onSearch]);
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      onSearch(searchQuery);
-    }
-  };
-
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSearch(searchQuery);
-  };
-
+const SearchBar: React.FC<SearchBarProps> = ({
+  searchQuery,
+  onSearchChange,
+  onFilterClick
+}) => {
   return (
-    <form onSubmit={handleFormSubmit} className="flex gap-4 mb-8">
+    <div className="flex gap-4 mb-8">
       <div className="flex-1 relative">
         <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
         <input
           type="text"
           placeholder="Search campaigns, categories, platform"
           value={searchQuery}
-          onChange={handleSearch}
-          onKeyDown={handleKeyDown}
+          onChange={(e) => onSearchChange(e.target.value)}
           className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1DDCD3] focus:border-transparent text-[#1a1f2e] placeholder-gray-500 bg-white shadow-sm"
         />
       </div>
@@ -56,7 +32,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onFilterClick }) => {
       >
         <Filter className="w-5 h-5 text-gray-600" />
       </button>
-    </form>
+    </div>
   );
 };
 

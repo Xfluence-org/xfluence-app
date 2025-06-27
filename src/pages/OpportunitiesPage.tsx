@@ -1,5 +1,4 @@
-
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Sidebar from '@/components/dashboard/Sidebar';
 import SearchBar from '@/components/opportunities/SearchBar';
@@ -12,6 +11,7 @@ import { Opportunity } from '@/types/opportunities';
 
 const OpportunitiesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
   const [selectedOpportunityId, setSelectedOpportunityId] = useState<string>('');
@@ -25,15 +25,24 @@ const OpportunitiesPage: React.FC = () => {
 
   const { toast } = useToast();
 
+  // Debounce search query
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
   // Use React Query to fetch opportunities with the new database function
   const { data: opportunitiesData, isLoading: loading, error, refetch } = useQuery({
-    queryKey: ['opportunities', searchQuery, activeFilters],
+    queryKey: ['opportunities', debouncedSearchQuery, activeFilters],
     queryFn: async () => {
-      console.log('Fetching opportunities with search query:', searchQuery);
+      console.log('Fetching opportunities with search query:', debouncedSearchQuery);
       console.log('Active filters:', activeFilters);
       
       const { data, error } = await supabase.rpc('get_opportunities', {
-        search_query: searchQuery || '',
+        search_query: debouncedSearchQuery || '',
         category_filter: activeFilters.categories[0] || '',
         min_compensation: activeFilters.compensationRange.min * 100, // convert to cents
         max_compensation: activeFilters.compensationRange.max * 100,
@@ -100,10 +109,10 @@ const OpportunitiesPage: React.FC = () => {
     return filtered;
   }, [opportunities, activeFilters.platforms]);
 
-  const handleSearch = useCallback((query: string) => {
+  const handleSearchChange = (query: string) => {
     console.log('Search query changed to:', query);
     setSearchQuery(query);
-  }, []);
+  };
 
   const handleFilterClick = () => {
     setIsFilterModalOpen(true);
@@ -231,7 +240,11 @@ const OpportunitiesPage: React.FC = () => {
                   {filteredOpportunities.length} campaigns available
                 </p>
                 
-                <SearchBar onSearch={handleSearch} onFilterClick={handleFilterClick} />
+                <SearchBar 
+                  searchQuery={searchQuery}
+                  onSearchChange={handleSearchChange} 
+                  onFilterClick={handleFilterClick} 
+                />
               </div>
 
               <div className="space-y-6">
