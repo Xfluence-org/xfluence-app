@@ -19,19 +19,30 @@ interface BrandApplication {
   application_message: string;
 }
 
-export const useBrandApplications = (limit: number = 10) => {
+export const useBrandApplications = (limit: number = 50) => {
   return useQuery({
     queryKey: ['brand-applications', limit],
     queryFn: async () => {
-      console.log('Fetching brand applications');
+      console.log('Fetching brand applications with limit:', limit);
       
-      const { data, error } = await supabase.rpc('get_brand_applications', {
+      const { data, error } = await supabase.rpc('get_brand_applications_all', {
         limit_count: limit
       });
 
       if (error) {
         console.error('Error fetching brand applications:', error);
-        throw error;
+        // Fallback to original function if new one doesn't exist yet
+        const { data: fallbackData, error: fallbackError } = await supabase.rpc('get_brand_applications', {
+          limit_count: limit
+        });
+        
+        if (fallbackError) {
+          console.error('Error with fallback:', fallbackError);
+          throw fallbackError;
+        }
+        
+        console.log('Fetched brand applications (fallback):', fallbackData);
+        return fallbackData || [];
       }
 
       console.log('Fetched brand applications:', data);

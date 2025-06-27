@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ApplicationCard from './ApplicationCard';
-import CampaignFilter from './CampaignFilter';
+import CampaignSearch from './CampaignSearch';
 import { InfluencerApplication } from '@/types/brandDashboard';
 import { useBrandApplications } from '@/hooks/useBrandApplications';
 
@@ -12,13 +12,13 @@ interface ApplicationsTabProps {
 }
 
 const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ applications: propApplications }) => {
-  const { data: fetchedApplications = [], isLoading, error } = useBrandApplications(50);
-  const [selectedCampaign, setSelectedCampaign] = useState<string>('all');
+  const { data: fetchedApplications = [], isLoading, error } = useBrandApplications(100); // Increased limit to get more data
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeTab, setActiveTab] = useState<string>('open');
   const [localApplications, setLocalApplications] = useState<InfluencerApplication[]>([]);
 
-  // Use prop applications if provided, otherwise use fetched applications
-  const sourceApplications = propApplications || fetchedApplications.map((app: any) => ({
+  // Use fetched applications from database (prioritize database over props)
+  const sourceApplications = fetchedApplications.map((app: any) => ({
     id: app.application_id,
     campaignId: app.campaign_id,
     campaignTitle: app.campaign_title,
@@ -51,26 +51,22 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ applications: propApp
     return merged;
   }, [sourceApplications, localApplications]);
 
-  // Extract unique campaigns for filter dropdown
-  const availableCampaigns = useMemo(() => {
-    const campaigns = applications.map(app => ({
-      id: app.campaignId,
-      title: app.campaignTitle
-    }));
-    return Array.from(new Map(campaigns.map(c => [c.id, c])).values());
-  }, [applications]);
-
-  // Filter applications by campaign and status
+  // Filter applications by search query
   const filteredApplications = useMemo(() => {
     let filtered = applications;
     
-    // Filter by campaign if selected (and not "all")
-    if (selectedCampaign && selectedCampaign !== 'all') {
-      filtered = filtered.filter(app => app.campaignId === selectedCampaign);
+    // Filter by search query if provided
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(app => 
+        app.campaignTitle.toLowerCase().includes(query) ||
+        app.influencer.name.toLowerCase().includes(query) ||
+        app.influencer.handle.toLowerCase().includes(query)
+      );
     }
     
     return filtered;
-  }, [applications, selectedCampaign]);
+  }, [applications, searchQuery]);
 
   // Separate applications by status
   const openApplications = filteredApplications.filter(app => app.status === 'pending');
@@ -130,11 +126,10 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ applications: propApp
 
   return (
     <div className="space-y-6">
-      {/* Campaign Filter */}
-      <CampaignFilter
-        campaigns={availableCampaigns}
-        selectedCampaign={selectedCampaign}
-        onCampaignChange={setSelectedCampaign}
+      {/* Campaign Search */}
+      <CampaignSearch
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
       />
 
       {/* Applications Tabs */}
@@ -173,7 +168,9 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ applications: propApp
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">No open applications found.</p>
+                  <p className="text-gray-500">
+                    {searchQuery ? 'No applications found matching your search.' : 'No open applications found.'}
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -203,7 +200,9 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ applications: propApp
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">No approved applications found.</p>
+                  <p className="text-gray-500">
+                    {searchQuery ? 'No approved applications found matching your search.' : 'No approved applications found.'}
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -233,7 +232,9 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ applications: propApp
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">No rejected applications found.</p>
+                  <p className="text-gray-500">
+                    {searchQuery ? 'No rejected applications found matching your search.' : 'No rejected applications found.'}
+                  </p>
                 </div>
               )}
             </CardContent>
