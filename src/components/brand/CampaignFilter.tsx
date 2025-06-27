@@ -31,7 +31,7 @@ const CampaignFilter: React.FC<CampaignFilterProps> = ({
           <SelectValue placeholder="All Campaigns" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All Campaigns</SelectItem>
+          <SelectItem value="all">All Campaigns</SelectItem>
           {campaigns.map((campaign) => (
             <SelectItem key={campaign.id} value={campaign.id}>
               {campaign.title}

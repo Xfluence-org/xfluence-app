@@ -13,7 +13,7 @@ interface ApplicationsTabProps {
 
 const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ applications: propApplications }) => {
   const { data: fetchedApplications = [], isLoading, error } = useBrandApplications(50);
-  const [selectedCampaign, setSelectedCampaign] = useState<string>('');
+  const [selectedCampaign, setSelectedCampaign] = useState<string>('all');
   const [activeTab, setActiveTab] = useState<string>('open');
   const [localApplications, setLocalApplications] = useState<InfluencerApplication[]>([]);
 
@@ -64,8 +64,8 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ applications: propApp
   const filteredApplications = useMemo(() => {
     let filtered = applications;
     
-    // Filter by campaign if selected
-    if (selectedCampaign) {
+    // Filter by campaign if selected (and not "all")
+    if (selectedCampaign && selectedCampaign !== 'all') {
       filtered = filtered.filter(app => app.campaignId === selectedCampaign);
     }
     
