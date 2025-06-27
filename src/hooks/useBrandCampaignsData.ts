@@ -58,7 +58,7 @@ export const useBrandCampaignsData = (view: CampaignView) => {
           budget,
           amount,
           due_date,
-          categories,
+          category,
           created_at,
           is_public,
           brand_id,
@@ -83,12 +83,12 @@ export const useBrandCampaignsData = (view: CampaignView) => {
         campaign_title: campaign.title,
         campaign_status: campaign.status,
         budget: campaign.budget || campaign.amount || 0,
-        spent: 0,
-        applicants: 0,
-        accepted: 0,
+        spent: 0, // This would come from actual spending data
+        applicants: 0, // This would be calculated from campaign_participants
+        accepted: 0, // This would be calculated from campaign_participants
         due_date: campaign.due_date,
-        platforms: ['Instagram', 'TikTok'],
-        category: Array.isArray(campaign.categories) ? campaign.categories.join(', ') : 'General',
+        platforms: ['Instagram', 'TikTok'], // Default platforms
+        category: campaign.category || 'General',
         progress: campaign.status === 'completed' ? 100 : 
                  campaign.status === 'active' ? 75 : 
                  campaign.status === 'published' ? 50 : 25
