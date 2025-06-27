@@ -38,10 +38,15 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
 
   useEffect(() => {
     if (campaign) {
+      // Handle category conversion from array to string for the form
+      const categoryValue = Array.isArray(campaign.category) 
+        ? campaign.category[0] || '' 
+        : campaign.category || '';
+        
       setEditForm({
         title: campaign.title || '',
         description: campaign.description || '',
-        category: campaign.category || '',
+        category: categoryValue,
         budget: campaign.budget || 0
       });
     }
@@ -56,10 +61,15 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
 
   const handleCancel = () => {
     if (campaign) {
+      // Handle category conversion from array to string for the form
+      const categoryValue = Array.isArray(campaign.category) 
+        ? campaign.category[0] || '' 
+        : campaign.category || '';
+        
       setEditForm({
         title: campaign.title || '',
         description: campaign.description || '',
-        category: campaign.category || '',
+        category: categoryValue,
         budget: campaign.budget || 0
       });
     }
@@ -147,7 +157,12 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                       placeholder="Enter category"
                     />
                   ) : (
-                    <p className="text-gray-900">{campaign.category}</p>
+                    <p className="text-gray-900">
+                      {Array.isArray(campaign.category) 
+                        ? campaign.category[0] || 'General' 
+                        : campaign.category || 'General'
+                      }
+                    </p>
                   )}
                 </div>
 
