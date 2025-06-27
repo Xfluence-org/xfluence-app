@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-type CampaignView = 'active' | 'completed' | 'archived';
+type CampaignView = 'active' | 'published' | 'completed' | 'archived';
 
 export const useBrandCampaignsData = (view: CampaignView) => {
   const queryClient = useQueryClient();
@@ -12,9 +12,43 @@ export const useBrandCampaignsData = (view: CampaignView) => {
     queryFn: async () => {
       console.log('Fetching brand campaigns for view:', view);
       
-      const { data, error } = await supabase.rpc('get_brand_campaigns', {
-        brand_filter: view
-      });
+      // Map view to database status
+      let statusFilter: string;
+      switch (view) {
+        case 'active':
+          statusFilter = 'active';
+          break;
+        case 'published':
+          statusFilter = 'published';
+          break;
+        case 'completed':
+          statusFilter = 'completed';
+          break;
+        case 'archived':
+          statusFilter = 'archived';
+          break;
+        default:
+          statusFilter = 'active';
+      }
+
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select(`
+          id,
+          title,
+          status,
+          budget,
+          amount,
+          due_date,
+          category,
+          created_at,
+          is_public,
+          brands (
+            name
+          )
+        `)
+        .eq('status', statusFilter)
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching brand campaigns:', error);
@@ -22,7 +56,23 @@ export const useBrandCampaignsData = (view: CampaignView) => {
       }
 
       console.log('Fetched brand campaigns:', data);
-      return data || [];
+      
+      // Transform data to match expected interface
+      return (data || []).map(campaign => ({
+        campaign_id: campaign.id,
+        campaign_title: campaign.title,
+        campaign_status: campaign.status,
+        budget: campaign.budget || campaign.amount || 0,
+        spent: 0, // This would come from actual spending data
+        applicants: 0, // This would be calculated from campaign_participants
+        accepted: 0, // This would be calculated from campaign_participants
+        due_date: campaign.due_date,
+        platforms: ['Instagram', 'TikTok'], // Default platforms
+        category: campaign.category || 'General',
+        progress: campaign.status === 'completed' ? 100 : 
+                 campaign.status === 'active' ? 75 : 
+                 campaign.status === 'published' ? 50 : 25
+      }));
     }
   });
 
@@ -30,7 +80,7 @@ export const useBrandCampaignsData = (view: CampaignView) => {
     mutationFn: async (campaignId: string) => {
       console.log('Archiving campaign:', campaignId);
       
-      // Update campaign status to archived
+      // Update campaign status to archived and set is_public to false
       const { error: campaignError } = await supabase
         .from('campaigns')
         .update({ 
