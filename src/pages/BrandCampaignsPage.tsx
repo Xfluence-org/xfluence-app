@@ -92,7 +92,7 @@ const BrandCampaignsPage: React.FC = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {campaigns.map((campaign) => (
                         <BrandCampaignCard
-                          key={campaign.id}
+                          key={campaign.campaign_id}
                           campaign={campaign}
                           onView={handleViewCampaign}
                           onArchive={handleArchiveCampaign}
@@ -115,7 +115,7 @@ const BrandCampaignsPage: React.FC = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {campaigns.map((campaign) => (
                         <BrandCampaignCard
-                          key={campaign.id}
+                          key={campaign.campaign_id}
                           campaign={campaign}
                           onView={handleViewCampaign}
                           onArchive={handleArchiveCampaign}
@@ -138,7 +138,7 @@ const BrandCampaignsPage: React.FC = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {campaigns.map((campaign) => (
                         <BrandCampaignCard
-                          key={campaign.id}
+                          key={campaign.campaign_id}
                           campaign={campaign}
                           onView={handleViewCampaign}
                           onArchive={handleArchiveCampaign}

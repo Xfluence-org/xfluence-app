@@ -34,7 +34,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
     budget: 0
   });
 
-  const { campaign, loading, error } = useCampaignDetail(campaignId);
+  const { data: campaign, isLoading, error } = useCampaignDetail(campaignId);
 
   useEffect(() => {
     if (campaign) {
@@ -106,7 +106,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
           </div>
         </DialogHeader>
 
-        {loading ? (
+        {isLoading ? (
           <div className="text-center py-8">
             <p className="text-gray-500">Loading campaign details...</p>
           </div>
