@@ -27,7 +27,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredUserT
     // Redirect to appropriate dashboard based on user type
     if (profile.user_type === 'Influencer') {
       return <Navigate to="/dashboard" replace />;
-    } else {
+    } else if (profile.user_type === 'Agency' || profile.user_type === 'Brand') {
       return <Navigate to="/brand-dashboard" replace />;
     }
   }

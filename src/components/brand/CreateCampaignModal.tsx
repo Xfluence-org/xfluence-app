@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -24,40 +25,21 @@ import * as z from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const campaignFormSchema = z.object({
+  brand_name: z.string().min(1, 'Brand name is required'),
   goals: z.string().min(1, 'Goals are required'),
   campaign_description: z.string().min(1, 'Description is required'),
   categories: z.array(z.string()).min(1, 'At least one category is required'),
   total_influencers: z.number().min(1, 'Must have at least 1 influencer'),
-  follower_tiers: z.array(z.string()).min(1, 'At least one follower tier is required'),
+  influencer_tiers: z.array(z.string()).min(1, 'At least one influencer tier is required'),
   content_types: z.array(z.string()).min(1, 'At least one content type is required'),
   budget_min: z.number().min(0, 'Minimum budget must be 0 or greater'),
   budget_max: z.number().min(1, 'Maximum budget must be greater than 0'),
 });
 
 type CampaignFormData = z.infer<typeof campaignFormSchema>;
-
-interface CampaignPlannerResponse {
-  search_strategy_summary: string;
-  influencer_allocation: {
-    total_influencers: number;
-    allocation_by_category: Record<string, number>;
-    allocation_by_tier: Record<string, Record<string, number>>;
-  };
-  content_strategy: {
-    content_distribution: {
-      rationale: string;
-      [key: string]: any;
-    };
-    platform_specific_strategies: Record<string, any>;
-  };
-  actionable_search_tactics: {
-    niche_hashtags: string[];
-    platform_tools: string[];
-  };
-  justification: string;
-}
 
 interface CreateCampaignModalProps {
   isOpen: boolean;
@@ -71,15 +53,22 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user, profile } = useAuth();
+
+  // Check if user is Agency or Brand
+  if (!profile || (profile.user_type !== 'Agency' && profile.user_type !== 'Brand')) {
+    return null; // Don't render modal for non-brand/agency users
+  }
 
   const form = useForm<CampaignFormData>({
     resolver: zodResolver(campaignFormSchema),
     defaultValues: {
+      brand_name: '',
       goals: '',
       campaign_description: '',
       categories: [],
       total_influencers: 5,
-      follower_tiers: [],
+      influencer_tiers: [],
       content_types: [],
       budget_min: 0,
       budget_max: 1000,
@@ -91,22 +80,87 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
     console.log('Campaign creation data:', data);
     
     try {
-      // Create temporary campaign data
+      // First, create or get the brand
+      let brandId: string;
+      
+      // Check if brand already exists
+      const { data: existingBrand, error: brandCheckError } = await supabase
+        .from('brands')
+        .select('id')
+        .eq('name', data.brand_name)
+        .single();
+
+      if (brandCheckError && brandCheckError.code !== 'PGRST116') {
+        console.error('Error checking existing brand:', brandCheckError);
+        toast({
+          title: "Error",
+          description: "Failed to check existing brand.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (existingBrand) {
+        brandId = existingBrand.id;
+      } else {
+        // Create new brand
+        const { data: newBrand, error: brandError } = await supabase
+          .from('brands')
+          .insert({
+            name: data.brand_name
+          })
+          .select()
+          .single();
+
+        if (brandError) {
+          console.error('Error creating brand:', brandError);
+          toast({
+            title: "Error",
+            description: "Failed to create brand.",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        brandId = newBrand.id;
+      }
+
+      // Create brand_user association if it doesn't exist
+      const { error: brandUserError } = await supabase
+        .from('brand_users')
+        .upsert({
+          user_id: user?.id,
+          brand_id: brandId,
+          role: 'admin'
+        });
+
+      if (brandUserError) {
+        console.error('Error creating brand user association:', brandUserError);
+        toast({
+          title: "Error",
+          description: "Failed to associate user with brand.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Create temporary campaign data with brand_id
       const campaignData = {
         id: Date.now(),
         ...data,
+        brand_id: brandId,
         platform: 'Instagram',
         created_at: new Date().toISOString(),
       };
       
-      // Prepare search parameters for the edge function - nested under searchParams
+      // Prepare search parameters for the edge function
       const requestBody = {
         searchParams: {
           goals: data.goals,
           campaign_description: data.campaign_description,
           categories: data.categories,
           total_influencers: data.total_influencers,
-          follower_tier: data.follower_tiers.length > 0 ? data.follower_tiers : ['micro', 'mid'],
+          follower_tier: data.influencer_tiers.length > 0 ? data.influencer_tiers : ['micro', 'mid'],
           content_type: data.content_types.length > 0 ? data.content_types : ['post', 'reel'],
           budget_min: data.budget_min,
           budget_max: data.budget_max,
@@ -114,7 +168,6 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
       };
       
       console.log('Request body being sent to edge function:', requestBody);
-      console.log('JSON stringified request body:', JSON.stringify(requestBody, null, 2));
       
       // Call the campaign planner edge function
       console.log('Calling campaign_planner edge function...');
@@ -152,7 +205,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
 
       console.log('Campaign planner successful response:', plannerResponse);
       
-      // Parse the response if it's a string (sometimes edge functions return stringified JSON)
+      // Parse the response if it's a string
       let parsedResponse = plannerResponse;
       if (typeof plannerResponse === 'string') {
         try {
@@ -210,14 +263,18 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
     'Gaming',
   ];
 
-  const followerTiers = [
+  const influencerTiers = [
+    { value: 'nano', label: 'Nano (1K-10K)' },
     { value: 'micro', label: 'Micro (10K-50K)' },
-    { value: 'mid', label: 'Mid (50K-100K)' },
+    { value: 'mid', label: 'Mid (50K-500K)' },
+    { value: 'macro', label: 'Macro (500K-1M)' },
+    { value: 'mega', label: 'Mega (1M+)' },
   ];
 
   const contentTypes = [
     { value: 'post', label: 'Post' },
     { value: 'reel', label: 'Reel' },
+    { value: 'story', label: 'Story' },
   ];
 
   return (
@@ -231,6 +288,23 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="brand_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Brand Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter your brand name..."
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="goals"
@@ -337,16 +411,16 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
-                name="follower_tiers"
+                name="influencer_tiers"
                 render={() => (
                   <FormItem>
-                    <FormLabel>Follower Tiers (Multi-select)</FormLabel>
+                    <FormLabel>Influencer Tiers (Multi-select)</FormLabel>
                     <div className="space-y-2 p-3 border rounded-md bg-background">
-                      {followerTiers.map((tier) => (
+                      {influencerTiers.map((tier) => (
                         <FormField
                           key={tier.value}
                           control={form.control}
-                          name="follower_tiers"
+                          name="influencer_tiers"
                           render={({ field }) => {
                             return (
                               <FormItem
