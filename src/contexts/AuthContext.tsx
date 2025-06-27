@@ -41,10 +41,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Add refs to track state and prevent unwanted redirects
-  const hasRedirectedRef = useRef(false);
-  const isInitialLoadRef = useRef(true);
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -66,42 +62,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // More restrictive function to determine when to redirect
-  const shouldRedirectOnEvent = (event: string) => {
-    // Only redirect on actual sign-in
-    if (event === 'SIGNED_IN') return true;
-    
-    // Don't redirect on token refresh, sign out, etc.
-    return false;
-  };
-
-  const shouldRedirect = (userType: UserType, currentPath: string) => {
-    // Don't redirect if user is already on an appropriate page
-    if (userType === 'Influencer') {
-      return !currentPath.startsWith('/dashboard') && 
-             !currentPath.startsWith('/opportunities') && 
-             !currentPath.startsWith('/campaigns');
-    } else {
-      return !currentPath.startsWith('/brand-dashboard') && 
-             !currentPath.startsWith('/brand/') && 
-             !currentPath.startsWith('/campaign-review') &&
-             !currentPath.startsWith('/campaigns');
-    }
-  };
-
-  const redirectToDashboard = (userType: UserType, force: boolean = false) => {
-    // Prevent multiple redirects unless forced
-    if (hasRedirectedRef.current && !force) {
-      return;
-    }
-
-    if (!shouldRedirect(userType, location.pathname)) {
-      return; // Don't redirect if user is already on appropriate page
-    }
-
+  const redirectToDashboard = (userType: UserType) => {
     console.log('Redirecting user to dashboard:', userType);
-    hasRedirectedRef.current = true;
-
+    
     if (userType === 'Influencer') {
       navigate('/dashboard');
     } else {
@@ -112,7 +75,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let isMounted = true;
 
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.id);
@@ -123,28 +85,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Fetch user profile
           const userProfile = await fetchUserProfile(session.user.id);
           
           if (!isMounted) return;
           
           setProfile(userProfile);
           
-          // Only redirect on specific events and conditions
-          if (userProfile && shouldRedirectOnEvent(event)) {
-            redirectToDashboard(userProfile.user_type);
+          // Only redirect on successful sign in and if user is on auth page
+          if (event === 'SIGNED_IN' && userProfile) {
+            const isOnAuthPage = location.pathname === '/' || 
+                                location.pathname === '/login' || 
+                                location.pathname === '/signup';
+            
+            if (isOnAuthPage) {
+              redirectToDashboard(userProfile.user_type);
+            }
           }
         } else {
           setProfile(null);
-          hasRedirectedRef.current = false; // Reset redirect flag when user logs out
         }
 
         setLoading(false);
-        isInitialLoadRef.current = false;
       }
     );
 
-    // Check for existing session (initial load)
+    // Check for existing session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!isMounted) return;
 
@@ -157,23 +122,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           setProfile(userProfile);
           
-          // Only redirect on initial load if user is on auth page
-          if (userProfile && isInitialLoadRef.current) {
-            const isOnAuthPage = location.pathname === '/' || 
-                                location.pathname === '/login' || 
-                                location.pathname === '/signup';
-            
-            if (isOnAuthPage) {
-              redirectToDashboard(userProfile.user_type, true);
-            }
+          // Only redirect if user is on auth page
+          const isOnAuthPage = location.pathname === '/' || 
+                              location.pathname === '/login' || 
+                              location.pathname === '/signup';
+          
+          if (userProfile && isOnAuthPage) {
+            redirectToDashboard(userProfile.user_type);
           }
           
           setLoading(false);
-          isInitialLoadRef.current = false;
         });
       } else {
         setLoading(false);
-        isInitialLoadRef.current = false;
       }
     });
 
@@ -181,15 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, []); // Remove location dependency to prevent re-runs
-
-  // Reset redirect flag when location changes manually
-  useEffect(() => {
-    // Allow redirects again if user manually navigates
-    if (!isInitialLoadRef.current) {
-      hasRedirectedRef.current = false;
-    }
-  }, [location.pathname]);
+  }, []);
 
   const signUp = async (email: string, password: string, userType: UserType, name: string) => {
     try {
@@ -219,16 +172,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Signing in:', { email });
       
-      // Validate inputs
       if (!email || !password) {
         return { error: new Error('Email and password are required') };
       }
 
-      // Reset redirect flag before signing in
-      hasRedirectedRef.current = false;
-      
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim(),
         password
       });
 
@@ -258,7 +207,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    hasRedirectedRef.current = false; // Reset redirect flag
     await supabase.auth.signOut();
     navigate('/');
   };
