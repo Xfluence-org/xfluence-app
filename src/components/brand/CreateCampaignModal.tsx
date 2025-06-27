@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -26,7 +25,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Loader2, Send } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { CampaignReviewStep } from './CampaignReviewStep';
+import CampaignReviewStep from './CampaignReviewStep';
 
 const campaignFormSchema = z.object({
   brand_name: z.string().min(1, 'Brand name is required'),
@@ -43,6 +42,15 @@ const campaignFormSchema = z.object({
 
 type CampaignFormData = z.infer<typeof campaignFormSchema>;
 
+// Extended type for internal use that includes calculated fields
+type ExtendedCampaignData = CampaignFormData & {
+  due_date: Date;
+  brand_id: string;
+  id: number;
+  platform: string;
+  created_at: string;
+};
+
 interface CreateCampaignModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -56,7 +64,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
   const [isPublishing, setIsPublishing] = useState(false);
   const [currentStep, setCurrentStep] = useState<'form' | 'review'>('form');
   const [campaignStrategy, setCampaignStrategy] = useState<any>(null);
-  const [formData, setFormData] = useState<CampaignFormData | null>(null);
+  const [formData, setFormData] = useState<ExtendedCampaignData | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
@@ -159,9 +167,9 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
 
       // Create campaign data with brand_id and calculated due date
       const dueDate = calculateDueDate(data.campaign_validity_days);
-      const campaignData = {
-        id: Date.now(),
+      const campaignData: ExtendedCampaignData = {
         ...data,
+        id: Date.now(),
         brand_id: brandId,
         due_date: dueDate,
         platform: 'Instagram',
@@ -259,30 +267,23 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
 
     setIsPublishing(true);
     try {
-      // Extract requirements from the campaign strategy
+      // Extract content distribution from campaign strategy
       const contentDistribution = campaignStrategy.content_strategy?.content_distribution || {};
-      const requirements = {
-        total_influencers: formData.total_influencers,
-        follower_tiers: formData.influencer_tiers,
-        content_types: formData.content_types,
-        categories: formData.categories,
-        content_distribution: contentDistribution
-      };
-
+      
       // Create the campaign in the database
       const { data: newCampaign, error } = await supabase
         .from('campaigns')
         .insert({
           title: `${formData.goals} Campaign`,
           description: formData.campaign_description,
-          category: formData.categories, // Store as array
-          budget: formData.budget_max * 100, // Convert to cents
+          category: formData.categories, // Populate from dialog categories
+          budget: formData.budget_max * 100, // Populate from max budget
           amount: formData.budget_max * 100,
-          compensation_min: formData.budget_min * 100,
-          compensation_max: formData.budget_max * 100,
-          due_date: formData.due_date,
-          application_deadline: formData.due_date,
-          requirements: requirements,
+          compensation_min: formData.budget_min * 100, // Populate from min budget
+          compensation_max: formData.budget_max * 100, // Populate from max budget
+          due_date: formData.due_date, // Populate from validity field
+          application_deadline: formData.due_date, // Same as due_date
+          requirements: contentDistribution, // Populate from LLM response
           status: 'published',
           is_public: true,
           llm_campaign: campaignStrategy,
@@ -335,6 +336,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
     setCurrentStep('form');
   };
 
+  // Categories for the form
   const categories = [
     'Food & Drinks',
     'Travel',
@@ -346,6 +348,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
     'Gaming',
   ];
 
+  // Influencer tiers for the form
   const influencerTiers = [
     { value: 'nano', label: 'Nano (1K-10K)' },
     { value: 'micro', label: 'Micro (10K-50K)' },
@@ -354,13 +357,16 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
     { value: 'mega', label: 'Mega (1M+)' },
   ];
 
+  // Content types for the form
   const contentTypes = [
     { value: 'post', label: 'Post' },
     { value: 'reel', label: 'Reel' },
     { value: 'story', label: 'Story' },
   ];
 
+  // Watched validity days for the form
   const watchedValidityDays = form.watch('campaign_validity_days');
+  // Calculated due date based on watched validity days
   const calculatedDueDate = watchedValidityDays ? calculateDueDate(watchedValidityDays) : null;
 
   return (
