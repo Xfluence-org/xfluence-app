@@ -1,7 +1,8 @@
-
 import React, { useState } from 'react';
 import BrandSidebar from '@/components/brand/BrandSidebar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 import { useBrandCampaignsData } from '@/hooks/useBrandCampaignsData';
 import BrandCampaignCard from '@/components/brand/BrandCampaignCard';
 import CampaignDetailModal from '@/components/brand/CampaignDetailModal';
@@ -34,6 +35,11 @@ const BrandCampaignsPage: React.FC = () => {
 
   const handleUpdateCampaign = async (campaignId: string, updates: any) => {
     await updateCampaign(campaignId, updates);
+  };
+
+  const handleCreateCampaign = () => {
+    console.log('Create campaign clicked');
+    // TODO: Implement create campaign flow
   };
 
   if (loading) {
@@ -74,8 +80,16 @@ const BrandCampaignsPage: React.FC = () => {
       <main className="flex-1 overflow-y-auto">
         <div className="p-8">
           <header className="mb-8">
-            <h1 className="text-3xl font-bold text-[#1a1f2e] mb-2">Campaign Management</h1>
-            <p className="text-gray-600">Manage your active, published, completed, and archived campaigns</p>
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-3xl font-bold text-[#1a1f2e] mb-2">Campaign Management</h1>
+                <p className="text-gray-600">Manage your active, published, completed, and archived campaigns</p>
+              </div>
+              <Button onClick={handleCreateCampaign} className="bg-[#1a1f2e] hover:bg-[#2a2f3e] text-white">
+                <Plus className="mr-2" />
+                Create Campaign
+              </Button>
+            </div>
           </header>
 
           <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
