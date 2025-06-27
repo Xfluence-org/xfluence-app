@@ -53,8 +53,8 @@ export const useBrandDashboardData = () => {
     id: campaign.campaign_id,
     title: campaign.campaign_title,
     status: campaign.campaign_status as 'active' | 'draft' | 'completed' | 'paused',
-    budget: Math.floor((campaign.budget || 0) / 100), // Convert from cents
-    spent: Math.floor((campaign.spent || 0) / 100), // Convert from cents  
+    budget: campaign.budget || 0, // Budget is now already in dollars from the database
+    spent: campaign.spent || 0, // Spent is already in dollars
     applicants: campaign.applicants,
     accepted: campaign.accepted,
     dueDate: campaign.due_date ? new Date(campaign.due_date).toLocaleDateString('en-GB') : 'TBD',
@@ -72,8 +72,8 @@ export const useBrandDashboardData = () => {
   const metrics: BrandMetrics = {
     totalCampaigns: campaignsData.length,
     activeCampaigns: campaignsData.filter(c => c.campaign_status === 'active').length,
-    totalBudget: campaignsData.reduce((sum, c) => sum + Math.floor((c.budget || 0) / 100), 0),
-    totalSpent: campaignsData.reduce((sum, c) => sum + Math.floor((c.spent || 0) / 100), 0),
+    totalBudget: campaignsData.reduce((sum, c) => sum + (c.budget || 0), 0),
+    totalSpent: campaignsData.reduce((sum, c) => sum + (c.spent || 0), 0),
     pendingApplications: campaignsData.reduce((sum, c) => sum + (c.applicants - c.accepted), 0),
     totalReach: 1250000, // Mock data for now
     avgEngagementRate: 4.2, // Mock data for now
