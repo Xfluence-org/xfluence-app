@@ -26,6 +26,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import CampaignReviewModal from './CampaignReviewModal';
 
 const campaignFormSchema = z.object({
   brand_name: z.string().min(1, 'Brand name is required'),
@@ -37,6 +38,7 @@ const campaignFormSchema = z.object({
   content_types: z.array(z.string()).min(1, 'At least one content type is required'),
   budget_min: z.number().min(0, 'Minimum budget must be 0 or greater'),
   budget_max: z.number().min(1, 'Maximum budget must be greater than 0'),
+  campaign_validity_days: z.number().min(1, 'Campaign validity must be at least 1 day'),
 });
 
 type CampaignFormData = z.infer<typeof campaignFormSchema>;
@@ -51,6 +53,9 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
   onClose,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showReview, setShowReview] = useState(false);
+  const [campaignData, setCampaignData] = useState<any>(null);
+  const [llmResponse, setLlmResponse] = useState<any>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
@@ -72,6 +77,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
       content_types: [],
       budget_min: 0,
       budget_max: 1000,
+      campaign_validity_days: 30,
     },
   });
 
@@ -144,11 +150,16 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
         return;
       }
 
-      // Create temporary campaign data with brand_id
-      const campaignData = {
+      // Calculate due date from campaign validity days
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + data.campaign_validity_days);
+
+      // Create temporary campaign data with brand_id and calculated due date
+      const tempCampaignData = {
         id: Date.now(),
         ...data,
         brand_id: brandId,
+        due_date: dueDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
         platform: 'Instagram',
         created_at: new Date().toISOString(),
       };
@@ -222,18 +233,15 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
         }
       }
       
-      // Store campaign data in localStorage for the review page
-      localStorage.setItem('temp_campaign', JSON.stringify(campaignData));
-      localStorage.setItem('temp_campaign_results', JSON.stringify(parsedResponse));
+      // Set data for review modal
+      setCampaignData(tempCampaignData);
+      setLlmResponse(parsedResponse);
+      setShowReview(true);
       
       toast({
         title: "Success",
         description: "Campaign strategy generated successfully!",
       });
-      
-      // Close modal and navigate to review page
-      onClose();
-      navigate('/campaign-review');
       
     } catch (error) {
       console.error('Error in campaign creation:', error);
@@ -249,8 +257,24 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
 
   const handleClose = () => {
     form.reset();
+    setShowReview(false);
+    setCampaignData(null);
+    setLlmResponse(null);
     onClose();
   };
+
+  const handleBackFromReview = () => {
+    setShowReview(false);
+  };
+
+  const handlePublishSuccess = () => {
+    handleClose();
+    navigate('/brand-dashboard');
+  };
+
+  // Calculate and display due date based on campaign validity days
+  const validityDays = form.watch('campaign_validity_days');
+  const dueDatePreview = validityDays ? new Date(Date.now() + validityDays * 24 * 60 * 60 * 1000).toLocaleDateString() : '';
 
   const categories = [
     'Food & Drinks',
@@ -280,301 +304,336 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-[#1a1f2e]">
-            Create New Campaign
-          </DialogTitle>
-        </DialogHeader>
+        {!showReview ? (
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold text-[#1a1f2e]">
+                Create New Campaign
+              </DialogTitle>
+            </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="brand_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Brand Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter your brand name..."
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="goals"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Campaign Goals</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Describe your campaign goals..."
-                      className="min-h-[80px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="campaign_description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Campaign Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Provide detailed campaign description..."
-                      className="min-h-[100px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="categories"
-                render={() => (
-                  <FormItem>
-                    <FormLabel>Categories (Multi-select)</FormLabel>
-                    <div className="grid grid-cols-2 gap-2 p-3 border rounded-md bg-background">
-                      {categories.map((category) => (
-                        <FormField
-                          key={category}
-                          control={form.control}
-                          name="categories"
-                          render={({ field }) => {
-                            return (
-                              <FormItem
-                                key={category}
-                                className="flex flex-row items-start space-x-3 space-y-0"
-                              >
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value?.includes(category)}
-                                    onCheckedChange={(checked) => {
-                                      return checked
-                                        ? field.onChange([...field.value, category])
-                                        : field.onChange(
-                                            field.value?.filter(
-                                              (value) => value !== category
-                                            )
-                                          )
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormLabel className="text-sm font-normal">
-                                  {category}
-                                </FormLabel>
-                              </FormItem>
-                            )
-                          }}
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="brand_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Brand Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter your brand name..."
+                          {...field}
                         />
-                      ))}
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="total_influencers"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Total Influencers Needed</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="1"
-                        {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="influencer_tiers"
-                render={() => (
-                  <FormItem>
-                    <FormLabel>Influencer Tiers (Multi-select)</FormLabel>
-                    <div className="space-y-2 p-3 border rounded-md bg-background">
-                      {influencerTiers.map((tier) => (
-                        <FormField
-                          key={tier.value}
-                          control={form.control}
-                          name="influencer_tiers"
-                          render={({ field }) => {
-                            return (
-                              <FormItem
-                                key={tier.value}
-                                className="flex flex-row items-start space-x-3 space-y-0"
-                              >
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value?.includes(tier.value)}
-                                    onCheckedChange={(checked) => {
-                                      return checked
-                                        ? field.onChange([...field.value, tier.value])
-                                        : field.onChange(
-                                            field.value?.filter(
-                                              (value) => value !== tier.value
-                                            )
-                                          )
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormLabel className="text-sm font-normal">
-                                  {tier.label}
-                                </FormLabel>
-                              </FormItem>
-                            )
-                          }}
+                <FormField
+                  control={form.control}
+                  name="goals"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Campaign Goals</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Describe your campaign goals..."
+                          className="min-h-[80px]"
+                          {...field}
                         />
-                      ))}
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="content_types"
-                render={() => (
-                  <FormItem>
-                    <FormLabel>Content Types (Multi-select)</FormLabel>
-                    <div className="space-y-2 p-3 border rounded-md bg-background">
-                      {contentTypes.map((type) => (
-                        <FormField
-                          key={type.value}
-                          control={form.control}
-                          name="content_types"
-                          render={({ field }) => {
-                            return (
-                              <FormItem
-                                key={type.value}
-                                className="flex flex-row items-start space-x-3 space-y-0"
-                              >
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value?.includes(type.value)}
-                                    onCheckedChange={(checked) => {
-                                      return checked
-                                        ? field.onChange([...field.value, type.value])
-                                        : field.onChange(
-                                            field.value?.filter(
-                                              (value) => value !== type.value
-                                            )
-                                          )
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormLabel className="text-sm font-normal">
-                                  {type.label}
-                                </FormLabel>
-                              </FormItem>
-                            )
-                          }}
+                <FormField
+                  control={form.control}
+                  name="campaign_description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Campaign Description</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Provide detailed campaign description..."
+                          className="min-h-[100px]"
+                          {...field}
                         />
-                      ))}
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <div className="space-y-4">
-              <div className="p-3 border rounded-md bg-gray-50">
-                <FormLabel className="text-sm font-medium text-gray-700">Platform</FormLabel>
-                <p className="text-sm text-gray-600 mt-1">Instagram (Beta)</p>
-              </div>
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="categories"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>Categories (Multi-select)</FormLabel>
+                        <div className="grid grid-cols-2 gap-2 p-3 border rounded-md bg-background">
+                          {categories.map((category) => (
+                            <FormField
+                              key={category}
+                              control={form.control}
+                              name="categories"
+                              render={({ field }) => {
+                                return (
+                                  <FormItem
+                                    key={category}
+                                    className="flex flex-row items-start space-x-3 space-y-0"
+                                  >
+                                    <FormControl>
+                                      <Checkbox
+                                        checked={field.value?.includes(category)}
+                                        onCheckedChange={(checked) => {
+                                          return checked
+                                            ? field.onChange([...field.value, category])
+                                            : field.onChange(
+                                                field.value?.filter(
+                                                  (value) => value !== category
+                                                )
+                                              )
+                                        }}
+                                      />
+                                    </FormControl>
+                                    <FormLabel className="text-sm font-normal">
+                                      {category}
+                                    </FormLabel>
+                                  </FormItem>
+                                )
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="budget_min"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Minimum Budget ($)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="0"
-                        {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="total_influencers"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Total Influencers Needed</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="1"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-              <FormField
-                control={form.control}
-                name="budget_max"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Maximum Budget ($)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="1"
-                        {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="influencer_tiers"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>Influencer Tiers (Multi-select)</FormLabel>
+                        <div className="space-y-2 p-3 border rounded-md bg-background">
+                          {influencerTiers.map((tier) => (
+                            <FormField
+                              key={tier.value}
+                              control={form.control}
+                              name="influencer_tiers"
+                              render={({ field }) => {
+                                return (
+                                  <FormItem
+                                    key={tier.value}
+                                    className="flex flex-row items-start space-x-3 space-y-0"
+                                  >
+                                    <FormControl>
+                                      <Checkbox
+                                        checked={field.value?.includes(tier.value)}
+                                        onCheckedChange={(checked) => {
+                                          return checked
+                                            ? field.onChange([...field.value, tier.value])
+                                            : field.onChange(
+                                                field.value?.filter(
+                                                  (value) => value !== tier.value
+                                                )
+                                              )
+                                        }}
+                                      />
+                                    </FormControl>
+                                    <FormLabel className="text-sm font-normal">
+                                      {tier.label}
+                                    </FormLabel>
+                                  </FormItem>
+                                )
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-            <div className="flex justify-end space-x-4 pt-6">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleClose}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="bg-[#1a1f2e] hover:bg-[#2a2f3e] text-white"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating Strategy...
-                  </>
-                ) : (
-                  'Generate Campaign Strategy'
-                )}
-              </Button>
-            </div>
-          </form>
-        </Form>
+                  <FormField
+                    control={form.control}
+                    name="content_types"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>Content Types (Multi-select)</FormLabel>
+                        <div className="space-y-2 p-3 border rounded-md bg-background">
+                          {contentTypes.map((type) => (
+                            <FormField
+                              key={type.value}
+                              control={form.control}
+                              name="content_types"
+                              render={({ field }) => {
+                                return (
+                                  <FormItem
+                                    key={type.value}
+                                    className="flex flex-row items-start space-x-3 space-y-0"
+                                  >
+                                    <FormControl>
+                                      <Checkbox
+                                        checked={field.value?.includes(type.value)}
+                                        onCheckedChange={(checked) => {
+                                          return checked
+                                            ? field.onChange([...field.value, type.value])
+                                            : field.onChange(
+                                                field.value?.filter(
+                                                  (value) => value !== type.value
+                                                )
+                                              )
+                                        }}
+                                      />
+                                    </FormControl>
+                                    <FormLabel className="text-sm font-normal">
+                                      {type.label}
+                                    </FormLabel>
+                                  </FormItem>
+                                )
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <div className="p-3 border rounded-md bg-gray-50">
+                    <FormLabel className="text-sm font-medium text-gray-700">Platform</FormLabel>
+                    <p className="text-sm text-gray-600 mt-1">Instagram (Beta)</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="budget_min"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Minimum Budget ($)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="0"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="budget_max"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Maximum Budget ($)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="1"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="campaign_validity_days"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Campaign Valid Through (Days)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="1"
+                          {...field}
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                      {dueDatePreview && (
+                        <p className="text-sm text-gray-600 mt-1">
+                          Due date: {dueDatePreview} ({validityDays} days from now)
+                        </p>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex justify-end space-x-4 pt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleClose}
+                    disabled={isSubmitting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="bg-[#1a1f2e] hover:bg-[#2a2f3e] text-white"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Generating Strategy...
+                      </>
+                    ) : (
+                      'Generate Campaign Strategy'
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </>
+        ) : (
+          <CampaignReviewModal
+            campaignData={campaignData}
+            llmResponse={llmResponse}
+            onBack={handleBackFromReview}
+            onPublishSuccess={handlePublishSuccess}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

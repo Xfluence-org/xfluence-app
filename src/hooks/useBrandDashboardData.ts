@@ -12,7 +12,7 @@ interface BrandCampaignData {
   accepted: number;
   due_date: string;
   platforms: string[];
-  category: string;
+  categories: string[]; // Updated to handle array
   progress: number;
 }
 
@@ -59,7 +59,7 @@ export const useBrandDashboardData = () => {
     accepted: campaign.accepted,
     dueDate: campaign.due_date ? new Date(campaign.due_date).toLocaleDateString('en-GB') : 'TBD',
     platforms: campaign.platforms,
-    category: campaign.category,
+    category: Array.isArray(campaign.categories) ? campaign.categories.join(', ') : campaign.categories || 'General', // Handle categories array
     progress: campaign.progress,
     performance: {
       reach: Math.floor(Math.random() * 200000) + 50000, // Mock data for now

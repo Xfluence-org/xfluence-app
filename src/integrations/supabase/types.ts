@@ -191,7 +191,8 @@ export type Database = {
           application_deadline: string | null
           brand_id: string | null
           budget: number | null
-          category: string | null
+          campaign_validity_days: number | null
+          categories: string[] | null
           compensation_max: number | null
           compensation_min: number | null
           created_at: string | null
@@ -213,7 +214,8 @@ export type Database = {
           application_deadline?: string | null
           brand_id?: string | null
           budget?: number | null
-          category?: string | null
+          campaign_validity_days?: number | null
+          categories?: string[] | null
           compensation_max?: number | null
           compensation_min?: number | null
           created_at?: string | null
@@ -235,7 +237,8 @@ export type Database = {
           application_deadline?: string | null
           brand_id?: string | null
           budget?: number | null
-          category?: string | null
+          campaign_validity_days?: number | null
+          categories?: string[] | null
           compensation_max?: number | null
           compensation_min?: number | null
           created_at?: string | null
