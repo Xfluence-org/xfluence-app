@@ -6,47 +6,30 @@ import CampaignOverviewCard from '@/components/brand/CampaignOverviewCard';
 import ApplicationCard from '@/components/brand/ApplicationCard';
 import { InfluencerApplication } from '@/types/brandDashboard';
 import { useBrandDashboardData } from '@/hooks/useBrandDashboardData';
+import { useBrandApplications } from '@/hooks/useBrandApplications';
 
 const BrandDashboard: React.FC = () => {
   const { campaigns, metrics, loading, error } = useBrandDashboardData();
+  const { data: applicationsData = [], isLoading: applicationsLoading, error: applicationsError } = useBrandApplications(10);
 
-  // Mock recent applications - this would come from another API call
-  const recentApplications: InfluencerApplication[] = [
-    {
-      id: '1',
-      campaignId: campaigns[0]?.id || '1',
-      campaignTitle: campaigns[0]?.title || 'Summer Fitness Collection',
-      influencer: {
-        name: 'Sarah Johnson',
-        handle: 'sarahfitslife',
-        followers: 45000,
-        platform: 'Instagram'
-      },
-      appliedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      status: 'pending',
-      engagementRate: 5.2,
-      averageViews: 12000,
-      niche: ['Fitness', 'Lifestyle', 'Wellness'],
-      aiScore: 92
+  // Transform applications data to match component expectations
+  const recentApplications: InfluencerApplication[] = applicationsData.map((app: any) => ({
+    id: app.application_id,
+    campaignId: app.campaign_id,
+    campaignTitle: app.campaign_title,
+    influencer: {
+      name: app.influencer_name,
+      handle: app.influencer_handle,
+      followers: app.followers_count,
+      platform: app.platform
     },
-    {
-      id: '2',
-      campaignId: campaigns[1]?.id || '2',
-      campaignTitle: campaigns[1]?.title || 'Back to School Campaign',
-      influencer: {
-        name: 'Mike Chen',
-        handle: 'miketech',
-        followers: 78000,
-        platform: 'TikTok'
-      },
-      appliedAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-      status: 'pending',
-      engagementRate: 6.1,
-      averageViews: 25000,
-      niche: ['Tech', 'Lifestyle', 'Education'],
-      aiScore: 88
-    }
-  ];
+    appliedAt: app.applied_at,
+    status: app.application_status as 'pending' | 'approved' | 'rejected',
+    engagementRate: parseFloat(app.engagement_rate.toString()),
+    averageViews: app.average_views,
+    niche: app.niche,
+    aiScore: app.ai_score
+  }));
 
   const handleViewCampaignDetails = (campaignId: string) => {
     console.log('View campaign details:', campaignId);
@@ -68,7 +51,7 @@ const BrandDashboard: React.FC = () => {
     // Navigate to influencer profile
   };
 
-  if (loading) {
+  if (loading || applicationsLoading) {
     return (
       <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <BrandSidebar userName="Brand Team" />
@@ -83,7 +66,7 @@ const BrandDashboard: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (error || applicationsError) {
     return (
       <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <BrandSidebar userName="Brand Team" />
@@ -91,7 +74,7 @@ const BrandDashboard: React.FC = () => {
           <div className="p-8">
             <div className="text-center py-12">
               <p className="text-red-500 text-lg">Error loading dashboard</p>
-              <p className="text-gray-500 mt-2">{error}</p>
+              <p className="text-gray-500 mt-2">{error || applicationsError?.message}</p>
             </div>
           </div>
         </main>
@@ -131,7 +114,7 @@ const BrandDashboard: React.FC = () => {
                 />
                 <MetricsCard
                   title="Pending Applications"
-                  value={metrics.pendingApplications}
+                  value={recentApplications.length}
                   subtitle="Awaiting review"
                   icon="📝"
                 />
@@ -177,17 +160,23 @@ const BrandDashboard: React.FC = () => {
                   View All →
                 </button>
               </div>
-              <div className="space-y-4">
-                {recentApplications.map((application) => (
-                  <ApplicationCard
-                    key={application.id}
-                    application={application}
-                    onApprove={handleApproveApplication}
-                    onReject={handleRejectApplication}
-                    onViewProfile={handleViewProfile}
-                  />
-                ))}
-              </div>
+              {recentApplications.length > 0 ? (
+                <div className="space-y-4">
+                  {recentApplications.map((application) => (
+                    <ApplicationCard
+                      key={application.id}
+                      application={application}
+                      onApprove={handleApproveApplication}
+                      onReject={handleRejectApplication}
+                      onViewProfile={handleViewProfile}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No recent applications found.</p>
+                </div>
+              )}
             </div>
           </section>
         </div>
