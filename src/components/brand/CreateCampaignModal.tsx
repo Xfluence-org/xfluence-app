@@ -100,31 +100,32 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
         created_at: new Date().toISOString(),
       };
       
-      // Prepare search parameters for the edge function
-      const searchParams = {
-        goals: data.goals,
-        campaign_description: data.campaign_description,
-        categories: data.categories,
-        total_influencers: data.total_influencers,
-        follower_tier: data.follower_tiers.length > 0 ? data.follower_tiers : ['micro', 'mid'], // Ensure we always have values
-        content_type: data.content_types.length > 0 ? data.content_types : ['post', 'reel'], // Ensure we always have values
-        budget_min: data.budget_min,
-        budget_max: data.budget_max,
-        platform: 'Instagram'
+      // Prepare search parameters for the edge function - nested under searchParams
+      const requestBody = {
+        searchParams: {
+          goals: data.goals,
+          campaign_description: data.campaign_description,
+          categories: data.categories,
+          total_influencers: data.total_influencers,
+          follower_tier: data.follower_tiers.length > 0 ? data.follower_tiers : ['micro', 'mid'],
+          content_type: data.content_types.length > 0 ? data.content_types : ['post', 'reel'],
+          budget_min: data.budget_min,
+          budget_max: data.budget_max,
+        }
       };
       
-      console.log('Search params being sent to edge function:', searchParams);
-      console.log('follower_tier value:', searchParams.follower_tier);
-      console.log('follower_tier type:', typeof searchParams.follower_tier);
-      console.log('follower_tier is array:', Array.isArray(searchParams.follower_tier));
-      console.log('content_type value:', searchParams.content_type);
-      console.log('content_type type:', typeof searchParams.content_type);
-      console.log('content_type is array:', Array.isArray(searchParams.content_type));
+      console.log('Request body being sent to edge function:', requestBody);
+      console.log('follower_tier value:', requestBody.searchParams.follower_tier);
+      console.log('follower_tier type:', typeof requestBody.searchParams.follower_tier);
+      console.log('follower_tier is array:', Array.isArray(requestBody.searchParams.follower_tier));
+      console.log('content_type value:', requestBody.searchParams.content_type);
+      console.log('content_type type:', typeof requestBody.searchParams.content_type);
+      console.log('content_type is array:', Array.isArray(requestBody.searchParams.content_type));
       
       // Call the campaign planner edge function
-      console.log('Calling campaign_planner edge function with params:', searchParams);
+      console.log('Calling campaign_planner edge function with params:', requestBody);
       const { data: plannerResponse, error: plannerError } = await supabase.functions.invoke('campaign-planner', {
-        body: searchParams // Send searchParams directly as the body
+        body: requestBody
       });
 
       if (plannerError) {
