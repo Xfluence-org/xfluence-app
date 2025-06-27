@@ -2,6 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
 
 interface SidebarProps {
   activeItem?: string;
@@ -10,6 +11,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard', userName = 'Name' }) => {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊', path: '/dashboard' },
@@ -22,7 +24,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard', userName = 
     navigate(item.path);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut();
     navigate('/');
   };
 

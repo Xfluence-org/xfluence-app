@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Send, Loader2 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/use-auth';
+import BrandSidebar from '@/components/brand/BrandSidebar';
 
 interface LLMInteraction {
   id: string;
@@ -101,10 +100,10 @@ const CampaignReviewPage = () => {
           title: `${campaignData.goals} Campaign`,
           description: campaignData.campaign_description,
           category: campaignData.categories, // Array of categories from the form
-          amount: campaignData.budget_max * 100, // Convert to cents
-          budget: campaignData.budget_max * 100, // Populate from maximum budget field
-          compensation_min: campaignData.budget_min * 100, // Populate from min_budget field (converted to cents)
-          compensation_max: campaignData.budget_max * 100, // Populate from max_budget field (converted to cents)
+          amount: campaignData.budget_max, // Keep in dollars
+          budget: campaignData.budget_max, // Keep in dollars
+          compensation_min: campaignData.budget_min, // Keep in dollars
+          compensation_max: campaignData.budget_max, // Keep in dollars
           due_date: campaignData.due_date, // Populate from campaign valid through field
           application_deadline: campaignData.due_date, // Same as due_date as requested
           requirements: {
@@ -116,7 +115,7 @@ const CampaignReviewPage = () => {
           status: 'published',
           llm_campaign: llmInteraction.raw_output,
           brand_id: campaignData.brand_id,
-          is_public: true // Make it public so it appears in opportunities
+          is_public: false // Explicitly set to false
         })
         .select()
         .single();
@@ -142,8 +141,8 @@ const CampaignReviewPage = () => {
         description: "Campaign published successfully!",
       });
       
-      // Navigate back to brand dashboard
-      navigate('/brand-dashboard');
+      // Navigate back to campaigns page
+      navigate('/brand/campaigns');
       
     } catch (error) {
       console.error('Error submitting campaign:', error);
@@ -164,22 +163,38 @@ const CampaignReviewPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="text-lg">Loading campaign data...</div>
+      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <BrandSidebar userName="Brand Team" />
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-8">
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">Loading campaign data...</p>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
 
   if (!llmInteraction?.raw_output) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">No Campaign Data Found</h2>
-          <p className="text-gray-600 mb-4">Please create a campaign first.</p>
-          <Button onClick={() => navigate('/brand-dashboard')}>
-            Back to Dashboard
-          </Button>
-        </div>
+      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <BrandSidebar userName="Brand Team" />
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-8">
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200 text-center">
+              <h2 className="text-2xl font-bold text-[#1a1f2e] mb-2">No Campaign Data Found</h2>
+              <p className="text-gray-600 mb-6">Please create a campaign first.</p>
+              <Button 
+                onClick={() => navigate('/brand/campaigns')}
+                className="bg-[#1a1f2e] hover:bg-[#2a2f3e] text-white"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Campaigns
+              </Button>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
@@ -187,81 +202,80 @@ const CampaignReviewPage = () => {
   const campaignData = llmInteraction.raw_output;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-[#1a1f2e] to-[#2a2f3e] text-white p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <Button
-                  variant="ghost"
-                  onClick={() => navigate('/brand-dashboard')}
-                  className="p-2 hover:bg-white/10 text-white"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-                <h1 className="text-2xl font-bold">Campaign Review</h1>
+    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <BrandSidebar userName="Brand Team" />
+      
+      <main className="flex-1 overflow-y-auto">
+        <div className="p-8">
+          <header className="mb-8">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-3xl font-bold text-[#1a1f2e] mb-2">Campaign Review</h1>
+                <p className="text-gray-600">Review and publish your AI-generated campaign strategy</p>
               </div>
-              <Button
-                onClick={handleSubmitCampaign}
-                disabled={isSubmitting}
-                className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/80 text-white border-0"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Publishing...
-                  </>
-                ) : (
-                  <>
-                    <Send className="mr-2 h-4 w-4" />
-                    Publish Campaign
-                  </>
-                )}
-              </Button>
+              <div className="flex gap-4">
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/brand/campaigns')}
+                  className="border-2 border-gray-300 hover:bg-gray-50 px-6 py-2.5 rounded-xl font-medium transition-all duration-200"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Campaigns
+                </Button>
+                <Button
+                  onClick={handleSubmitCampaign}
+                  disabled={isSubmitting}
+                  className="bg-gradient-to-r from-[#1a1f2e] to-[#2a2f3e] hover:from-[#2a2f3e] hover:to-[#3a3f4e] text-white px-8 py-2.5 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Publishing...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="mr-2 h-4 w-4" />
+                      Publish Campaign
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
-          </div>
+          </header>
 
           {/* Content */}
-          <div className="p-6 space-y-6">
+          <div className="space-y-6">
             {/* Strategy Summary */}
-            <Card className="shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-[#1a1f2e] flex items-center gap-2">
-                  <span className="text-2xl">🎯</span>
-                  Strategy Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-700 leading-relaxed">{campaignData.search_strategy_summary}</p>
-              </CardContent>
-            </Card>
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
+              <h2 className="text-2xl font-bold text-[#1a1f2e] mb-6 flex items-center gap-3">
+                <span className="text-2xl">🎯</span>
+                Strategy Summary
+              </h2>
+              <p className="text-gray-700 leading-relaxed">{campaignData.search_strategy_summary}</p>
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Influencer Allocation */}
-              <Card className="shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-[#1a1f2e] flex items-center gap-2">
-                    <span className="text-xl">👥</span>
-                    Influencer Allocation
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+              <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
+                <h3 className="text-xl font-bold text-[#1a1f2e] mb-6 flex items-center gap-2">
+                  <span className="text-xl">👥</span>
+                  Influencer Allocation
+                </h3>
+                <div className="space-y-4">
                   <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                     <span className="font-medium">Total Influencers:</span>
-                    <Badge variant="secondary" className="bg-[#1a1f2e] text-white">
+                    <span className="text-2xl font-bold text-[#1a1f2e]">
                       {campaignData.influencer_allocation.total_influencers}
-                    </Badge>
+                    </span>
                   </div>
                   
                   <div>
                     <h4 className="font-medium text-gray-700 mb-3">By Category:</h4>
                     <div className="space-y-2">
                       {Object.entries(campaignData.influencer_allocation.allocation_by_category).map(([category, count]) => (
-                        <div key={category} className="flex justify-between text-sm p-2 bg-gray-50 rounded">
-                          <span className="capitalize">{category}:</span>
-                          <Badge variant="outline">{count as number}</Badge>
+                        <div key={category} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                          <span className="capitalize text-gray-700">{category}</span>
+                          <span className="font-semibold text-[#1a1f2e]">{count as number}</span>
                         </div>
                       ))}
                     </div>
@@ -272,12 +286,12 @@ const CampaignReviewPage = () => {
                     <div className="space-y-2">
                       {Object.entries(campaignData.influencer_allocation.allocation_by_tier).map(([category, tiers]) => (
                         <div key={category} className="text-sm">
-                          <div className="font-medium text-gray-600 mb-1">{category}:</div>
-                          <div className="ml-4 space-y-1">
+                          <div className="font-medium text-gray-700 mb-2 capitalize">{category}</div>
+                          <div className="ml-4 space-y-2">
                             {Object.entries(tiers as Record<string, number>).map(([tier, count]) => (
-                              <div key={tier} className="flex justify-between p-1 bg-gray-50 rounded">
-                                <span className="capitalize">{tier}:</span>
-                                <span className="font-medium">{count}</span>
+                              <div key={tier} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                                <span className="capitalize text-gray-600">{tier}</span>
+                                <span className="font-semibold text-[#1a1f2e]">{count}</span>
                               </div>
                             ))}
                           </div>
@@ -285,18 +299,16 @@ const CampaignReviewPage = () => {
                       ))}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
               {/* Content Strategy */}
-              <Card className="shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-[#1a1f2e] flex items-center gap-2">
-                    <span className="text-xl">📱</span>
-                    Content Strategy
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+              <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
+                <h3 className="text-xl font-bold text-[#1a1f2e] mb-6 flex items-center gap-2">
+                  <span className="text-xl">📱</span>
+                  Content Strategy
+                </h3>
+                <div className="space-y-4">
                   <div>
                     <h4 className="font-medium text-gray-700 mb-2">Distribution Rationale:</h4>
                     <p className="text-sm text-gray-600 p-3 bg-gray-50 rounded-lg">{campaignData.content_strategy.content_distribution.rationale}</p>
@@ -311,70 +323,64 @@ const CampaignReviewPage = () => {
                           <div key={type} className="p-3 bg-gray-50 rounded-lg">
                             <div className="flex justify-between items-center mb-2">
                               <span className="font-medium capitalize">{type}:</span>
-                              <Badge variant="secondary" className="bg-[#1DDCD3] text-white">
+                              <span className="font-bold text-[#1DDCD3]">
                                 {(details as any).percentage}%
-                              </Badge>
+                              </span>
                             </div>
-                            <p className="text-xs text-gray-600">{(details as any).purpose}</p>
+                            <p className="text-sm text-gray-600 mt-1">{(details as any).purpose}</p>
                           </div>
                         ))}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </div>
 
             {/* Search Tactics */}
-            <Card className="shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-[#1a1f2e] flex items-center gap-2">
-                  <span className="text-xl">🔍</span>
-                  Actionable Search Tactics
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
+              <h2 className="text-2xl font-bold text-[#1a1f2e] mb-6 flex items-center gap-3">
+                <span className="text-2xl">🔍</span>
+                Actionable Search Tactics
+              </h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div>
-                    <h4 className="font-medium text-gray-700 mb-3">Recommended Hashtags:</h4>
+                    <h4 className="font-semibold text-gray-700 mb-4">Recommended Hashtags:</h4>
                     <div className="flex flex-wrap gap-2">
                       {campaignData.actionable_search_tactics.niche_hashtags.map((hashtag: string, index: number) => (
-                        <Badge key={index} variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                        <span key={index} className="inline-block px-3 py-1.5 bg-[#1DDCD3]/10 text-[#1a1f2e] border border-[#1DDCD3]/30 rounded-full text-sm font-medium hover:bg-[#1DDCD3]/20 transition-colors cursor-pointer">
                           {hashtag}
-                        </Badge>
+                        </span>
                       ))}
                     </div>
                   </div>
                   
                   <div>
-                    <h4 className="font-medium text-gray-700 mb-3">Platform Tools:</h4>
+                    <h4 className="font-semibold text-gray-700 mb-4">Platform Tools:</h4>
                     <div className="space-y-2">
                       {campaignData.actionable_search_tactics.platform_tools.map((tool: string, index: number) => (
-                        <div key={index} className="text-sm text-gray-600 flex items-center p-2 bg-gray-50 rounded">
-                          <span className="w-2 h-2 bg-[#1DDCD3] rounded-full mr-3"></span>
+                        <div key={index} className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                          <span className="w-2 h-2 bg-[#1DDCD3] rounded-full mr-3 flex-shrink-0"></span>
+                          <span className="text-sm text-gray-700">
                           {tool}
+                          </span>
                         </div>
                       ))}
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Justification */}
-            <Card className="shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-[#1a1f2e] flex items-center gap-2">
-                  <span className="text-xl">💡</span>
-                  Strategy Justification
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-700 leading-relaxed p-4 bg-gray-50 rounded-lg">{campaignData.justification}</p>
-              </CardContent>
-            </Card>
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
+              <h2 className="text-2xl font-bold text-[#1a1f2e] mb-6 flex items-center gap-3">
+                <span className="text-2xl">💡</span>
+                Strategy Justification
+              </h2>
+              <p className="text-gray-700 leading-relaxed p-6 bg-gray-50 rounded-xl">{campaignData.justification}</p>
+            </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

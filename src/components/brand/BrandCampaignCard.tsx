@@ -12,7 +12,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Eye, Archive, Calendar, Users, DollarSign } from 'lucide-react';
+import { Eye, Archive, Calendar, Users, DollarSign, Globe, Lock } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface BrandCampaign {
   campaign_id: string;
@@ -26,6 +29,7 @@ interface BrandCampaign {
   platforms: string[];
   category: string;
   progress: number;
+  is_public?: boolean;
 }
 
 interface BrandCampaignCardProps {
@@ -41,6 +45,9 @@ const BrandCampaignCard: React.FC<BrandCampaignCardProps> = ({
   onArchive,
   showArchiveButton
 }) => {
+  const [isPublic, setIsPublic] = useState(campaign.is_public || false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const { toast } = useToast();
   const getStatusBadge = (status: string) => {
     const baseClasses = "px-3 py-1 rounded-full text-white text-xs font-medium";
     switch (status.toLowerCase()) {
@@ -62,6 +69,54 @@ const BrandCampaignCard: React.FC<BrandCampaignCardProps> = ({
     return new Date(dateStr).toLocaleDateString('en-GB');
   };
 
+  const handleVisibilityToggle = async (newValue: boolean) => {
+    // If setting to private and there are applicants, show a warning
+    if (!newValue && campaign.applicants > 0) {
+      const confirmChange = window.confirm(
+        `This campaign has ${campaign.applicants} applicant(s). Making it private will:\n\n` +
+        `• Hide it from new influencers\n` +
+        `• Existing applicants will still see it in their "Applied" section\n` +
+        `• You can still review and approve existing applications\n\n` +
+        `Continue?`
+      );
+      
+      if (!confirmChange) {
+        return;
+      }
+    }
+
+    setIsUpdating(true);
+    try {
+      const { error } = await supabase
+        .from('campaigns')
+        .update({ is_public: newValue })
+        .eq('id', campaign.campaign_id);
+
+      if (error) {
+        throw error;
+      }
+
+      setIsPublic(newValue);
+      toast({
+        title: newValue ? "Campaign is now public" : "Campaign is now private",
+        description: newValue 
+          ? "This campaign will appear in opportunities for influencers to discover"
+          : campaign.applicants > 0 
+            ? "Campaign hidden from new influencers. Existing applications remain active."
+            : "This campaign is now hidden from opportunities. Only invited influencers can apply.",
+      });
+    } catch (error) {
+      console.error('Error updating campaign visibility:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update campaign visibility",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
     <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-200">
       {/* Campaign Header */}
@@ -77,6 +132,26 @@ const BrandCampaignCard: React.FC<BrandCampaignCardProps> = ({
             {campaign.category} • {campaign.platforms.join(', ')}
           </p>
         </div>
+        
+        {/* Visibility Toggle - Only show for published campaigns */}
+        {campaign.campaign_status.toLowerCase() === 'published' && (
+          <div className="flex items-center gap-2">
+            <div className="flex items-center text-sm text-gray-600">
+              {isPublic ? (
+                <Globe className="h-4 w-4 mr-1" />
+              ) : (
+                <Lock className="h-4 w-4 mr-1" />
+              )}
+              {isPublic ? 'Public' : 'Private'}
+            </div>
+            <Switch
+              checked={isPublic}
+              onCheckedChange={handleVisibilityToggle}
+              disabled={isUpdating}
+              className="data-[state=checked]:bg-[#1DDCD3]"
+            />
+          </div>
+        )}
       </div>
 
       {/* Campaign Metrics */}

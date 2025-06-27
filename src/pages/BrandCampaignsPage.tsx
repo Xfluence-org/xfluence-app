@@ -146,7 +146,7 @@ const BrandCampaignsPage: React.FC = () => {
                   ) : (
                     <div className="text-center py-12">
                       <p className="text-gray-500 text-lg">No published campaigns found</p>
-                      <p className="text-gray-400 mt-2">Published campaigns will appear here</p>
+                      <p className="text-gray-400 mt-2">Create a campaign to get started</p>
                     </div>
                   )}
                 </div>

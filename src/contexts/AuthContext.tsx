@@ -38,6 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -101,7 +102,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setProfile(userProfile);
             
             // Only redirect on actual sign-in, not on token refresh or other events
-            if (userProfile && event === 'SIGNED_IN') {
+            // Also prevent redirects after initial load to avoid tab switch issues
+            if (userProfile && event === 'SIGNED_IN' && !hasInitialized) {
               redirectToDashboard(userProfile.user_type);
             }
           }, 0);
@@ -110,6 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         setLoading(false);
+        setHasInitialized(true);
       }
     );
 

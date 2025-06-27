@@ -2,6 +2,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
 
 interface BrandSidebarProps {
   userName?: string;
@@ -10,6 +11,7 @@ interface BrandSidebarProps {
 const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName = 'Brand Name' }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { signOut } = useAuth();
   
   const getActiveItem = () => {
     if (location.pathname.includes('/brand-dashboard')) return 'dashboard';
@@ -55,7 +57,8 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName = 'Brand Name' }) 
     },
   ];
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut();
     navigate('/');
   };
 

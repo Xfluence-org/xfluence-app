@@ -93,7 +93,8 @@ export const useBrandCampaignsData = (view: CampaignView) => {
           : 'General', // Handle array category properly
         progress: campaign.status === 'completed' ? 100 : 
                  campaign.status === 'active' ? 75 : 
-                 campaign.status === 'published' ? 50 : 25
+                 campaign.status === 'published' ? 50 : 25,
+        is_public: campaign.is_public || false
       }));
     }
   });
