@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -39,10 +38,9 @@ export const useCampaignDetail = (campaignId: string | null) => {
       return {
         ...data,
         budget: data.budget || data.amount || 0,
-        // Handle category array properly
-        category: Array.isArray(data.category) && data.category.length > 0 
-          ? data.category[0] 
-          : data.category || 'General'
+        // Handle category array properly - keep as array for internal use
+        // but provide first element for display compatibility
+        category: data.category
       };
     },
     enabled: !!campaignId

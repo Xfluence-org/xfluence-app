@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -133,9 +134,15 @@ export const useBrandCampaignsData = (view: CampaignView) => {
     mutationFn: async ({ campaignId, updates }: { campaignId: string; updates: any }) => {
       console.log('Updating campaign:', campaignId, updates);
       
+      // Convert category string back to array format for database
+      const processedUpdates = {
+        ...updates,
+        category: updates.category ? [updates.category] : ['General']
+      };
+      
       const { error } = await supabase
         .from('campaigns')
-        .update(updates)
+        .update(processedUpdates)
         .eq('id', campaignId);
 
       if (error) throw error;
@@ -145,6 +152,7 @@ export const useBrandCampaignsData = (view: CampaignView) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['brand-campaigns-management'] });
       queryClient.invalidateQueries({ queryKey: ['brand-campaigns'] });
+      queryClient.invalidateQueries({ queryKey: ['campaign-detail'] });
     }
   });
 

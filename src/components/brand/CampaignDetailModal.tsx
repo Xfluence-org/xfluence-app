@@ -76,6 +76,14 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
     setIsEditing(false);
   };
 
+  // Helper function to get category display value
+  const getCategoryDisplay = (category: any) => {
+    if (Array.isArray(category)) {
+      return category.length > 0 ? category[0] : 'General';
+    }
+    return category || 'General';
+  };
+
   if (!isOpen || !campaignId) return null;
 
   return (
@@ -158,10 +166,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                     />
                   ) : (
                     <p className="text-gray-900">
-                      {Array.isArray(campaign.category) 
-                        ? campaign.category[0] || 'General' 
-                        : campaign.category || 'General'
-                      }
+                      {getCategoryDisplay(campaign.category)}
                     </p>
                   )}
                 </div>
