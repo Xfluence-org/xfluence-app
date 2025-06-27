@@ -435,6 +435,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_brand_campaigns: {
+        Args: { brand_filter?: string }
+        Returns: {
+          campaign_id: string
+          campaign_title: string
+          campaign_status: string
+          budget: number
+          spent: number
+          applicants: number
+          accepted: number
+          due_date: string
+          platforms: string[]
+          category: string
+          progress: number
+        }[]
+      }
       get_influencer_campaigns: {
         Args: { tab_filter?: string }
         Returns: {

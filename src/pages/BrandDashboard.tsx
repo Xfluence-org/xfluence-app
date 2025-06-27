@@ -1,68 +1,21 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import BrandSidebar from '@/components/brand/BrandSidebar';
 import MetricsCard from '@/components/brand/MetricsCard';
 import CampaignOverviewCard from '@/components/brand/CampaignOverviewCard';
 import ApplicationCard from '@/components/brand/ApplicationCard';
-import { BrandCampaign, InfluencerApplication, DashboardMetrics } from '@/types/brandDashboard';
+import { InfluencerApplication } from '@/types/brandDashboard';
+import { useBrandDashboardData } from '@/hooks/useBrandDashboardData';
 
 const BrandDashboard: React.FC = () => {
-  // Mock data - replace with actual API calls
-  const [metrics] = useState<DashboardMetrics>({
-    totalCampaigns: 12,
-    activeCampaigns: 5,
-    totalBudget: 85000,
-    totalSpent: 42300,
-    pendingApplications: 23,
-    totalReach: 1250000,
-    avgEngagementRate: 4.2,
-    completedCampaigns: 7
-  });
+  const { campaigns, metrics, loading, error } = useBrandDashboardData();
 
-  const [activeCampaigns] = useState<BrandCampaign[]>([
+  // Mock recent applications - this would come from another API call
+  const recentApplications: InfluencerApplication[] = [
     {
       id: '1',
-      title: 'Summer Fitness Collection',
-      status: 'active',
-      budget: 15000,
-      spent: 8500,
-      applicants: 45,
-      accepted: 8,
-      dueDate: '15/07/2025',
-      platforms: ['Instagram', 'TikTok'],
-      category: 'Fitness',
-      progress: 65,
-      performance: {
-        reach: 180000,
-        engagement: 4.8,
-        clicks: 1250
-      }
-    },
-    {
-      id: '2',
-      title: 'Back to School Campaign',
-      status: 'active',
-      budget: 20000,
-      spent: 5200,
-      applicants: 67,
-      accepted: 12,
-      dueDate: '30/08/2025',
-      platforms: ['Instagram', 'YouTube'],
-      category: 'Lifestyle',
-      progress: 25,
-      performance: {
-        reach: 95000,
-        engagement: 3.9,
-        clicks: 780
-      }
-    }
-  ]);
-
-  const [recentApplications] = useState<InfluencerApplication[]>([
-    {
-      id: '1',
-      campaignId: '1',
-      campaignTitle: 'Summer Fitness Collection',
+      campaignId: campaigns[0]?.id || '1',
+      campaignTitle: campaigns[0]?.title || 'Summer Fitness Collection',
       influencer: {
         name: 'Sarah Johnson',
         handle: 'sarahfitslife',
@@ -78,8 +31,8 @@ const BrandDashboard: React.FC = () => {
     },
     {
       id: '2',
-      campaignId: '2',
-      campaignTitle: 'Back to School Campaign',
+      campaignId: campaigns[1]?.id || '2',
+      campaignTitle: campaigns[1]?.title || 'Back to School Campaign',
       influencer: {
         name: 'Mike Chen',
         handle: 'miketech',
@@ -92,25 +45,8 @@ const BrandDashboard: React.FC = () => {
       averageViews: 25000,
       niche: ['Tech', 'Lifestyle', 'Education'],
       aiScore: 88
-    },
-    {
-      id: '3',
-      campaignId: '1',
-      campaignTitle: 'Summer Fitness Collection',
-      influencer: {
-        name: 'Emma Rodriguez',
-        handle: 'emmaworkouts',
-        followers: 32000,
-        platform: 'Instagram'
-      },
-      appliedAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-      status: 'pending',
-      engagementRate: 4.7,
-      averageViews: 8500,
-      niche: ['Fitness', 'Health', 'Nutrition'],
-      aiScore: 85
     }
-  ]);
+  ];
 
   const handleViewCampaignDetails = (campaignId: string) => {
     console.log('View campaign details:', campaignId);
@@ -132,9 +68,40 @@ const BrandDashboard: React.FC = () => {
     // Navigate to influencer profile
   };
 
+  if (loading) {
+    return (
+      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <BrandSidebar userName="Brand Team" />
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-8">
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">Loading dashboard...</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <BrandSidebar userName="Brand Team" />
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-8">
+            <div className="text-center py-12">
+              <p className="text-red-500 text-lg">Error loading dashboard</p>
+              <p className="text-gray-500 mt-2">{error}</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <BrandSidebar userName="Nike Brand Team" />
+      <BrandSidebar userName="Brand Team" />
       
       <main className="flex-1 overflow-y-auto">
         <div className="p-8">
@@ -183,15 +150,21 @@ const BrandDashboard: React.FC = () => {
           <section className="mb-12">
             <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
               <h2 className="text-2xl font-bold text-[#1a1f2e] mb-6">Active Campaigns</h2>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {activeCampaigns.map((campaign) => (
-                  <CampaignOverviewCard
-                    key={campaign.id}
-                    campaign={campaign}
-                    onViewDetails={handleViewCampaignDetails}
-                  />
-                ))}
-              </div>
+              {campaigns.length > 0 ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {campaigns.map((campaign) => (
+                    <CampaignOverviewCard
+                      key={campaign.id}
+                      campaign={campaign}
+                      onViewDetails={handleViewCampaignDetails}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No campaigns found. Create your first campaign to get started!</p>
+                </div>
+              )}
             </div>
           </section>
 
