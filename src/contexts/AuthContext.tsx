@@ -100,7 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // ✅ More restrictive function to determine when to redirect
+  // ✅ More restrictive function to determine when to redirect - moved outside useEffect
   const shouldRedirectOnEvent = (event: string) => {
     // Only redirect on actual sign-in or initial load
     if (event === 'SIGNED_IN') return true;
