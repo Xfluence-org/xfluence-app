@@ -12,6 +12,7 @@ import OpportunitiesPage from "./pages/OpportunitiesPage";
 import CampaignsPage from "./pages/CampaignsPage";
 import BrandDashboard from "./pages/BrandDashboard";
 import BrandCampaignsPage from "./pages/BrandCampaignsPage";
+import BrandApplicationsPage from "./pages/BrandApplicationsPage";
 import CampaignReviewPage from "./pages/CampaignReviewPage";
 import NotFound from "./pages/NotFound";
 
@@ -77,6 +78,14 @@ const App = () => (
               element={
                 <AuthRoute>
                   <BrandCampaignsPage />
+                </AuthRoute>
+              } 
+            />
+            <Route 
+              path="/brand/applications" 
+              element={
+                <AuthRoute>
+                  <BrandApplicationsPage />
                 </AuthRoute>
               } 
             />
