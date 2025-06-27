@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { 
   Table,
   TableBody,
@@ -12,325 +13,316 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
+import { 
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronRight, Check, X, Edit } from 'lucide-react';
+import { ChevronDown, ChevronRight, Check, X, Edit, Save } from 'lucide-react';
+
+interface InfluencerTask {
+  id: string;
+  influencer_id: string;
+  influencer_name: string;
+  task_type: string;
+  title: string;
+  description: string;
+  status: string;
+  progress: number;
+  next_deadline: string;
+}
 
 interface InfluencerPerformanceSectionProps {
   campaignId: string;
 }
 
-const InfluencerPerformanceSection: React.FC<InfluencerPerformanceSectionProps> = ({ 
-  campaignId 
+const InfluencerPerformanceSection: React.FC<InfluencerPerformanceSectionProps> = ({
+  campaignId
 }) => {
-  const [expandedInfluencer, setExpandedInfluencer] = useState<string | null>(null);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [editingTask, setEditingTask] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
-  
-  const queryClient = useQueryClient();
 
-  const { data: influencers = [], isLoading } = useQuery({
-    queryKey: ['campaign-influencers', campaignId],
+  const { data: tasks = [], isLoading, error } = useQuery({
+    queryKey: ['campaign-tasks', campaignId],
     queryFn: async () => {
-      console.log('Fetching campaign influencers for:', campaignId);
+      console.log('Fetching campaign tasks for:', campaignId);
       
       const { data, error } = await supabase
-        .from('campaign_participants')
+        .from('campaign_tasks')
         .select(`
           id,
+          influencer_id,
+          task_type,
+          title,
+          description,
           status,
           progress,
-          created_at,
-          profiles (
-            id,
-            name,
-            email
-          ),
-          campaign_tasks (
-            id,
-            task_type,
-            title,
-            status,
-            progress,
-            description
+          next_deadline,
+          profiles!campaign_tasks_influencer_id_fkey (
+            name
           )
         `)
-        .eq('campaign_id', campaignId)
-        .eq('status', 'accepted');
+        .eq('campaign_id', campaignId);
 
       if (error) {
-        console.error('Error fetching campaign influencers:', error);
+        console.error('Error fetching campaign tasks:', error);
         throw error;
       }
 
-      console.log('Fetched campaign influencers:', data);
-      return data || [];
-    }
+      return data?.map(task => ({
+        ...task,
+        influencer_name: task.profiles?.name || 'Unknown'
+      })) || [];
+    },
+    enabled: !!campaignId
   });
 
-  const updateTaskMutation = useMutation({
-    mutationFn: async ({ taskId, updates }: { taskId: string; updates: any }) => {
+  const toggleRow = (taskId: string) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(taskId)) {
+      newExpanded.delete(taskId);
+    } else {
+      newExpanded.add(taskId);
+    }
+    setExpandedRows(newExpanded);
+  };
+
+  const startEditing = (taskId: string, currentDescription: string) => {
+    setEditingTask(taskId);
+    setEditContent(currentDescription || '');
+  };
+
+  const saveEdit = async (taskId: string) => {
+    try {
       const { error } = await supabase
         .from('campaign_tasks')
-        .update(updates)
+        .update({ description: editContent })
         .eq('id', taskId);
 
       if (error) throw error;
-      return { success: true };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['campaign-influencers', campaignId] });
+
       setEditingTask(null);
       setEditContent('');
+      // Refetch data
+      window.location.reload();
+    } catch (error) {
+      console.error('Error updating task:', error);
     }
-  });
+  };
 
-  const approveTaskMutation = useMutation({
-    mutationFn: async (taskId: string) => {
+  const updateTaskStatus = async (taskId: string, newStatus: string) => {
+    try {
       const { error } = await supabase
         .from('campaign_tasks')
-        .update({ 
-          status: 'completed',
-          progress: 100 
-        })
+        .update({ status: newStatus })
         .eq('id', taskId);
 
       if (error) throw error;
-      return { success: true };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['campaign-influencers', campaignId] });
+
+      // Refetch data
+      window.location.reload();
+    } catch (error) {
+      console.error('Error updating task status:', error);
     }
-  });
-
-  const denyTaskMutation = useMutation({
-    mutationFn: async (taskId: string) => {
-      const { error } = await supabase
-        .from('campaign_tasks')
-        .update({ 
-          status: 'content_review',
-          progress: 25 
-        })
-        .eq('id', taskId);
-
-      if (error) throw error;
-      return { success: true };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['campaign-influencers', campaignId] });
-    }
-  });
-
-  const handleEditTask = (taskId: string, currentContent: string) => {
-    setEditingTask(taskId);
-    setEditContent(currentContent || '');
-  };
-
-  const handleSaveEdit = (taskId: string) => {
-    updateTaskMutation.mutate({
-      taskId,
-      updates: { description: editContent }
-    });
-  };
-
-  const handleCancelEdit = () => {
-    setEditingTask(null);
-    setEditContent('');
   };
 
   const getStatusBadge = (status: string) => {
-    const baseClasses = "px-2 py-1 rounded-full text-xs font-medium";
-    switch (status) {
-      case 'completed':
-        return `${baseClasses} bg-green-100 text-green-800`;
-      case 'content_review':
-        return `${baseClasses} bg-yellow-100 text-yellow-800`;
-      case 'pending':
-        return `${baseClasses} bg-gray-100 text-gray-800`;
-      default:
-        return `${baseClasses} bg-blue-100 text-blue-800`;
-    }
+    const variants: Record<string, string> = {
+      'content_requirement': 'bg-blue-100 text-blue-800',
+      'content_draft': 'bg-yellow-100 text-yellow-800',
+      'submitted': 'bg-purple-100 text-purple-800',
+      'approved': 'bg-green-100 text-green-800',
+      'rejected': 'bg-red-100 text-red-800',
+      'completed': 'bg-gray-100 text-gray-800'
+    };
+
+    return (
+      <Badge className={variants[status] || 'bg-gray-100 text-gray-800'}>
+        {status.replace('_', ' ').toUpperCase()}
+      </Badge>
+    );
   };
 
   if (isLoading) {
     return (
-      <div className="bg-gray-50 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-[#1a1f2e] mb-4">Influencers & Performance</h3>
-        <p className="text-gray-500">Loading influencer data...</p>
+      <div className="text-center py-8">
+        <p className="text-gray-500">Loading influencer performance...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-500">Error loading performance data</p>
       </div>
     );
   }
 
   return (
     <div className="bg-gray-50 rounded-lg p-6">
-      <h3 className="text-lg font-semibold text-[#1a1f2e] mb-4">Influencers & Performance</h3>
+      <h3 className="text-lg font-semibold text-[#1a1f2e] mb-4">
+        Influencers & Performance ({tasks.length} tasks)
+      </h3>
       
-      {influencers.length === 0 ? (
-        <p className="text-gray-500">No accepted influencers found for this campaign.</p>
-      ) : (
-        <div className="space-y-4">
+      {tasks.length > 0 ? (
+        <div className="bg-white rounded-lg overflow-hidden border">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-8"></TableHead>
                 <TableHead>Influencer</TableHead>
+                <TableHead>Task</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Progress</TableHead>
-                <TableHead>Tasks</TableHead>
+                <TableHead>Deadline</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {influencers.map((participant: any) => (
-                <React.Fragment key={participant.id}>
+              {tasks.map((task) => (
+                <React.Fragment key={task.id}>
                   <TableRow>
                     <TableCell>
-                      <div>
-                        <p className="font-medium">{participant.profiles?.name || 'Unknown'}</p>
-                        <p className="text-sm text-gray-500">{participant.profiles?.email}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className={getStatusBadge(participant.status)}>
-                        {participant.status}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 bg-gray-200 rounded-full h-2 w-20">
-                          <div 
-                            className="bg-[#1DDCD3] h-2 rounded-full" 
-                            style={{ width: `${participant.progress || 0}%` }}
-                          />
-                        </div>
-                        <span className="text-sm">{participant.progress || 0}%</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {participant.campaign_tasks?.length || 0} tasks
-                    </TableCell>
-                    <TableCell>
-                      <Collapsible 
-                        open={expandedInfluencer === participant.id}
-                        onOpenChange={() => setExpandedInfluencer(
-                          expandedInfluencer === participant.id ? null : participant.id
-                        )}
-                      >
+                      <Collapsible>
                         <CollapsibleTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            {expandedInfluencer === participant.id ? 
-                              <ChevronDown className="h-4 w-4" /> :
+                          <Button
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => toggleRow(task.id)}
+                          >
+                            {expandedRows.has(task.id) ? 
+                              <ChevronDown className="h-4 w-4" /> : 
                               <ChevronRight className="h-4 w-4" />
                             }
-                            Details
                           </Button>
                         </CollapsibleTrigger>
                       </Collapsible>
                     </TableCell>
+                    <TableCell className="font-medium">{task.influencer_name}</TableCell>
+                    <TableCell>{task.title}</TableCell>
+                    <TableCell>{getStatusBadge(task.status)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-[#1DDCD3] h-2 rounded-full" 
+                            style={{ width: `${task.progress}%` }}
+                          />
+                        </div>
+                        <span className="text-sm">{task.progress}%</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {task.next_deadline ? 
+                        new Date(task.next_deadline).toLocaleDateString() : 
+                        'TBD'
+                      }
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        {task.status === 'submitted' && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => updateTaskStatus(task.id, 'approved')}
+                              className="text-green-600 hover:text-green-700"
+                            >
+                              <Check className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => updateTaskStatus(task.id, 'rejected')}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
                   </TableRow>
                   
-                  <TableRow>
-                    <TableCell colSpan={5} className="p-0">
-                      <Collapsible 
-                        open={expandedInfluencer === participant.id}
-                        onOpenChange={() => setExpandedInfluencer(
-                          expandedInfluencer === participant.id ? null : participant.id
-                        )}
-                      >
-                        <CollapsibleContent>
-                          <div className="p-4 bg-white border-l-4 border-[#1DDCD3] ml-4">
-                            <h4 className="font-medium text-[#1a1f2e] mb-3">Task Details</h4>
-                            {participant.campaign_tasks?.map((task: any) => (
-                              <div key={task.id} className="border rounded-lg p-4 mb-3">
-                                <div className="flex items-center justify-between mb-2">
-                                  <div>
-                                    <h5 className="font-medium">{task.title}</h5>
-                                    <p className="text-sm text-gray-600">{task.task_type}</p>
-                                  </div>
-                                  <span className={getStatusBadge(task.status)}>
-                                    {task.status}
-                                  </span>
-                                </div>
-                                
-                                <div className="mb-3">
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Content/Instructions
-                                  </label>
-                                  {editingTask === task.id ? (
-                                    <div className="space-y-2">
-                                      <Textarea
-                                        value={editContent}
-                                        onChange={(e) => setEditContent(e.target.value)}
-                                        placeholder="Enter task content or instructions"
-                                        rows={3}
-                                      />
-                                      <div className="flex gap-2">
-                                        <Button 
-                                          size="sm" 
-                                          onClick={() => handleSaveEdit(task.id)}
-                                          className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
-                                        >
-                                          Save
-                                        </Button>
-                                        <Button 
-                                          size="sm" 
-                                          variant="outline"
-                                          onClick={handleCancelEdit}
-                                        >
-                                          Cancel
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <div className="flex items-start gap-2">
-                                      <p className="text-sm text-gray-900 flex-1">
-                                        {task.description || 'No content available'}
-                                      </p>
+                  {expandedRows.has(task.id) && (
+                    <TableRow>
+                      <TableCell colSpan={7} className="bg-gray-50">
+                        <Collapsible open={expandedRows.has(task.id)}>
+                          <CollapsibleContent>
+                            <div className="p-4 space-y-4">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Task Description
+                                </label>
+                                {editingTask === task.id ? (
+                                  <div className="space-y-2">
+                                    <Textarea
+                                      value={editContent}
+                                      onChange={(e) => setEditContent(e.target.value)}
+                                      rows={3}
+                                    />
+                                    <div className="flex gap-2">
                                       <Button
                                         size="sm"
-                                        variant="ghost"
-                                        onClick={() => handleEditTask(task.id, task.description)}
+                                        onClick={() => saveEdit(task.id)}
+                                        className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
                                       >
-                                        <Edit className="h-4 w-4" />
+                                        <Save className="h-3 w-3 mr-1" />
+                                        Save
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => setEditingTask(null)}
+                                      >
+                                        Cancel
                                       </Button>
                                     </div>
-                                  )}
-                                </div>
-
-                                {task.status === 'content_review' && (
-                                  <div className="flex gap-2">
-                                    <Button
-                                      size="sm"
-                                      onClick={() => approveTaskMutation.mutate(task.id)}
-                                      className="bg-green-600 hover:bg-green-700 text-white"
-                                    >
-                                      <Check className="h-4 w-4 mr-1" />
-                                      Approve
-                                    </Button>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-start justify-between">
+                                    <p className="text-gray-900">{task.description || 'No description available'}</p>
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      onClick={() => denyTaskMutation.mutate(task.id)}
-                                      className="text-red-600 hover:text-red-700"
+                                      onClick={() => startEditing(task.id, task.description)}
                                     >
-                                      <X className="h-4 w-4 mr-1" />
-                                      Request Changes
+                                      <Edit className="h-3 w-3" />
                                     </Button>
                                   </div>
                                 )}
                               </div>
-                            ))}
-                          </div>
-                        </CollapsibleContent>
-                      </Collapsible>
-                    </TableCell>
-                  </TableRow>
+                              
+                              <div className="grid grid-cols-3 gap-4 text-sm">
+                                <div>
+                                  <span className="font-medium text-gray-700">Task Type:</span>
+                                  <p className="text-gray-900">{task.task_type}</p>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-gray-700">Current Status:</span>
+                                  <p className="text-gray-900">{task.status.replace('_', ' ')}</p>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-gray-700">Progress:</span>
+                                  <p className="text-gray-900">{task.progress}% complete</p>
+                                </div>
+                              </div>
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </React.Fragment>
               ))}
             </TableBody>
           </Table>
+        </div>
+      ) : (
+        <div className="text-center py-8">
+          <p className="text-gray-500">No influencers assigned to this campaign yet.</p>
         </div>
       )}
     </div>

@@ -11,6 +11,7 @@ import InfluencerDashboard from "./pages/InfluencerDashboard";
 import OpportunitiesPage from "./pages/OpportunitiesPage";
 import CampaignsPage from "./pages/CampaignsPage";
 import BrandDashboard from "./pages/BrandDashboard";
+import BrandCampaignsPage from "./pages/BrandCampaignsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <BrandDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/brand/campaigns" 
+              element={
+                <ProtectedRoute>
+                  <BrandCampaignsPage />
                 </ProtectedRoute>
               } 
             />
