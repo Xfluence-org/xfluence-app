@@ -1,8 +1,7 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 type UserType = 'Agency' | 'Brand' | 'Influencer';
 
@@ -40,6 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -61,7 +61,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const shouldRedirect = (userType: UserType, currentPath: string) => {
+    // Don't redirect if user is already on an appropriate page
+    if (userType === 'Influencer') {
+      return !currentPath.startsWith('/dashboard') && 
+             !currentPath.startsWith('/opportunities') && 
+             !currentPath.startsWith('/campaigns');
+    } else {
+      return !currentPath.startsWith('/brand-dashboard') && 
+             !currentPath.startsWith('/brand/') && 
+             !currentPath.startsWith('/campaign-review');
+    }
+  };
+
   const redirectToDashboard = (userType: UserType) => {
+    if (!shouldRedirect(userType, location.pathname)) {
+      return; // Don't redirect if user is already on appropriate page
+    }
+
     if (userType === 'Influencer') {
       navigate('/dashboard');
     } else {
