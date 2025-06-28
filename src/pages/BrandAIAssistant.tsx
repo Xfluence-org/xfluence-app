@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Send, Plus, MessageSquare, Trash2 } from 'lucide-react';
 import BrandSidebar from '@/components/brand/BrandSidebar';
