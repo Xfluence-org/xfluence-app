@@ -1,21 +1,25 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { InfluencerApplication } from '@/types/brandDashboard';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 
 interface ApplicationCardProps {
   application: InfluencerApplication;
   onApprove: (applicationId: string) => void;
   onReject: (applicationId: string) => void;
-  onViewProfile: (applicationId: string) => void;
+  onViewMessage: (applicationId: string, message?: string) => void;
   hideActions?: boolean;
+  applicationMessage?: string;
 }
 
 const ApplicationCard: React.FC<ApplicationCardProps> = ({ 
   application, 
   onApprove, 
   onReject, 
-  onViewProfile,
-  hideActions = false
+  onViewMessage,
+  hideActions = false,
+  applicationMessage
 }) => {
   const formatFollowers = (followers: number) => {
     if (followers >= 1000000) {
@@ -37,8 +41,10 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
   };
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'approved':
+      case 'accepted':
+      case 'active':
         return (
           <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">
             Approved
@@ -51,6 +57,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
           </span>
         );
       case 'pending':
+      case 'applied':
+      case 'invited':
       default:
         return (
           <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">
@@ -150,26 +158,86 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
           {/* Actions */}
           {!hideActions && (
             <div className="flex gap-2">
-              <button
-                onClick={() => onViewProfile(application.id)}
-                className="flex-1 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 text-sm font-medium"
-              >
-                View Profile
-              </button>
-              {application.status === 'pending' && (
+              {/* View Message Button */}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <button className="flex-1 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 text-sm font-medium">
+                    View Message
+                  </button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Application Message</AlertDialogTitle>
+                    <AlertDialogDescription asChild>
+                      <div>
+                        <p className="mb-2"><strong>From:</strong> {application.influencer.name} (@{application.influencer.handle})</p>
+                        <p className="mb-2"><strong>Campaign:</strong> {application.campaignTitle}</p>
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <p className="text-gray-800">
+                            {applicationMessage || 'I would love to collaborate on this campaign!'}
+                          </p>
+                        </div>
+                      </div>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Close</AlertDialogCancel>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
+              {/* Approve/Reject buttons only for pending applications */}
+              {['pending', 'applied', 'invited'].includes(application.status.toLowerCase()) && (
                 <>
-                  <button
-                    onClick={() => onReject(application.id)}
-                    className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 text-sm font-medium"
-                  >
-                    Reject
-                  </button>
-                  <button
-                    onClick={() => onApprove(application.id)}
-                    className="px-3 py-2 bg-[#1DDCD3] text-white rounded-lg hover:bg-[#00D4C7] transition-all duration-200 text-sm font-medium"
-                  >
-                    Approve
-                  </button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 text-sm font-medium">
+                        Reject
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Reject Application</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to reject this application from {application.influencer.name}? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={() => onReject(application.id)}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          Reject
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button className="px-3 py-2 bg-[#1DDCD3] text-white rounded-lg hover:bg-[#00D4C7] transition-all duration-200 text-sm font-medium">
+                        Approve
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Approve Application</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to approve this application from {application.influencer.name}? They will be notified and can start working on the campaign.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={() => onApprove(application.id)}
+                          className="bg-[#1DDCD3] hover:bg-[#00D4C7]"
+                        >
+                          Approve
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </>
               )}
             </div>
@@ -177,12 +245,32 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
           
           {hideActions && (
             <div className="flex gap-2">
-              <button
-                onClick={() => onViewProfile(application.id)}
-                className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 text-sm font-medium"
-              >
-                View Profile
-              </button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 text-sm font-medium">
+                    View Message
+                  </button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Application Message</AlertDialogTitle>
+                    <AlertDialogDescription asChild>
+                      <div>
+                        <p className="mb-2"><strong>From:</strong> {application.influencer.name} (@{application.influencer.handle})</p>
+                        <p className="mb-2"><strong>Campaign:</strong> {application.campaignTitle}</p>
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <p className="text-gray-800">
+                            {applicationMessage || 'I would love to collaborate on this campaign!'}
+                          </p>
+                        </div>
+                      </div>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Close</AlertDialogCancel>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           )}
         </div>

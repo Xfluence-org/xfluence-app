@@ -36,7 +36,8 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ applications: propApp
       engagementRate: parseFloat(app.engagement_rate?.toString() || '0'),
       averageViews: app.average_views || 0,
       niche: Array.isArray(app.niche) ? app.niche : [],
-      aiScore: app.ai_score || 0
+      aiScore: app.ai_score || 0,
+      applicationMessage: app.application_message
     }));
   }, [fetchedApplications]);
 
@@ -59,13 +60,13 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ applications: propApp
 
   // Separate applications by status
   const openApplications = filteredApplications.filter(app => 
-    ['pending', 'applied', 'invited'].includes(app.status)
+    ['pending', 'applied', 'invited'].includes(app.status.toLowerCase())
   );
   const approvedApplications = filteredApplications.filter(app => 
-    ['approved', 'accepted', 'active'].includes(app.status)
+    ['approved', 'accepted', 'active'].includes(app.status.toLowerCase())
   );
   const rejectedApplications = filteredApplications.filter(app => 
-    app.status === 'rejected'
+    app.status.toLowerCase() === 'rejected'
   );
 
   // Handle application status updates
@@ -125,9 +126,9 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ applications: propApp
     }
   };
 
-  const handleViewProfile = (applicationId: string) => {
-    console.log('View profile for application:', applicationId);
-    // TODO: Navigate to influencer profile page
+  const handleViewMessage = (applicationId: string, message?: string) => {
+    console.log('View message for application:', applicationId, message);
+    // The message viewing is handled by the AlertDialog in ApplicationCard
   };
 
   if (isLoading) {
@@ -189,7 +190,8 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ applications: propApp
                       application={application}
                       onApprove={handleApproveApplication}
                       onReject={handleRejectApplication}
-                      onViewProfile={handleViewProfile}
+                      onViewMessage={handleViewMessage}
+                      applicationMessage={application.applicationMessage}
                     />
                   ))}
                 </div>
@@ -220,7 +222,8 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ applications: propApp
                       application={application}
                       onApprove={handleApproveApplication}
                       onReject={handleRejectApplication}
-                      onViewProfile={handleViewProfile}
+                      onViewMessage={handleViewMessage}
+                      applicationMessage={application.applicationMessage}
                       hideActions={true}
                     />
                   ))}
@@ -252,7 +255,8 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ applications: propApp
                       application={application}
                       onApprove={handleApproveApplication}
                       onReject={handleRejectApplication}
-                      onViewProfile={handleViewProfile}
+                      onViewMessage={handleViewMessage}
+                      applicationMessage={application.applicationMessage}
                       hideActions={true}
                     />
                   ))}

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import BrandSidebar from '@/components/brand/BrandSidebar';
 import MetricsCard from '@/components/brand/MetricsCard';
@@ -34,12 +33,13 @@ const BrandDashboard: React.FC = () => {
     engagementRate: parseFloat(app.engagement_rate?.toString() || '0'),
     averageViews: app.average_views || 0,
     niche: Array.isArray(app.niche) ? app.niche : [],
-    aiScore: app.ai_score || 0
+    aiScore: app.ai_score || 0,
+    applicationMessage: app.application_message
   }));
 
   // Filter to only show pending applications in recent applications
   const recentApplications = allApplications.filter(app => 
-    ['pending', 'applied', 'invited'].includes(app.status)
+    ['pending', 'applied', 'invited'].includes(app.status.toLowerCase())
   );
 
   const handleViewCampaignDetails = (campaignId: string) => {
@@ -103,9 +103,9 @@ const BrandDashboard: React.FC = () => {
     }
   };
 
-  const handleViewProfile = (applicationId: string) => {
-    console.log('View influencer profile:', applicationId);
-    // Navigate to influencer profile
+  const handleViewMessage = (applicationId: string, message?: string) => {
+    console.log('View message for application:', applicationId, message);
+    // The message viewing is handled by the AlertDialog in ApplicationCard
   };
 
   if (loading || applicationsLoading) {
@@ -236,7 +236,8 @@ const BrandDashboard: React.FC = () => {
                           application={application}
                           onApprove={handleApproveApplication}
                           onReject={handleRejectApplication}
-                          onViewProfile={handleViewProfile}
+                          onViewMessage={handleViewMessage}
+                          applicationMessage={application.applicationMessage}
                         />
                       ))}
                     </div>

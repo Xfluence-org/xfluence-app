@@ -35,6 +35,7 @@ export interface InfluencerApplication {
   averageViews: number;
   niche: string[];
   aiScore: number;
+  applicationMessage?: string;
 }
 
 export interface DashboardMetrics {
