@@ -3,9 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BrandSidebar from '@/components/brand/BrandSidebar';
+import ContentStrategySection from '@/components/brand/ContentStrategySection';
+import InfluencerAllocationSection from '@/components/brand/InfluencerAllocationSection';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, Save, Eye } from 'lucide-react';
+import { ArrowLeft, Save, Eye, Target, Users, Hash, Globe } from 'lucide-react';
 
 const CampaignReviewPage = () => {
   const { user, profile, loading } = useAuth();
@@ -58,6 +61,124 @@ const CampaignReviewPage = () => {
 
   const handleGoBack = () => {
     navigate('/brand/campaigns');
+  };
+
+  // Helper function to create mock LLM interactions for the strategy sections
+  const createMockLLMInteractions = () => {
+    if (!campaignResults) return [];
+    
+    return [{
+      raw_output: campaignResults
+    }];
+  };
+
+  const renderStrategyOverview = () => {
+    if (!campaignResults) return null;
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <Card>
+          <CardContent className="p-4 text-center">
+            <Users className="h-8 w-8 text-[#1DDCD3] mx-auto mb-2" />
+            <div className="text-2xl font-bold text-[#1a1f2e]">
+              {campaignResults.influencer_allocation?.total_influencers || 0}
+            </div>
+            <div className="text-sm text-gray-600">Total Influencers</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4 text-center">
+            <Target className="h-8 w-8 text-[#1DDCD3] mx-auto mb-2" />
+            <div className="text-2xl font-bold text-[#1a1f2e]">
+              {Object.keys(campaignResults.influencer_allocation?.allocation_by_category || {}).length}
+            </div>
+            <div className="text-sm text-gray-600">Categories</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4 text-center">
+            <Hash className="h-8 w-8 text-[#1DDCD3] mx-auto mb-2" />
+            <div className="text-2xl font-bold text-[#1a1f2e]">
+              {campaignResults.actionable_search_tactics?.niche_hashtags?.length || 0}
+            </div>
+            <div className="text-sm text-gray-600">Niche Hashtags</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4 text-center">
+            <Globe className="h-8 w-8 text-[#1DDCD3] mx-auto mb-2" />
+            <div className="text-2xl font-bold text-[#1a1f2e]">
+              {campaignResults.actionable_search_tactics?.platform_tools?.length || 0}
+            </div>
+            <div className="text-sm text-gray-600">Platform Tools</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderSearchStrategy = () => {
+    if (!campaignResults.actionable_search_tactics) return null;
+
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="h-5 w-5 text-[#1DDCD3]" />
+            Search Strategy & Tactics
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {campaignResults.search_strategy_summary && (
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
+                <h4 className="font-medium text-blue-800 mb-2">Strategy Summary</h4>
+                <p className="text-blue-700 text-sm">{campaignResults.search_strategy_summary}</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {campaignResults.actionable_search_tactics.niche_hashtags && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-700 mb-3">Niche Hashtags</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {campaignResults.actionable_search_tactics.niche_hashtags.map((hashtag: string, index: number) => (
+                      <span key={index} className="bg-[#1DDCD3] text-white px-2 py-1 rounded text-sm">
+                        {hashtag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {campaignResults.actionable_search_tactics.platform_tools && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-700 mb-3">Platform Tools</h4>
+                  <div className="space-y-2">
+                    {campaignResults.actionable_search_tactics.platform_tools.map((tool: string, index: number) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-[#1DDCD3]" />
+                        <span className="text-sm text-gray-700">{tool}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {campaignResults.justification && (
+              <div className="bg-green-50 border-l-4 border-green-400 p-4">
+                <h4 className="font-medium text-green-800 mb-2">Strategy Justification</h4>
+                <p className="text-green-700 text-sm">{campaignResults.justification}</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
   };
 
   return (
@@ -135,21 +256,36 @@ const CampaignReviewPage = () => {
 
               {/* AI Strategy Results */}
               {campaignResults && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Eye className="h-5 w-5 text-[#1DDCD3]" />
-                      AI-Generated Strategy
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <pre className="whitespace-pre-wrap text-sm text-gray-700">
-                        {JSON.stringify(campaignResults, null, 2)}
-                      </pre>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="space-y-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Eye className="h-6 w-6 text-[#1DDCD3]" />
+                    <h2 className="text-2xl font-bold text-[#1a1f2e]">AI-Generated Strategy</h2>
+                  </div>
+
+                  {/* Strategy Overview Cards */}
+                  {renderStrategyOverview()}
+
+                  {/* Strategy Tabs */}
+                  <Tabs defaultValue="allocation" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger value="allocation">Influencer Allocation</TabsTrigger>
+                      <TabsTrigger value="content">Content Strategy</TabsTrigger>
+                      <TabsTrigger value="search">Search Strategy</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="allocation" className="mt-6">
+                      <InfluencerAllocationSection llmInteractions={createMockLLMInteractions()} />
+                    </TabsContent>
+
+                    <TabsContent value="content" className="mt-6">
+                      <ContentStrategySection llmInteractions={createMockLLMInteractions()} />
+                    </TabsContent>
+
+                    <TabsContent value="search" className="mt-6">
+                      {renderSearchStrategy()}
+                    </TabsContent>
+                  </Tabs>
+                </div>
               )}
             </div>
           ) : (
