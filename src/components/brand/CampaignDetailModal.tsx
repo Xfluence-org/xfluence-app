@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -27,13 +28,34 @@ interface CampaignDetailModalProps {
 
 // Type for the LLM campaign data structure
 interface LLMCampaignData {
-  campaign_name?: string;
-  campaign_objective?: string;
-  target_audience?: string;
-  content_guidelines?: string;
-  key_messages?: string[] | string;
-  success_metrics?: string[] | string;
-  timeline?: string;
+  justification?: string;
+  content_strategy?: {
+    content_distribution?: {
+      post?: { purpose: string; percentage: number };
+      reel?: { purpose: string; percentage: number };
+      rationale?: string;
+    };
+    platform_specific_strategies?: {
+      post?: {
+        best_practices: string[];
+        creative_approach: string;
+      };
+      reel?: {
+        best_practices: string[];
+        creative_approach: string;
+      };
+    };
+  };
+  influencer_allocation?: {
+    total_influencers?: number;
+    allocation_by_tier?: any;
+    allocation_by_category?: any;
+  };
+  search_strategy_summary?: string;
+  actionable_search_tactics?: {
+    niche_hashtags?: string[];
+    platform_tools?: string[];
+  };
 }
 
 const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
@@ -105,7 +127,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
     return category || 'General';
   };
 
-  // Helper function to safely get LLM campaign data
+  // Helper function to safely get LLM campaign data from llm_campaign field
   const getLLMCampaignData = (): LLMCampaignData | null => {
     if (!campaign?.llm_campaign) return null;
     
@@ -305,73 +327,155 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                 <h3 className="text-lg font-semibold text-[#1a1f2e] mb-4">AI Generated Campaign Strategy</h3>
                 
                 {llmCampaignData ? (
-                  <div className="space-y-4">
-                    {llmCampaignData.campaign_name && (
-                      <div>
-                        <h4 className="font-medium text-gray-700 mb-2">Campaign Name</h4>
-                        <p className="text-gray-900">{llmCampaignData.campaign_name}</p>
+                  <div className="space-y-6">
+                    {/* Strategy Justification */}
+                    {llmCampaignData.justification && (
+                      <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
+                        <h4 className="font-medium text-blue-800 mb-2">Strategy Justification</h4>
+                        <p className="text-blue-700">{llmCampaignData.justification}</p>
                       </div>
                     )}
-                    
-                    {llmCampaignData.campaign_objective && (
-                      <div>
-                        <h4 className="font-medium text-gray-700 mb-2">Campaign Objective</h4>
-                        <p className="text-gray-900">{llmCampaignData.campaign_objective}</p>
+
+                    {/* Content Strategy */}
+                    {llmCampaignData.content_strategy && (
+                      <div className="space-y-4">
+                        <h4 className="text-lg font-semibold text-[#1a1f2e]">Content Strategy</h4>
+                        
+                        {/* Content Distribution */}
+                        {llmCampaignData.content_strategy.content_distribution && (
+                          <div className="bg-white rounded-lg p-4">
+                            <h5 className="font-medium text-gray-700 mb-3">Content Distribution</h5>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                              {llmCampaignData.content_strategy.content_distribution.post && (
+                                <div className="bg-gray-50 rounded-lg p-3">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <h6 className="font-medium text-gray-700">Posts</h6>
+                                    <span className="bg-[#1DDCD3] text-white px-2 py-1 rounded text-sm">
+                                      {llmCampaignData.content_strategy.content_distribution.post.percentage}%
+                                    </span>
+                                  </div>
+                                  <p className="text-gray-600 text-sm">
+                                    {llmCampaignData.content_strategy.content_distribution.post.purpose}
+                                  </p>
+                                </div>
+                              )}
+                              
+                              {llmCampaignData.content_strategy.content_distribution.reel && (
+                                <div className="bg-gray-50 rounded-lg p-3">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <h6 className="font-medium text-gray-700">Reels</h6>
+                                    <span className="bg-[#1DDCD3] text-white px-2 py-1 rounded text-sm">
+                                      {llmCampaignData.content_strategy.content_distribution.reel.percentage}%
+                                    </span>
+                                  </div>
+                                  <p className="text-gray-600 text-sm">
+                                    {llmCampaignData.content_strategy.content_distribution.reel.purpose}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {llmCampaignData.content_strategy.content_distribution.rationale && (
+                              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3">
+                                <h6 className="font-medium text-yellow-800 mb-1">Content Rationale</h6>
+                                <p className="text-yellow-700 text-sm">{llmCampaignData.content_strategy.content_distribution.rationale}</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Platform Specific Strategies */}
+                        {llmCampaignData.content_strategy.platform_specific_strategies && (
+                          <div className="bg-white rounded-lg p-4">
+                            <h5 className="font-medium text-gray-700 mb-3">Platform Specific Strategies</h5>
+                            
+                            <div className="space-y-4">
+                              {llmCampaignData.content_strategy.platform_specific_strategies.post && (
+                                <div className="bg-gray-50 rounded-lg p-3">
+                                  <h6 className="font-medium text-gray-700 mb-2">Post Strategy</h6>
+                                  <div className="space-y-2">
+                                    <div>
+                                      <p className="text-sm font-medium text-gray-600 mb-1">Creative Approach:</p>
+                                      <p className="text-sm text-gray-700">
+                                        {llmCampaignData.content_strategy.platform_specific_strategies.post.creative_approach}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-medium text-gray-600 mb-1">Best Practices:</p>
+                                      <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                                        {llmCampaignData.content_strategy.platform_specific_strategies.post.best_practices.map((practice, index) => (
+                                          <li key={index}>{practice}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {llmCampaignData.content_strategy.platform_specific_strategies.reel && (
+                                <div className="bg-gray-50 rounded-lg p-3">
+                                  <h6 className="font-medium text-gray-700 mb-2">Reel Strategy</h6>
+                                  <div className="space-y-2">
+                                    <div>
+                                      <p className="text-sm font-medium text-gray-600 mb-1">Creative Approach:</p>
+                                      <p className="text-sm text-gray-700">
+                                        {llmCampaignData.content_strategy.platform_specific_strategies.reel.creative_approach}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-medium text-gray-600 mb-1">Best Practices:</p>
+                                      <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                                        {llmCampaignData.content_strategy.platform_specific_strategies.reel.best_practices.map((practice, index) => (
+                                          <li key={index}>{practice}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
-                    
-                    {llmCampaignData.target_audience && (
-                      <div>
-                        <h4 className="font-medium text-gray-700 mb-2">Target Audience</h4>
-                        <p className="text-gray-900">{llmCampaignData.target_audience}</p>
+
+                    {/* Search Strategy Summary */}
+                    {llmCampaignData.search_strategy_summary && (
+                      <div className="bg-green-50 border-l-4 border-green-400 p-4">
+                        <h4 className="font-medium text-green-800 mb-2">Search Strategy Summary</h4>
+                        <p className="text-green-700">{llmCampaignData.search_strategy_summary}</p>
                       </div>
                     )}
-                    
-                    {llmCampaignData.content_guidelines && (
-                      <div>
-                        <h4 className="font-medium text-gray-700 mb-2">Content Guidelines</h4>
-                        <p className="text-gray-900">{llmCampaignData.content_guidelines}</p>
-                      </div>
-                    )}
-                    
-                    {llmCampaignData.key_messages && (
-                      <div>
-                        <h4 className="font-medium text-gray-700 mb-2">Key Messages</h4>
-                        <div className="text-gray-900">
-                          {Array.isArray(llmCampaignData.key_messages) ? (
-                            <ul className="list-disc list-inside space-y-1">
-                              {llmCampaignData.key_messages.map((message, index) => (
-                                <li key={index}>{message}</li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <p>{llmCampaignData.key_messages}</p>
+
+                    {/* Actionable Search Tactics */}
+                    {llmCampaignData.actionable_search_tactics && (
+                      <div className="bg-purple-50 border-l-4 border-purple-400 p-4">
+                        <h4 className="font-medium text-purple-800 mb-3">Actionable Search Tactics</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {llmCampaignData.actionable_search_tactics.niche_hashtags && (
+                            <div>
+                              <h5 className="font-medium text-purple-700 mb-2">Niche Hashtags</h5>
+                              <div className="flex flex-wrap gap-2">
+                                {llmCampaignData.actionable_search_tactics.niche_hashtags.map((hashtag, index) => (
+                                  <span key={index} className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">
+                                    {hashtag}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {llmCampaignData.actionable_search_tactics.platform_tools && (
+                            <div>
+                              <h5 className="font-medium text-purple-700 mb-2">Platform Tools</h5>
+                              <ul className="list-disc list-inside text-sm text-purple-700 space-y-1">
+                                {llmCampaignData.actionable_search_tactics.platform_tools.map((tool, index) => (
+                                  <li key={index}>{tool}</li>
+                                ))}
+                              </ul>
+                            </div>
                           )}
                         </div>
-                      </div>
-                    )}
-                    
-                    {llmCampaignData.success_metrics && (
-                      <div>
-                        <h4 className="font-medium text-gray-700 mb-2">Success Metrics</h4>
-                        <div className="text-gray-900">
-                          {Array.isArray(llmCampaignData.success_metrics) ? (
-                            <ul className="list-disc list-inside space-y-1">
-                              {llmCampaignData.success_metrics.map((metric, index) => (
-                                <li key={index}>{metric}</li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <p>{llmCampaignData.success_metrics}</p>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {llmCampaignData.timeline && (
-                      <div>
-                        <h4 className="font-medium text-gray-700 mb-2">Timeline</h4>
-                        <p className="text-gray-900">{llmCampaignData.timeline}</p>
                       </div>
                     )}
                   </div>
