@@ -62,17 +62,8 @@ const OpportunitiesPage = () => {
   });
 
   const handleApplyClick = (opportunity: Opportunity) => {
-    // Transform opportunity to match the expected interface for the modal
-    const transformedOpportunity = {
-      id: opportunity.id,
-      title: opportunity.title,
-      brand_name: opportunity.brand_name,
-      description: opportunity.description,
-      compensation_min: opportunity.compensation_min,
-      compensation_max: opportunity.compensation_max
-    };
-    
-    setSelectedOpportunity(transformedOpportunity);
+    // Use the full opportunity object since it already matches the interface
+    setSelectedOpportunity(opportunity);
     setIsApplicationModalOpen(true);
   };
 
