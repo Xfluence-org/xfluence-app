@@ -24,24 +24,44 @@ interface ContentStrategySectionProps {
 }
 
 const ContentStrategySection: React.FC<ContentStrategySectionProps> = ({ llmInteractions }) => {
-  // Extract content strategy from LLM interactions
+  // Extract content strategy from LLM interactions or raw_output
   const getContentStrategyData = (): ContentStrategyData | null => {
+    console.log('ContentStrategySection - llmInteractions:', llmInteractions);
+    
     for (const interaction of llmInteractions) {
+      // Check if data is in raw_output field directly
       if (interaction.raw_output?.content_strategy) {
+        console.log('Found content_strategy in raw_output:', interaction.raw_output.content_strategy);
         return interaction.raw_output.content_strategy;
       }
-      // Also check if the data is nested differently
+      
+      // Check if raw_output is a string that needs parsing
       if (typeof interaction.raw_output === 'string') {
         try {
           const parsed = JSON.parse(interaction.raw_output);
           if (parsed.content_strategy) {
+            console.log('Found content_strategy after parsing string:', parsed.content_strategy);
             return parsed.content_strategy;
           }
         } catch (e) {
-          console.log('Could not parse LLM interaction:', e);
+          console.log('Could not parse LLM interaction raw_output string:', e);
+        }
+      }
+      
+      // Legacy check for nested structure
+      if (interaction.raw_output && typeof interaction.raw_output === 'object') {
+        const keys = Object.keys(interaction.raw_output);
+        for (const key of keys) {
+          const value = interaction.raw_output[key];
+          if (value && typeof value === 'object' && value.content_strategy) {
+            console.log('Found nested content_strategy:', value.content_strategy);
+            return value.content_strategy;
+          }
         }
       }
     }
+    
+    console.log('No content strategy found in interactions');
     return null;
   };
 

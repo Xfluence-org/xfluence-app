@@ -26,7 +26,9 @@ const CampaignReviewPage = () => {
     }
     
     if (tempResults) {
-      setCampaignResults(JSON.parse(tempResults));
+      const results = JSON.parse(tempResults);
+      console.log('Campaign results loaded:', results);
+      setCampaignResults(results);
     }
   }, []);
 
@@ -66,6 +68,8 @@ const CampaignReviewPage = () => {
   // Helper function to create mock LLM interactions for the strategy sections
   const createMockLLMInteractions = () => {
     if (!campaignResults) return [];
+    
+    console.log('Creating mock LLM interactions with results:', campaignResults);
     
     return [{
       raw_output: campaignResults
@@ -121,7 +125,7 @@ const CampaignReviewPage = () => {
   };
 
   const renderSearchStrategy = () => {
-    if (!campaignResults.actionable_search_tactics) return null;
+    if (!campaignResults.actionable_search_tactics && !campaignResults.search_strategy_summary && !campaignResults.justification) return null;
 
     return (
       <Card>
@@ -140,34 +144,36 @@ const CampaignReviewPage = () => {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {campaignResults.actionable_search_tactics.niche_hashtags && (
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="font-medium text-gray-700 mb-3">Niche Hashtags</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {campaignResults.actionable_search_tactics.niche_hashtags.map((hashtag: string, index: number) => (
-                      <span key={index} className="bg-[#1DDCD3] text-white px-2 py-1 rounded text-sm">
-                        {hashtag}
-                      </span>
-                    ))}
+            {campaignResults.actionable_search_tactics && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {campaignResults.actionable_search_tactics.niche_hashtags && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="font-medium text-gray-700 mb-3">Niche Hashtags</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {campaignResults.actionable_search_tactics.niche_hashtags.map((hashtag: string, index: number) => (
+                        <span key={index} className="bg-[#1DDCD3] text-white px-2 py-1 rounded text-sm">
+                          {hashtag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {campaignResults.actionable_search_tactics.platform_tools && (
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="font-medium text-gray-700 mb-3">Platform Tools</h4>
-                  <div className="space-y-2">
-                    {campaignResults.actionable_search_tactics.platform_tools.map((tool: string, index: number) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <Globe className="h-4 w-4 text-[#1DDCD3]" />
-                        <span className="text-sm text-gray-700">{tool}</span>
-                      </div>
-                    ))}
+                {campaignResults.actionable_search_tactics.platform_tools && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="font-medium text-gray-700 mb-3">Platform Tools</h4>
+                    <div className="space-y-2">
+                      {campaignResults.actionable_search_tactics.platform_tools.map((tool: string, index: number) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Globe className="h-4 w-4 text-[#1DDCD3]" />
+                          <span className="text-sm text-gray-700">{tool}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             {campaignResults.justification && (
               <div className="bg-green-50 border-l-4 border-green-400 p-4">

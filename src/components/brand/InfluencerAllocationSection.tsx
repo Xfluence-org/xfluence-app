@@ -24,24 +24,44 @@ interface InfluencerAllocationSectionProps {
 const InfluencerAllocationSection: React.FC<InfluencerAllocationSectionProps> = ({ llmInteractions }) => {
   const [activeCategory, setActiveCategory] = useState<string>('');
 
-  // Extract influencer allocation from LLM interactions
+  // Extract influencer allocation from LLM interactions or raw_output
   const getInfluencerAllocationData = (): InfluencerAllocationData | null => {
+    console.log('InfluencerAllocationSection - llmInteractions:', llmInteractions);
+    
     for (const interaction of llmInteractions) {
+      // Check if data is in raw_output field directly
       if (interaction.raw_output?.influencer_allocation) {
+        console.log('Found influencer_allocation in raw_output:', interaction.raw_output.influencer_allocation);
         return interaction.raw_output.influencer_allocation;
       }
-      // Also check if the data is nested differently
+      
+      // Check if raw_output is a string that needs parsing
       if (typeof interaction.raw_output === 'string') {
         try {
           const parsed = JSON.parse(interaction.raw_output);
           if (parsed.influencer_allocation) {
+            console.log('Found influencer_allocation after parsing string:', parsed.influencer_allocation);
             return parsed.influencer_allocation;
           }
         } catch (e) {
-          console.log('Could not parse LLM interaction:', e);
+          console.log('Could not parse LLM interaction raw_output string:', e);
+        }
+      }
+      
+      // Legacy check for nested structure
+      if (interaction.raw_output && typeof interaction.raw_output === 'object') {
+        const keys = Object.keys(interaction.raw_output);
+        for (const key of keys) {
+          const value = interaction.raw_output[key];
+          if (value && typeof value === 'object' && value.influencer_allocation) {
+            console.log('Found nested influencer_allocation:', value.influencer_allocation);
+            return value.influencer_allocation;
+          }
         }
       }
     }
+    
+    console.log('No influencer allocation found in interactions');
     return null;
   };
 
