@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -89,13 +90,14 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName = 'Brand Name' }) 
         ))}
       </nav>
 
-      {/* User Section */}
+      {/* Logout Section */}
       <div className="p-4 border-t border-gray-200">
         <button 
           onClick={handleLogout}
-          className="w-full text-left px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-[#1a1f2e] rounded-xl transition-all duration-200"
+          className="w-full px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-[#1a1f2e] rounded-xl transition-all duration-200 flex items-center justify-center"
+          title="Logout"
         >
-          {userName} [log out →]
+          <LogOut className="h-5 w-5" />
         </button>
       </div>
     </div>
