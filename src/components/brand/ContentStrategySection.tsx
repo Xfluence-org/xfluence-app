@@ -26,46 +26,22 @@ interface ContentStrategySectionProps {
 const ContentStrategySection: React.FC<ContentStrategySectionProps> = ({ llmInteractions }) => {
   // Extract content strategy from LLM interactions
   const getContentStrategyData = (): ContentStrategyData | null => {
-    console.log('Processing LLM interactions for content strategy:', llmInteractions);
-    
     for (const interaction of llmInteractions) {
-      // Check direct content_strategy property
       if (interaction.raw_output?.content_strategy) {
-        console.log('Found content strategy in raw_output:', interaction.raw_output.content_strategy);
         return interaction.raw_output.content_strategy;
       }
-      
-      // Check if content strategy is at root level
-      if (interaction.raw_output?.content_distribution || interaction.raw_output?.platform_specific_strategies) {
-        console.log('Found content strategy at root level:', interaction.raw_output);
-        return {
-          content_distribution: interaction.raw_output.content_distribution,
-          platform_specific_strategies: interaction.raw_output.platform_specific_strategies
-        };
-      }
-      
       // Also check if the data is nested differently
       if (typeof interaction.raw_output === 'string') {
         try {
           const parsed = JSON.parse(interaction.raw_output);
           if (parsed.content_strategy) {
-            console.log('Found content strategy in parsed string:', parsed.content_strategy);
             return parsed.content_strategy;
-          }
-          if (parsed.content_distribution || parsed.platform_specific_strategies) {
-            console.log('Found content strategy at parsed root level:', parsed);
-            return {
-              content_distribution: parsed.content_distribution,
-              platform_specific_strategies: parsed.platform_specific_strategies
-            };
           }
         } catch (e) {
           console.log('Could not parse LLM interaction:', e);
         }
       }
     }
-    
-    console.log('No content strategy found in LLM interactions');
     return null;
   };
 
@@ -81,8 +57,6 @@ const ContentStrategySection: React.FC<ContentStrategySectionProps> = ({ llmInte
       </div>
     );
   }
-
-  console.log('Rendering content strategy:', contentStrategy);
 
   return (
     <div className="space-y-6">
@@ -180,16 +154,6 @@ const ContentStrategySection: React.FC<ContentStrategySectionProps> = ({ llmInte
               </div>
             )}
           </div>
-        </div>
-      )}
-
-      {/* Fallback message if no strategy sections found */}
-      {!contentStrategy.content_distribution && !contentStrategy.platform_specific_strategies && (
-        <div className="text-center py-8">
-          <p className="text-gray-500">Content strategy data is being processed</p>
-          <p className="text-gray-400 text-sm mt-1">
-            Please check back in a moment for detailed content recommendations
-          </p>
         </div>
       )}
     </div>

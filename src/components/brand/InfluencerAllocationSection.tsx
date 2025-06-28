@@ -26,48 +26,22 @@ const InfluencerAllocationSection: React.FC<InfluencerAllocationSectionProps> = 
 
   // Extract influencer allocation from LLM interactions
   const getInfluencerAllocationData = (): InfluencerAllocationData | null => {
-    console.log('Processing LLM interactions for influencer allocation:', llmInteractions);
-    
     for (const interaction of llmInteractions) {
-      // Check direct influencer_allocation property
       if (interaction.raw_output?.influencer_allocation) {
-        console.log('Found influencer allocation in raw_output:', interaction.raw_output.influencer_allocation);
         return interaction.raw_output.influencer_allocation;
       }
-      
-      // Check if allocation data is at root level
-      if (interaction.raw_output?.total_influencers || interaction.raw_output?.allocation_by_tier || interaction.raw_output?.allocation_by_category) {
-        console.log('Found influencer allocation at root level:', interaction.raw_output);
-        return {
-          total_influencers: interaction.raw_output.total_influencers,
-          allocation_by_tier: interaction.raw_output.allocation_by_tier,
-          allocation_by_category: interaction.raw_output.allocation_by_category
-        };
-      }
-      
       // Also check if the data is nested differently
       if (typeof interaction.raw_output === 'string') {
         try {
           const parsed = JSON.parse(interaction.raw_output);
           if (parsed.influencer_allocation) {
-            console.log('Found influencer allocation in parsed string:', parsed.influencer_allocation);
             return parsed.influencer_allocation;
-          }
-          if (parsed.total_influencers || parsed.allocation_by_tier || parsed.allocation_by_category) {
-            console.log('Found influencer allocation at parsed root level:', parsed);
-            return {
-              total_influencers: parsed.total_influencers,
-              allocation_by_tier: parsed.allocation_by_tier,
-              allocation_by_category: parsed.allocation_by_category
-            };
           }
         } catch (e) {
           console.log('Could not parse LLM interaction:', e);
         }
       }
     }
-    
-    console.log('No influencer allocation found in LLM interactions');
     return null;
   };
 
@@ -83,8 +57,6 @@ const InfluencerAllocationSection: React.FC<InfluencerAllocationSectionProps> = 
       </div>
     );
   }
-
-  console.log('Rendering influencer allocation:', influencerAllocation);
 
   const categories = Object.keys(influencerAllocation.allocation_by_tier || {});
   
@@ -201,16 +173,6 @@ const InfluencerAllocationSection: React.FC<InfluencerAllocationSectionProps> = 
               </TabsContent>
             ))}
           </Tabs>
-        </div>
-      )}
-
-      {/* Fallback if no category breakdown */}
-      {categories.length === 0 && (
-        <div className="text-center py-8">
-          <p className="text-gray-500">Influencer allocation data is being processed</p>
-          <p className="text-gray-400 text-sm mt-1">
-            Please check back in a moment for detailed allocation recommendations
-          </p>
         </div>
       )}
     </div>
