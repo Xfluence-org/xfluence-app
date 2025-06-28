@@ -14,6 +14,8 @@ import InfluencerPerformanceSection from '@/components/brand/InfluencerPerforman
 import ContentStrategySection from '@/components/brand/ContentStrategySection';
 import InfluencerAllocationSection from '@/components/brand/InfluencerAllocationSection';
 import { Save, Edit, X } from 'lucide-react';
+import PublicCampaignToggle from '@/components/brand/PublicCampaignToggle';
+import ApplicationsManagementSection from '@/components/brand/ApplicationsManagementSection';
 
 interface CampaignDetailModalProps {
   isOpen: boolean;
@@ -41,6 +43,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditing, setIsEditing] = useState(false);
+  const [campaignPublicStatus, setCampaignPublicStatus] = useState(false);
   const [editForm, setEditForm] = useState({
     title: '',
     description: '',
@@ -63,6 +66,9 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
         category: categoryValue,
         budget: campaign.budget || 0
       });
+      
+      // Set public status
+      setCampaignPublicStatus(campaign.is_public || false);
     }
   }, [campaign]);
 
@@ -119,6 +125,10 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
     return null;
   };
 
+  const handlePublicToggle = (isPublic: boolean) => {
+    setCampaignPublicStatus(isPublic);
+  };
+
   if (!isOpen || !campaignId) return null;
 
   const llmCampaignData = getLLMCampaignData();
@@ -171,13 +181,21 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
           </div>
         ) : campaign ? (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="overview">Campaign Overview</TabsTrigger>
               <TabsTrigger value="strategy">Campaign Strategy</TabsTrigger>
               <TabsTrigger value="influencers">Influencers</TabsTrigger>
+              <TabsTrigger value="applications">Applications</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6 mt-6">
+              {/* Public Campaign Toggle */}
+              <PublicCampaignToggle
+                campaignId={campaignId}
+                isPublic={campaignPublicStatus}
+                onToggle={handlePublicToggle}
+              />
+
               <div className="bg-gray-50 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-[#1a1f2e] mb-4">Campaign Information</h3>
                 
@@ -371,6 +389,10 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
               
               {/* Existing Influencer Performance Section */}
               <InfluencerPerformanceSection campaignId={campaignId} />
+            </TabsContent>
+
+            <TabsContent value="applications" className="space-y-6 mt-6">
+              <ApplicationsManagementSection campaignId={campaignId} />
             </TabsContent>
           </Tabs>
         ) : null}

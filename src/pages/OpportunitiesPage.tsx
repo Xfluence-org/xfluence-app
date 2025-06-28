@@ -1,202 +1,85 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import Sidebar from '@/components/dashboard/Sidebar';
-import SearchBar from '@/components/opportunities/SearchBar';
-import OpportunityCard from '@/components/opportunities/OpportunityCard';
-import ApplicationModal from '@/components/opportunities/ApplicationModal';
-import FilterModal, { FilterOptions } from '@/components/opportunities/FilterModal';
+
+import React, { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { Opportunity } from '@/types/opportunities';
+import Sidebar from '@/components/dashboard/Sidebar';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import OpportunityApplicationModal from '@/components/influencer/OpportunityApplicationModal';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Search, Filter, MapPin, Calendar, DollarSign } from 'lucide-react';
 
-const OpportunitiesPage: React.FC = () => {
+interface Opportunity {
+  id: string;
+  title: string;
+  brand_name: string;
+  description: string;
+  category: string;
+  compensation_min: number;
+  compensation_max: number;
+  requirements: any;
+  created_at: string;
+  due_date: string;
+  application_deadline: string;
+  has_applied: boolean;
+}
+
+const OpportunitiesPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
-  const [selectedOpportunityId, setSelectedOpportunityId] = useState<string>('');
-  const [applicationLoading, setApplicationLoading] = useState(false);
-  const [activeFilters, setActiveFilters] = useState<FilterOptions>({
-    categories: [],
-    platforms: [],
-    compensationRange: { min: 0, max: 10000 },
-    deliverables: []
-  });
+  const queryClient = useQueryClient();
 
-  const { toast } = useToast();
-
-  // Debounce search query
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery);
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
-
-  // Use React Query to fetch opportunities with the new database function
-  const { data: opportunitiesData, isLoading: loading, error, refetch } = useQuery({
-    queryKey: ['opportunities', debouncedSearchQuery, activeFilters],
+  const { data: opportunities = [], isLoading, error } = useQuery({
+    queryKey: ['opportunities', searchQuery, categoryFilter],
     queryFn: async () => {
-      console.log('Fetching opportunities with search query:', debouncedSearchQuery);
-      console.log('Active filters:', activeFilters);
+      console.log('Fetching opportunities with filters:', { searchQuery, categoryFilter });
       
       const { data, error } = await supabase.rpc('get_opportunities', {
-        search_query: debouncedSearchQuery || '',
-        category_filter: activeFilters.categories[0] || '',
-        min_compensation: activeFilters.compensationRange.min * 100, // convert to cents
-        max_compensation: activeFilters.compensationRange.max * 100,
-        platform_filter: activeFilters.platforms[0] || ''
+        search_query: searchQuery,
+        category_filter: categoryFilter,
+        min_compensation: 0,
+        max_compensation: 999999999,
+        platform_filter: ''
       });
-      
+
       if (error) {
         console.error('Error fetching opportunities:', error);
         throw error;
       }
-      
-      console.log('Fetched opportunities from database:', data);
-      console.log('Number of opportunities found:', data?.length || 0);
+
+      console.log('Opportunities fetched:', data);
       return data || [];
     }
   });
 
-  // Transform database data to match Opportunity interface
-  const opportunities: Opportunity[] = useMemo(() => {
-    if (!opportunitiesData) return [];
-    
-    return opportunitiesData.map(opportunity => {
-      const requirements = opportunity.requirements as any || {};
-      
-      return {
-        id: opportunity.id,
-        title: opportunity.title,
-        brand: opportunity.brand_name || 'Unknown Brand',
-        compensation: {
-          min: opportunity.compensation_min ? Math.floor(opportunity.compensation_min / 100) : undefined,
-          max: opportunity.compensation_max ? Math.floor(opportunity.compensation_max / 100) : 0,
-          type: opportunity.compensation_min ? 'range' : 'fixed'
-        },
-        category: opportunity.category ? [opportunity.category] : ['General'],
-        platforms: requirements.platforms || ['Instagram', 'TikTok'],
-        deliverables: {
-          posts: requirements.posts || 1,
-          stories: requirements.stories || 0,
-          reels: requirements.reels || 0
-        },
-        postedAt: opportunity.created_at,
-        description: opportunity.description || undefined,
-        applicationDeadline: opportunity.application_deadline || undefined
-      };
-    });
-  }, [opportunitiesData]);
-
-  // Apply client-side platform filtering since database function handles basic filters
-  const filteredOpportunities = useMemo(() => {
-    let filtered = opportunities;
-
-    // Apply platform filter (additional client-side filtering)
-    if (activeFilters.platforms.length > 1) { // Only apply if multiple platforms selected
-      filtered = filtered.filter(opp =>
-        opp.platforms.some(platform => 
-          activeFilters.platforms.some(filterPlatform => 
-            platform.toLowerCase() === filterPlatform.toLowerCase()
-          )
-        )
-      );
-    }
-
-    console.log('Filtered opportunities count:', filtered.length);
-    return filtered;
-  }, [opportunities, activeFilters.platforms]);
-
-  const handleSearchChange = (query: string) => {
-    console.log('Search query changed to:', query);
-    setSearchQuery(query);
+  const handleApplyClick = (opportunity: Opportunity) => {
+    setSelectedOpportunity(opportunity);
+    setIsApplicationModalOpen(true);
   };
 
-  const handleFilterClick = () => {
-    setIsFilterModalOpen(true);
+  const handleApplicationSubmitted = () => {
+    // Refresh opportunities to update application status
+    queryClient.invalidateQueries({ queryKey: ['opportunities'] });
   };
 
-  const handleApplyFilters = (filters: FilterOptions) => {
-    setActiveFilters(filters);
-  };
+  const categories = ['Food & Drinks', 'Travel', 'Lifestyle', 'Fashion', 'Beauty', 'Fitness', 'Technology', 'Gaming'];
 
-  const handleViewDetails = (opportunityId: string) => {
-    console.log('View details for:', opportunityId);
-    // Navigate to opportunity details page or open modal
-  };
-
-  const handleApplyNow = (opportunityId: string) => {
-    const opportunity = opportunities.find(opp => opp.id === opportunityId);
-    if (opportunity) {
-      setSelectedOpportunityId(opportunityId);
-      setIsApplicationModalOpen(true);
-    }
-  };
-
-  const handleApplicationSubmit = async (message: string) => {
-    if (!selectedOpportunityId) return;
-    
-    setApplicationLoading(true);
-    
-    try {
-      console.log('Submitting application for opportunity:', selectedOpportunityId);
-      
-      // Using the test user ID for now - in production this would be the current user's ID
-      const testUserId = '46ec4c99-d347-4c75-a0bb-5c409ed6c8ab';
-      
-      const { error } = await supabase
-        .from('campaign_participants')
-        .insert({
-          campaign_id: selectedOpportunityId,
-          influencer_id: testUserId,
-          status: 'applied',
-          application_message: message,
-          ai_match_score: Math.floor(Math.random() * 40) + 60 // Random score between 60-100 for demo
-        });
-        
-      if (error) {
-        console.error('Application failed:', error);
-        throw error;
-      }
-      
-      console.log('Application submitted successfully!');
-      
-      toast({
-        title: "Application Submitted",
-        description: "Your application has been submitted successfully!",
-      });
-      
-      setIsApplicationModalOpen(false);
-      setSelectedOpportunityId('');
-      
-      // Refetch opportunities to update the has_applied status
-      refetch();
-      
-    } catch (err) {
-      console.error('Error submitting application:', err);
-      toast({
-        title: "Application Failed",
-        description: "Failed to submit application. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setApplicationLoading(false);
-    }
-  };
-
-  const selectedOpportunity = opportunities.find(opp => opp.id === selectedOpportunityId);
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <Sidebar activeItem="opportunities" userName="Name" />
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-8">
-            <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">Loading opportunities...</p>
-            </div>
+      <div className="min-h-screen bg-gray-50 flex">
+        <Sidebar />
+        <main className="flex-1 ml-64 p-8">
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">Loading opportunities...</p>
           </div>
         </main>
       </div>
@@ -205,14 +88,11 @@ const OpportunitiesPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <Sidebar activeItem="opportunities" userName="Name" />
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-8">
-            <div className="text-center py-12">
-              <p className="text-red-500 text-lg">Error loading opportunities. Please try again.</p>
-              <p className="text-gray-500 mt-2">Error: {error.message}</p>
-            </div>
+      <div className="min-h-screen bg-gray-50 flex">
+        <Sidebar />
+        <main className="flex-1 ml-64 p-8">
+          <div className="text-center py-12">
+            <p className="text-red-500 text-lg">Error loading opportunities</p>
           </div>
         </main>
       </div>
@@ -220,80 +100,139 @@ const OpportunitiesPage: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <Sidebar activeItem="opportunities" userName="Name" />
+    <div className="min-h-screen bg-gray-50 flex">
+      <Sidebar />
       
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-8">
-          <header className="mb-8">
-            <h1 className="text-3xl font-bold text-[#1a1f2e] mb-2">Opportunities</h1>
+      <main className="flex-1 ml-64 p-8">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-[#1a1f2e] mb-2">
+              Campaign Opportunities
+            </h1>
             <p className="text-gray-600">
-              {searchQuery ? `Search results for "${searchQuery}"` : 'Campaigns you may like'}
+              Discover and apply to campaigns that match your style and audience.
             </p>
-          </header>
+          </div>
 
-          <section>
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
-              <div className="mb-6">
-                <h2 className="text-2xl font-bold text-[#1a1f2e] mb-2">New Campaigns</h2>
-                <p className="text-gray-600 mb-6">
-                  {filteredOpportunities.length} campaigns available
-                </p>
-                
-                <SearchBar 
-                  searchQuery={searchQuery}
-                  onSearchChange={handleSearchChange} 
-                  onFilterClick={handleFilterClick} 
-                />
+          {/* Filters */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex-1 min-w-64">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <Input
+                    placeholder="Search campaigns..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
               </div>
-
-              <div className="space-y-6">
-                {filteredOpportunities.length > 0 ? (
-                  filteredOpportunities.map((opportunity) => (
-                    <OpportunityCard
-                      key={opportunity.id}
-                      opportunity={opportunity}
-                      onViewDetails={handleViewDetails}
-                      onApplyNow={handleApplyNow}
-                    />
-                  ))
-                ) : (
-                  <div className="text-center py-12">
-                    <p className="text-gray-500 text-lg">
-                      {searchQuery 
-                        ? `No opportunities found for "${searchQuery}"`
-                        : "No opportunities found matching your criteria."
-                      }
-                    </p>
-                    <p className="text-gray-400 mt-2">
-                      {searchQuery 
-                        ? "Try a different search term or clear your search."
-                        : "Try adjusting your search or filters."
-                      }
-                    </p>
-                  </div>
-                )}
-              </div>
+              
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-48">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Categories</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              {(searchQuery || categoryFilter) && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setCategoryFilter('');
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              )}
             </div>
-          </section>
+          </div>
+
+          {/* Opportunities */}
+          {opportunities.length === 0 ? (
+            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+              <p className="text-gray-500 text-lg">No opportunities found</p>
+              <p className="text-gray-400 mt-2">
+                {searchQuery || categoryFilter 
+                  ? 'Try adjusting your search filters' 
+                  : 'Check back later for new campaigns'
+                }
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {opportunities.map((opportunity) => (
+                <div
+                  key={opportunity.id}
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow duration-200"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-[#1a1f2e] mb-1">
+                        {opportunity.title}
+                      </h3>
+                      <p className="text-gray-600 mb-2">by {opportunity.brand_name}</p>
+                      <Badge variant="outline" className="bg-gray-50">
+                        {opportunity.category}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <p className="text-gray-700 mb-4 line-clamp-3">
+                    {opportunity.description}
+                  </p>
+
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <DollarSign className="h-4 w-4" />
+                      <span>
+                        ${opportunity.compensation_min?.toLocaleString()} - ${opportunity.compensation_max?.toLocaleString()}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Calendar className="h-4 w-4" />
+                      <span>
+                        Apply by: {new Date(opportunity.application_deadline).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {opportunity.has_applied ? (
+                    <Button disabled className="w-full">
+                      Applied
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => handleApplyClick(opportunity)}
+                      className="w-full bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
+                    >
+                      Apply Now
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
 
-      <FilterModal
-        isOpen={isFilterModalOpen}
-        onClose={() => setIsFilterModalOpen(false)}
-        onApplyFilters={handleApplyFilters}
-      />
-
-      <ApplicationModal
+      <OpportunityApplicationModal
         isOpen={isApplicationModalOpen}
-        onClose={() => {
-          setIsApplicationModalOpen(false);
-          setSelectedOpportunityId('');
-        }}
-        onSubmit={handleApplicationSubmit}
-        opportunityTitle={selectedOpportunity?.title || ''}
-        loading={applicationLoading}
+        onClose={() => setIsApplicationModalOpen(false)}
+        campaign={selectedOpportunity}
+        onApplicationSubmitted={handleApplicationSubmitted}
       />
     </div>
   );
