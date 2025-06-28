@@ -92,19 +92,19 @@
   .btn-primary {
     @apply bg-black text-white px-6 py-3 rounded-md font-medium transition-all duration-150 
            hover:scale-[1.02] hover:shadow-lg focus:ring-2 focus:ring-primary/50 focus:ring-offset-2
-           active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed;
+           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
   }
   
   .btn-secondary {
     @apply bg-background-tertiary text-text-primary border border-border-dark px-6 py-3 rounded-md font-medium
            transition-all duration-150 hover:scale-[1.02] hover:shadow-md focus:ring-2 focus:ring-primary/50 focus:ring-offset-2
-           active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed;
+           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
   }
   
   .btn-ghost {
     @apply bg-transparent text-primary px-4 py-2 rounded-md font-medium
            transition-all duration-150 hover:bg-background-tertiary focus:ring-2 focus:ring-primary/50 focus:ring-offset-2
-           active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed;
+           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   /* Card Components */
