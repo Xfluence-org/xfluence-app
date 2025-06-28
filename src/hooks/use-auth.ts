@@ -55,22 +55,23 @@ export const useAuth = () => {
     return userType === 'Influencer' ? '/dashboard' : '/brand-dashboard';
   }, []);
 
+  const updateAuthState = useCallback((user: User | null, profile: UserProfile | null, session: Session | null) => {
+    console.log('Updating auth state:', { userId: user?.id, profileType: profile?.user_type });
+    setAuthState({
+      user,
+      profile,
+      session,
+      loading: false,
+      initialized: true
+    });
+  }, []);
+
   const clearAuthState = useCallback(() => {
     console.log('Clearing auth state');
     setAuthState({
       user: null,
       profile: null,
       session: null,
-      loading: false,
-      initialized: true
-    });
-  }, []);
-
-  const updateAuthState = useCallback((user: User | null, profile: UserProfile | null, session: Session | null) => {
-    setAuthState({
-      user,
-      profile,
-      session,
       loading: false,
       initialized: true
     });
@@ -117,8 +118,8 @@ export const useAuth = () => {
         
         if (!mounted) return;
 
-        if (event === 'SIGNED_OUT') {
-          console.log('User signed out, clearing state');
+        if (event === 'SIGNED_OUT' || !session) {
+          console.log('User signed out or no session, clearing state');
           clearAuthState();
           return;
         }
@@ -132,9 +133,6 @@ export const useAuth = () => {
             console.error('Error in auth state change:', error);
             clearAuthState();
           }
-        } else {
-          console.log('No session, clearing state');
-          clearAuthState();
         }
       }
     );
@@ -207,6 +205,7 @@ export const useAuth = () => {
     try {
       console.log('Starting sign out process');
       
+      // Clear state immediately to prevent UI flashing
       clearAuthState();
       
       const { error } = await supabase.auth.signOut();

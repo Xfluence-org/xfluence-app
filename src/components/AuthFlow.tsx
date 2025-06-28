@@ -20,17 +20,18 @@ const AuthFlow = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const { signUp, signIn, resetPassword, user, profile, getDashboardPath } = useAuth();
+  const { signUp, signIn, resetPassword, user, profile, getDashboardPath, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   // Redirect authenticated users to appropriate dashboard
   useEffect(() => {
-    if (user && profile) {
+    if (!loading && user && profile) {
+      console.log('Redirecting authenticated user to dashboard:', profile.user_type);
       const dashboardPath = getDashboardPath(profile.user_type);
-      navigate(dashboardPath);
+      navigate(dashboardPath, { replace: true });
     }
-  }, [user, profile, navigate, getDashboardPath]);
+  }, [user, profile, loading, navigate, getDashboardPath]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -101,15 +102,26 @@ const AuthFlow = () => {
           backToLogin();
         }
       } else if (isLogin) {
+        if (!formData.email || !formData.password) {
+          toast({
+            title: "Missing Information",
+            description: "Please enter both email and password.",
+            variant: "destructive"
+          });
+          return;
+        }
+
         const { error } = await signIn(formData.email, formData.password);
         
         if (error) {
+          console.error('Login error:', error);
           toast({
             title: "Login Failed",
-            description: error.message || "Failed to login. Please try again.",
+            description: error.message || "Failed to login. Please check your credentials.",
             variant: "destructive"
           });
         } else {
+          console.log('Login successful');
           toast({
             title: "Login Successful",
             description: "Welcome back!"
@@ -143,6 +155,7 @@ const AuthFlow = () => {
         );
 
         if (error) {
+          console.error('Signup error:', error);
           toast({
             title: "Registration Failed",
             description: error.message || "Failed to create account. Please try again.",
@@ -165,6 +178,7 @@ const AuthFlow = () => {
         }
       }
     } catch (error) {
+      console.error('Auth error:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
@@ -174,6 +188,18 @@ const AuthFlow = () => {
       setIsLoading(false);
     }
   };
+
+  // Show loading if auth is still initializing
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1DDCD3]"></div>
+          <div className="text-sm text-gray-600">Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
   const getFormTitle = () => {
     if (isForgotPassword) return 'Reset Password';
@@ -311,7 +337,7 @@ const AuthFlow = () => {
               </Button>
             </form>
 
-            {isLogin && !isForgotPassword && (
+            {
               <>
                 <div className="text-center text-sm text-[#6c757d]">
                   or login with
@@ -329,25 +355,22 @@ const AuthFlow = () => {
                   </button>
                 </div>
               </>
-            )}
+            }
           </div>
         </div>
       </div>
 
-      {/* Right Panel - Hero Section (55% width) */}
-      <div className={`w-[55%] relative overflow-hidden transition-all duration-700 ease-in-out ${isLogin ? 'translate-x-0' : '-translate-x-full'}`}>
+      {
+        <div className={`w-[55%] relative overflow-hidden transition-all duration-700 ease-in-out ${isLogin ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="h-full relative bg-gradient-to-br from-[#1a1f2e] to-[#252b3b]">
-          {/* Animated fluid shapes */}
           <div className="absolute inset-0 overflow-hidden">
             {isLogin ? (
               <>
-                {/* Teal fluid shapes for login */}
                 <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-[#1DDCD3] opacity-20 blur-3xl animate-pulse"></div>
                 <div className="absolute top-20 left-10 w-64 h-64 rounded-full bg-[#00D4C7] opacity-40 blur-2xl animate-pulse delay-1000"></div>
                 <div className="absolute bottom-10 right-20 w-80 h-80 rounded-full bg-[#1DDCD3] opacity-30 blur-3xl animate-pulse delay-2000"></div>
                 <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full bg-[#00D4C7] opacity-25 blur-2xl animate-pulse delay-500"></div>
                 
-                {/* Flowing lines */}
                 <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg">
                   <path d="M0,100 Q100,50 200,100 T400,100 L400,200 Q300,150 200,200 T0,200 Z" fill="url(#teal-gradient)" opacity="0.3">
                     <animateTransform attributeName="transform" type="translate" values="0,0;20,10;0,0" dur="8s" repeatCount="indefinite"/>
@@ -365,13 +388,11 @@ const AuthFlow = () => {
               </>
             ) : (
               <>
-                {/* Purple fluid shapes for signup */}
                 <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-[#9d4edd] opacity-20 blur-3xl animate-pulse"></div>
                 <div className="absolute top-20 left-10 w-64 h-64 rounded-full bg-[#a855f7] opacity-40 blur-2xl animate-pulse delay-1000"></div>
                 <div className="absolute bottom-10 right-20 w-80 h-80 rounded-full bg-[#9d4edd] opacity-30 blur-3xl animate-pulse delay-2000"></div>
                 <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full bg-[#a855f7] opacity-25 blur-2xl animate-pulse delay-500"></div>
                 
-                {/* Flowing lines */}
                 <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg">
                   <path d="M0,100 Q100,50 200,100 T400,100 L400,200 Q300,150 200,200 T0,200 Z" fill="url(#purple-gradient)" opacity="0.3">
                     <animateTransform attributeName="transform" type="translate" values="0,0;20,10;0,0" dur="8s" repeatCount="indefinite"/>
@@ -390,7 +411,6 @@ const AuthFlow = () => {
             )}
           </div>
 
-          {/* Content Overlay */}
           <div className="relative z-10 h-full flex items-center justify-center p-12 text-white">
             <div className="text-center space-y-6 max-w-md">
               <div>
@@ -432,9 +452,10 @@ const AuthFlow = () => {
           </div>
         </div>
       </div>
+      }
 
-      {/* Mobile responsiveness overlay */}
-      <div className="md:hidden absolute inset-0 bg-white flex items-center justify-center p-6">
+      {
+        <div className="md:hidden absolute inset-0 bg-white flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
             <h1 className="text-lg font-medium text-[#1a1f2e] mb-2">Xfluence</h1>
@@ -552,6 +573,7 @@ const AuthFlow = () => {
           )}
         </div>
       </div>
+      }
     </div>
   );
 };
