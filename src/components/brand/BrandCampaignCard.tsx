@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -35,18 +36,14 @@ interface BrandCampaignCardProps {
   campaign: BrandCampaign;
   onView: (campaignId: string) => void;
   onArchive: (campaignId: string) => void;
-  onPublish?: (campaignId: string) => void;
   showArchiveButton: boolean;
-  showPublishButton?: boolean;
 }
 
 const BrandCampaignCard: React.FC<BrandCampaignCardProps> = ({
   campaign,
   onView,
   onArchive,
-  onPublish,
-  showArchiveButton,
-  showPublishButton = false
+  showArchiveButton
 }) => {
   const [isPublic, setIsPublic] = useState(campaign.is_public || false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -208,15 +205,6 @@ const BrandCampaignCard: React.FC<BrandCampaignCardProps> = ({
           <Eye className="h-4 w-4 mr-2" />
           View Details
         </Button>
-        
-        {showPublishButton && onPublish && (
-          <Button 
-            onClick={() => onPublish(campaign.campaign_id)}
-            className="bg-[#1DDCD3] hover:bg-[#00D4C7] text-white"
-          >
-            Publish
-          </Button>
-        )}
         
         {showArchiveButton && (
           <AlertDialog>
