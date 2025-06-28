@@ -12,6 +12,9 @@ import CampaignsPage from "./pages/CampaignsPage";
 import BrandDashboard from "./pages/BrandDashboard";
 import BrandCampaignsPage from "./pages/BrandCampaignsPage";
 import CampaignReviewPage from "./pages/CampaignReviewPage";
+import SettingsPage from "./pages/SettingsPage";
+import BrandSettingsPage from "./pages/BrandSettingsPage";
+import BrandAIAssistantPage from "./pages/BrandAIAssistantPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,6 +69,14 @@ const App = () => (
               } 
             />
             <Route 
+              path="/settings" 
+              element={
+                <AuthRoute requiredUserType="Influencer">
+                  <SettingsPage />
+                </AuthRoute>
+              } 
+            />
+            <Route 
               path="/brand-dashboard" 
               element={
                 <AuthRoute>
@@ -78,6 +89,22 @@ const App = () => (
               element={
                 <AuthRoute>
                   <BrandCampaignsPage />
+                </AuthRoute>
+              } 
+            />
+            <Route 
+              path="/brand/settings" 
+              element={
+                <AuthRoute>
+                  <BrandSettingsPage />
+                </AuthRoute>
+              } 
+            />
+            <Route 
+              path="/brand/ai-assistant" 
+              element={
+                <AuthRoute>
+                  <BrandAIAssistantPage />
                 </AuthRoute>
               } 
             />
