@@ -15,59 +15,64 @@ import NotFound from '@/pages/NotFound';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import './App.css';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <div className="min-h-screen bg-background">
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <InfluencerDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/brand-dashboard" element={
-              <ProtectedRoute>
-                <BrandDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/brand/campaigns" element={
-              <ProtectedRoute>
-                <BrandCampaignsPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/brand/applications" element={
-              <ProtectedRoute>
-                <BrandApplicationsPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/brand/ai-assistant" element={
-              <ProtectedRoute>
-                <BrandAIAssistant />
-              </ProtectedRoute>
-            } />
-            <Route path="/opportunities" element={
-              <ProtectedRoute>
-                <OpportunitiesPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/campaigns" element={
-              <ProtectedRoute>
-                <CampaignsPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/campaign-review/:id" element={
-              <ProtectedRoute>
-                <CampaignReviewPage />
-              </ProtectedRoute>
-            } />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <Toaster />
-        </div>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <InfluencerDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/brand-dashboard" element={
+            <ProtectedRoute>
+              <BrandDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/brand/campaigns" element={
+            <ProtectedRoute>
+              <BrandCampaignsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/brand/applications" element={
+            <ProtectedRoute>
+              <BrandApplicationsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/brand/ai-assistant" element={
+            <ProtectedRoute>
+              <BrandAIAssistant />
+            </ProtectedRoute>
+          } />
+          <Route path="/opportunities" element={
+            <ProtectedRoute>
+              <OpportunitiesPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/campaigns" element={
+            <ProtectedRoute>
+              <CampaignsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/campaign-review/:id" element={
+            <ProtectedRoute>
+              <CampaignReviewPage />
+            </ProtectedRoute>
+          } />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <Toaster />
       </Router>
     </QueryClientProvider>
   );
