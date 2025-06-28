@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { Task } from '@/types/campaigns';
+import { CampaignTask } from '@/types/campaigns';
 import { cn } from '@/lib/utils';
 
 interface TaskCardProps {
-  task: Task;
+  task: CampaignTask;
   onViewDetails: (taskId: string) => void;
 }
 

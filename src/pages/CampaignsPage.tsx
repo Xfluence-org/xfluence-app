@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Sidebar from '@/components/dashboard/Sidebar';
@@ -66,6 +65,11 @@ const CampaignsPage: React.FC = () => {
   const handleFilterClick = () => {
     console.log('Filter clicked');
     // Implement filter modal
+  };
+
+  const handleViewDetails = (campaignId: string) => {
+    // Navigate to campaign details or handle campaign view
+    console.log('View campaign details:', campaignId);
   };
 
   const handleViewTaskDetails = (taskId: string) => {
@@ -162,7 +166,7 @@ const CampaignsPage: React.FC = () => {
                     <DetailedCampaignCard
                       key={campaign.id}
                       campaign={campaign}
-                      onViewTaskDetails={handleViewTaskDetails}
+                      onViewDetails={handleViewDetails}
                     />
                   ))
                 ) : (
