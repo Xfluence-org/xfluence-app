@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,6 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [hasRedirectedOnce, setHasRedirectedOnce] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -102,14 +104,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const userProfile = await fetchUserProfile(session.user.id);
             setProfile(userProfile);
             
-            // Only redirect on actual sign-in events, not on token refresh or initial load
-            // Also prevent redirects after initial load to avoid tab switch issues
-            if (userProfile && event === 'SIGNED_IN' && !hasInitialized && location.pathname === '/') {
+            // Only redirect on initial sign-in and only once per session
+            // Prevent redirects on tab switches, token refresh, etc.
+            if (userProfile && 
+                event === 'SIGNED_IN' && 
+                !hasInitialized && 
+                !hasRedirectedOnce &&
+                location.pathname === '/') {
+              setHasRedirectedOnce(true);
               redirectToDashboard(userProfile.user_type);
             }
           }, 0);
         } else {
           setProfile(null);
+          // Reset redirect flag when user signs out
+          setHasRedirectedOnce(false);
         }
 
         setLoading(false);
