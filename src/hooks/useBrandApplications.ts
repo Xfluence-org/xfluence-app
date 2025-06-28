@@ -31,18 +31,7 @@ export const useBrandApplications = (limit: number = 50) => {
 
       if (error) {
         console.error('Error fetching brand applications:', error);
-        // Fallback to original function if new one doesn't exist yet
-        const { data: fallbackData, error: fallbackError } = await supabase.rpc('get_brand_applications', {
-          limit_count: limit
-        });
-        
-        if (fallbackError) {
-          console.error('Error with fallback:', fallbackError);
-          throw fallbackError;
-        }
-        
-        console.log('Fetched brand applications (fallback):', fallbackData);
-        return fallbackData || [];
+        throw error;
       }
 
       console.log('Fetched brand applications:', data);
