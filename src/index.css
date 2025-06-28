@@ -1,155 +1,103 @@
-
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Import Inter font */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
 
-/* Design System Base Styles */
 @layer base {
   :root {
-    --background: #F8FAFC;
-    --foreground: #1F2937;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
 
-    --card: #FFFFFF;
-    --card-foreground: #1F2937;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
 
-    --popover: #FFFFFF;
-    --popover-foreground: #1F2937;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: #3B82F6;
-    --primary-foreground: #FFFFFF;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: #6B7280;
-    --secondary-foreground: #FFFFFF;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --muted: #F3F4F6;
-    --muted-foreground: #6B7280;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: #EF4444;
-    --accent-foreground: #FFFFFF;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
 
-    --destructive: #EF4444;
-    --destructive-foreground: #FFFFFF;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: #E5E7EB;
-    --input: #D1D5DB;
-    --ring: #3B82F6;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
 
-    --radius: 8px;
+    --radius: 0.5rem;
 
-    --sidebar-background: #FFFFFF;
-    --sidebar-foreground: #1F2937;
-    --sidebar-primary: #3B82F6;
-    --sidebar-primary-foreground: #FFFFFF;
-    --sidebar-accent: #F3F4F6;
-    --sidebar-accent-foreground: #1F2937;
-    --sidebar-border: #E5E7EB;
-    --sidebar-ring: #3B82F6;
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
   * {
     @apply border-border;
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground;
   }
 }
-
-@layer components {
-  /* Button Components */
-  .btn-primary {
-    @apply bg-black text-white px-6 py-3 rounded-md font-medium transition-all duration-150 
-           hover:scale-[1.02] hover:shadow-lg focus:ring-2 focus:ring-primary/50 focus:ring-offset-2
-           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-  
-  .btn-secondary {
-    @apply bg-background-tertiary text-text-primary border border-border-dark px-6 py-3 rounded-md font-medium
-           transition-all duration-150 hover:scale-[1.02] hover:shadow-md focus:ring-2 focus:ring-primary/50 focus:ring-offset-2
-           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-  
-  .btn-ghost {
-    @apply bg-transparent text-primary px-4 py-2 rounded-md font-medium
-           transition-all duration-150 hover:bg-background-tertiary focus:ring-2 focus:ring-primary/50 focus:ring-offset-2
-           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-
-  /* Card Components */
-  .card-base {
-    @apply bg-white border border-border rounded-lg shadow-card p-6 
-           transition-all duration-150 hover:shadow-card-hover;
-  }
-
-  /* Form Components */
-  .input-base {
-    @apply border border-input bg-white px-4 py-3 rounded-md text-body
-           focus:border-primary focus:ring-2 focus:ring-primary/50 focus:ring-offset-0
-           placeholder:text-text-secondary disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-
-  .label-base {
-    @apply text-text-primary text-body font-medium mb-2 block;
-  }
-
-  /* Navigation Components */
-  .nav-item {
-    @apply flex items-center gap-3 px-4 py-3 text-text-secondary font-medium rounded-md
-           transition-all duration-150 hover:bg-background-tertiary hover:text-text-primary;
-  }
-
-  .nav-item-active {
-    @apply bg-background-tertiary text-primary border-l-3 border-primary font-semibold;
-  }
-
-  /* Status Components */
-  .status-success {
-    @apply bg-success/10 text-success border border-success/20 px-3 py-1 rounded-full text-body-sm font-medium;
-  }
-
-  .status-error {
-    @apply bg-error/10 text-error border border-error/20 px-3 py-1 rounded-full text-body-sm font-medium;
-  }
-
-  .status-warning {
-    @apply bg-warning/10 text-warning border border-warning/20 px-3 py-1 rounded-full text-body-sm font-medium;
-  }
-
-  .status-info {
-    @apply bg-info/10 text-info border border-info/20 px-3 py-1 rounded-full text-body-sm font-medium;
-  }
-
-  /* Avatar Components */
-  .avatar-base {
-    @apply w-10 h-10 rounded-full border-2 border-surface flex items-center justify-center;
-  }
-
-  /* Metrics Components */
-  .metric-number {
-    @apply text-h1 font-semibold text-text-primary;
-  }
-
-  .metric-label {
-    @apply text-body text-text-secondary;
-  }
-}
-
-/* Smooth transitions for interactive elements */
-@layer utilities {
-  .transition-smooth {
-    @apply transition-all duration-150 ease-smooth;
-  }
-
-  .hover-lift {
-    @apply hover:scale-[1.02] hover:shadow-card-hover transition-smooth;
-  }
-
-  .focus-ring {
-    @apply focus:ring-2 focus:ring-primary/50 focus:ring-offset-2;
-  }
-}
-

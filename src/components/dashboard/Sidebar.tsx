@@ -30,23 +30,23 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard', userName = 
   };
 
   return (
-    <div className="w-70 bg-white border-r border-border flex flex-col h-screen">
+    <div className="w-64 bg-gradient-to-b from-[#1a1f2e] to-[#252b3b] flex flex-col h-screen">
       {/* Logo/Brand */}
-      <div className="p-6 border-b border-border">
-        <h1 className="text-h2 font-semibold text-text-primary">Xfluence</h1>
+      <div className="p-6 border-b border-gray-700">
+        <h1 className="text-2xl font-bold text-white">Xfluence</h1>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-6 space-y-2">
+      <nav className="flex-1 p-4 space-y-2">
         {menuItems.map((item) => (
           <button
             key={item.id}
             onClick={() => handleMenuClick(item)}
             className={cn(
-              "w-full text-left px-4 py-3 rounded-md transition-smooth flex items-center gap-3",
+              "w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center gap-3",
               activeItem === item.id
-                ? "bg-background-tertiary text-primary font-semibold border-l-3 border-primary"
-                : "text-text-secondary hover:bg-background-tertiary hover:text-text-primary"
+                ? "bg-[#1DDCD3] text-white shadow-lg"
+                : "text-gray-300 hover:bg-gray-700 hover:text-white"
             )}
           >
             <span className="text-lg">{item.icon}</span>
@@ -56,10 +56,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard', userName = 
       </nav>
 
       {/* User Section */}
-      <div className="p-6 border-t border-border">
+      <div className="p-4 border-t border-gray-700">
         <button 
           onClick={handleLogout}
-          className="w-full text-left px-4 py-3 text-text-secondary hover:bg-background-tertiary hover:text-text-primary rounded-md transition-smooth font-medium"
+          className="w-full text-left px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-all duration-200"
         >
           {userName} [log out →]
         </button>

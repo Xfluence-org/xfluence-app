@@ -49,12 +49,12 @@ const BrandCampaignsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex h-screen bg-background">
+      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <BrandSidebar userName="Brand Team" />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
-              <p className="text-text-secondary text-body-lg">Loading campaigns...</p>
+              <p className="text-gray-500 text-lg">Loading campaigns...</p>
             </div>
           </div>
         </main>
@@ -64,13 +64,13 @@ const BrandCampaignsPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="flex h-screen bg-background">
+      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <BrandSidebar userName="Brand Team" />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
-              <p className="text-error text-body-lg">Error loading campaigns</p>
-              <p className="text-text-secondary text-body mt-2">{error}</p>
+              <p className="text-red-500 text-lg">Error loading campaigns</p>
+              <p className="text-gray-500 mt-2">{error}</p>
             </div>
           </div>
         </main>
@@ -79,51 +79,31 @@ const BrandCampaignsPage: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <BrandSidebar userName="Brand Team" />
       
       <main className="flex-1 overflow-y-auto">
-        <div className="p-8 max-w-7xl mx-auto">
+        <div className="p-8">
           <header className="mb-8">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-h1 font-semibold text-text-primary mb-2">Campaign Management</h1>
-                <p className="text-body text-text-secondary">Manage your active, published, completed, and archived campaigns</p>
+                <h1 className="text-3xl font-bold text-[#1a1f2e] mb-2">Campaign Management</h1>
+                <p className="text-gray-600">Manage your active, published, completed, and archived campaigns</p>
               </div>
-              <Button onClick={handleCreateCampaign} className="btn-primary">
+              <Button onClick={handleCreateCampaign} className="bg-[#1a1f2e] hover:bg-[#2a2f3e] text-white">
                 <Plus className="mr-2" />
                 Create Campaign
               </Button>
             </div>
           </header>
 
-          <div className="card-base">
+          <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as CampaignView)}>
-              <TabsList className="grid w-full grid-cols-4 bg-background-tertiary rounded-md p-1">
-                <TabsTrigger 
-                  value="active" 
-                  className="data-[state=active]:bg-black data-[state=active]:text-white data-[state=inactive]:text-text-secondary rounded-md transition-smooth"
-                >
-                  Active Campaigns
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="published"
-                  className="data-[state=active]:bg-black data-[state=active]:text-white data-[state=inactive]:text-text-secondary rounded-md transition-smooth"
-                >
-                  Published Campaigns
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="completed"
-                  className="data-[state=active]:bg-black data-[state=active]:text-white data-[state=inactive]:text-text-secondary rounded-md transition-smooth"
-                >
-                  Completed Campaigns
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="archived"
-                  className="data-[state=active]:bg-black data-[state=active]:text-white data-[state=inactive]:text-text-secondary rounded-md transition-smooth"
-                >
-                  Archived Campaigns
-                </TabsTrigger>
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="active">Active Campaigns</TabsTrigger>
+                <TabsTrigger value="published">Published Campaigns</TabsTrigger>
+                <TabsTrigger value="completed">Completed Campaigns</TabsTrigger>
+                <TabsTrigger value="archived">Archived Campaigns</TabsTrigger>
               </TabsList>
 
               <TabsContent value="active" className="mt-6">
@@ -142,8 +122,8 @@ const BrandCampaignsPage: React.FC = () => {
                     </div>
                   ) : (
                     <div className="text-center py-12">
-                      <p className="text-text-secondary text-body-lg">No active campaigns found</p>
-                      <p className="text-text-tertiary text-body mt-2">Active campaigns will appear here</p>
+                      <p className="text-gray-500 text-lg">No active campaigns found</p>
+                      <p className="text-gray-400 mt-2">Active campaigns will appear here</p>
                     </div>
                   )}
                 </div>
@@ -165,8 +145,8 @@ const BrandCampaignsPage: React.FC = () => {
                     </div>
                   ) : (
                     <div className="text-center py-12">
-                      <p className="text-text-secondary text-body-lg">No published campaigns found</p>
-                      <p className="text-text-tertiary text-body mt-2">Create a campaign to get started</p>
+                      <p className="text-gray-500 text-lg">No published campaigns found</p>
+                      <p className="text-gray-400 mt-2">Create a campaign to get started</p>
                     </div>
                   )}
                 </div>
@@ -188,8 +168,8 @@ const BrandCampaignsPage: React.FC = () => {
                     </div>
                   ) : (
                     <div className="text-center py-12">
-                      <p className="text-text-secondary text-body-lg">No completed campaigns found</p>
-                      <p className="text-text-tertiary text-body mt-2">Completed campaigns will appear here</p>
+                      <p className="text-gray-500 text-lg">No completed campaigns found</p>
+                      <p className="text-gray-400 mt-2">Completed campaigns will appear here</p>
                     </div>
                   )}
                 </div>
@@ -211,8 +191,8 @@ const BrandCampaignsPage: React.FC = () => {
                     </div>
                   ) : (
                     <div className="text-center py-12">
-                      <p className="text-text-secondary text-body-lg">No archived campaigns found</p>
-                      <p className="text-text-tertiary text-body mt-2">Archived campaigns will appear here</p>
+                      <p className="text-gray-500 text-lg">No archived campaigns found</p>
+                      <p className="text-gray-400 mt-2">Archived campaigns will appear here</p>
                     </div>
                   )}
                 </div>

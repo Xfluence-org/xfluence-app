@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -47,20 +48,19 @@ const BrandCampaignCard: React.FC<BrandCampaignCardProps> = ({
   const [isPublic, setIsPublic] = useState(campaign.is_public || false);
   const [isUpdating, setIsUpdating] = useState(false);
   const { toast } = useToast();
-
   const getStatusBadge = (status: string) => {
-    const baseClasses = "px-3 py-1 rounded-full text-body-sm font-medium";
+    const baseClasses = "px-3 py-1 rounded-full text-white text-xs font-medium";
     switch (status.toLowerCase()) {
       case 'active':
-        return `${baseClasses} status-info`;
+        return `${baseClasses} bg-[#1DDCD3]`;
       case 'completed':
-        return `${baseClasses} status-success`;
+        return `${baseClasses} bg-emerald-500`;
       case 'archived':
-        return `${baseClasses} bg-text-secondary/10 text-text-secondary border border-text-secondary/20`;
+        return `${baseClasses} bg-gray-500`;
       case 'published':
-        return `${baseClasses} status-info`;
+        return `${baseClasses} bg-blue-500`;
       default:
-        return `${baseClasses} bg-text-secondary/10 text-text-secondary border border-text-secondary/20`;
+        return `${baseClasses} bg-gray-400`;
     }
   };
 
@@ -118,29 +118,29 @@ const BrandCampaignCard: React.FC<BrandCampaignCardProps> = ({
   };
 
   return (
-    <div className="card-base hover-lift">
+    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-200">
       {/* Campaign Header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
-          <div className="flex items-center gap-3 mb-3">
-            <h3 className="text-h3 font-semibold text-text-primary">{campaign.campaign_title}</h3>
+          <div className="flex items-center gap-3 mb-2">
+            <h3 className="text-xl font-bold text-[#1a1f2e]">{campaign.campaign_title}</h3>
             <span className={getStatusBadge(campaign.campaign_status)}>
               {campaign.campaign_status}
             </span>
           </div>
-          <p className="text-body text-text-secondary mb-2">
+          <p className="text-gray-600 text-sm mb-2">
             {campaign.category} • {campaign.platforms.join(', ')}
           </p>
         </div>
         
         {/* Visibility Toggle - Only show for published campaigns */}
         {campaign.campaign_status.toLowerCase() === 'published' && (
-          <div className="flex items-center gap-3">
-            <div className="flex items-center text-body text-text-secondary">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center text-sm text-gray-600">
               {isPublic ? (
-                <Globe className="h-4 w-4 mr-2" />
+                <Globe className="h-4 w-4 mr-1" />
               ) : (
-                <Lock className="h-4 w-4 mr-2" />
+                <Lock className="h-4 w-4 mr-1" />
               )}
               {isPublic ? 'Public' : 'Private'}
             </div>
@@ -148,51 +148,51 @@ const BrandCampaignCard: React.FC<BrandCampaignCardProps> = ({
               checked={isPublic}
               onCheckedChange={handleVisibilityToggle}
               disabled={isUpdating}
-              className="data-[state=checked]:bg-primary"
+              className="data-[state=checked]:bg-[#1DDCD3]"
             />
           </div>
         )}
       </div>
 
       {/* Campaign Metrics */}
-      <div className="grid grid-cols-2 gap-6 mb-6">
-        <div className="flex items-center gap-3">
-          <DollarSign className="h-5 w-5 text-primary" />
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="flex items-center gap-2">
+          <DollarSign className="h-4 w-4 text-[#1DDCD3]" />
           <div>
-            <p className="text-body-sm text-text-secondary">Budget</p>
-            <p className="text-h4 font-semibold text-text-primary">${campaign.budget.toLocaleString()}</p>
+            <p className="text-sm text-gray-600">Budget</p>
+            <p className="font-semibold">${campaign.budget.toLocaleString()}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Users className="h-5 w-5 text-primary" />
+        <div className="flex items-center gap-2">
+          <Users className="h-4 w-4 text-[#1DDCD3]" />
           <div>
-            <p className="text-body-sm text-text-secondary">Applicants</p>
-            <p className="text-h4 font-semibold text-text-primary">{campaign.applicants} ({campaign.accepted} accepted)</p>
+            <p className="text-sm text-gray-600">Applicants</p>
+            <p className="font-semibold">{campaign.applicants} ({campaign.accepted} accepted)</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Calendar className="h-5 w-5 text-primary" />
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-[#1DDCD3]" />
           <div>
-            <p className="text-body-sm text-text-secondary">Due Date</p>
-            <p className="text-h4 font-semibold text-text-primary">{formatDate(campaign.due_date)}</p>
+            <p className="text-sm text-gray-600">Due Date</p>
+            <p className="font-semibold">{formatDate(campaign.due_date)}</p>
           </div>
         </div>
         <div>
-          <p className="text-body-sm text-text-secondary mb-2">Progress</p>
-          <div className="flex items-center gap-3">
-            <div className="flex-1 bg-background-tertiary rounded-full h-2">
+          <p className="text-sm text-gray-600">Progress</p>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 bg-gray-200 rounded-full h-2">
               <div 
-                className="bg-primary h-2 rounded-full transition-smooth" 
+                className="bg-[#1DDCD3] h-2 rounded-full" 
                 style={{ width: `${campaign.progress}%` }}
               />
             </div>
-            <span className="text-body-sm font-semibold text-text-primary">{campaign.progress}%</span>
+            <span className="text-sm font-semibold">{campaign.progress}%</span>
           </div>
         </div>
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-3 pt-6 border-t border-border">
+      <div className="flex gap-2 pt-4 border-t border-gray-100">
         <Button 
           variant="outline" 
           className="flex-1"
@@ -205,17 +205,17 @@ const BrandCampaignCard: React.FC<BrandCampaignCardProps> = ({
         {showArchiveButton && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="outline" className="text-warning hover:text-warning">
+              <Button variant="outline" className="text-orange-600 hover:text-orange-700">
                 <Archive className="h-4 w-4 mr-2" />
                 Archive
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="bg-white border border-border rounded-lg shadow-card-hover">
+            <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle className="text-h3 font-semibold text-text-primary">Archive Campaign</AlertDialogTitle>
-                <AlertDialogDescription className="text-body text-text-secondary">
+                <AlertDialogTitle>Archive Campaign</AlertDialogTitle>
+                <AlertDialogDescription>
                   Are you sure you want to archive "{campaign.campaign_title}"? This will:
-                  <ul className="list-disc list-inside mt-3 space-y-1">
+                  <ul className="list-disc list-inside mt-2">
                     <li>Remove it from opportunities</li>
                     <li>Auto-reject all pending applications</li>
                     <li>Move it to the archived campaigns section</li>
@@ -223,10 +223,10 @@ const BrandCampaignCard: React.FC<BrandCampaignCardProps> = ({
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel className="btn-secondary">Cancel</AlertDialogCancel>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction 
                   onClick={() => onArchive(campaign.campaign_id)}
-                  className="bg-warning hover:bg-warning/90 text-white"
+                  className="bg-orange-600 hover:bg-orange-700"
                 >
                   Archive Campaign
                 </AlertDialogAction>

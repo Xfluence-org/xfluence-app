@@ -14,124 +14,59 @@ export default {
 			center: true,
 			padding: '2rem',
 			screens: {
-				'2xl': '1440px'
+				'2xl': '1400px'
 			}
 		},
 		extend: {
 			colors: {
-				// Custom Design System Colors
+				border: 'hsl(var(--border))',
+				input: 'hsl(var(--input))',
+				ring: 'hsl(var(--ring))',
+				background: 'hsl(var(--background))',
+				foreground: 'hsl(var(--foreground))',
 				primary: {
-					DEFAULT: '#3B82F6',
-					foreground: '#FFFFFF'
+					DEFAULT: 'hsl(var(--primary))',
+					foreground: 'hsl(var(--primary-foreground))'
 				},
 				secondary: {
-					DEFAULT: '#6B7280',
-					foreground: '#FFFFFF'
-				},
-				accent: {
-					DEFAULT: '#EF4444',
-					foreground: '#FFFFFF'
-				},
-				background: {
-					DEFAULT: '#F8FAFC',
-					secondary: '#FFFFFF',
-					tertiary: '#F3F4F6'
-				},
-				surface: '#FFFFFF',
-				text: {
-					primary: '#1F2937',
-					secondary: '#6B7280',
-					tertiary: '#9CA3AF'
-				},
-				border: {
-					DEFAULT: '#E5E7EB',
-					light: '#F3F4F6',
-					medium: '#E5E7EB',
-					dark: '#D1D5DB'
-				},
-				success: '#10B981',
-				error: '#EF4444',
-				warning: '#F59E0B',
-				info: '#3B82F6',
-				interactive: {
-					primary: '#3B82F6',
-					secondary: '#6366F1'
-				},
-				// Keep existing shadcn colors for compatibility
-				foreground: '#1F2937',
-				card: {
-					DEFAULT: '#FFFFFF',
-					foreground: '#1F2937'
-				},
-				popover: {
-					DEFAULT: '#FFFFFF',
-					foreground: '#1F2937'
-				},
-				muted: {
-					DEFAULT: '#F3F4F6',
-					foreground: '#6B7280'
+					DEFAULT: 'hsl(var(--secondary))',
+					foreground: 'hsl(var(--secondary-foreground))'
 				},
 				destructive: {
-					DEFAULT: '#EF4444',
-					foreground: '#FFFFFF'
+					DEFAULT: 'hsl(var(--destructive))',
+					foreground: 'hsl(var(--destructive-foreground))'
 				},
-				input: '#D1D5DB',
-				ring: '#3B82F6',
+				muted: {
+					DEFAULT: 'hsl(var(--muted))',
+					foreground: 'hsl(var(--muted-foreground))'
+				},
+				accent: {
+					DEFAULT: 'hsl(var(--accent))',
+					foreground: 'hsl(var(--accent-foreground))'
+				},
+				popover: {
+					DEFAULT: 'hsl(var(--popover))',
+					foreground: 'hsl(var(--popover-foreground))'
+				},
+				card: {
+					DEFAULT: 'hsl(var(--card))',
+					foreground: 'hsl(var(--card-foreground))'
+				},
 				sidebar: {
-					DEFAULT: '#FFFFFF',
-					foreground: '#1F2937',
-					primary: '#3B82F6',
-					'primary-foreground': '#FFFFFF',
-					accent: '#F3F4F6',
-					'accent-foreground': '#1F2937',
-					border: '#E5E7EB',
-					ring: '#3B82F6'
+					DEFAULT: 'hsl(var(--sidebar-background))',
+					foreground: 'hsl(var(--sidebar-foreground))',
+					primary: 'hsl(var(--sidebar-primary))',
+					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
+					accent: 'hsl(var(--sidebar-accent))',
+					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
+					border: 'hsl(var(--sidebar-border))',
+					ring: 'hsl(var(--sidebar-ring))'
 				}
 			},
-			fontFamily: {
-				sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
-			},
-			fontSize: {
-				'h1': ['32px', { lineHeight: '40px', fontWeight: '600' }],
-				'h2': ['24px', { lineHeight: '32px', fontWeight: '600' }],
-				'h3': ['20px', { lineHeight: '28px', fontWeight: '600' }],
-				'h4': ['18px', { lineHeight: '24px', fontWeight: '500' }],
-				'body-lg': ['16px', { lineHeight: '24px', fontWeight: '400' }],
-				'body': ['14px', { lineHeight: '20px', fontWeight: '400' }],
-				'body-sm': ['12px', { lineHeight: '16px', fontWeight: '400' }],
-			},
-			spacing: {
-				'4': '4px',
-				'8': '8px',
-				'12': '12px',
-				'16': '16px',
-				'20': '20px',
-				'24': '24px',
-				'32': '32px',
-				'40': '40px',
-				'48': '48px',
-				'64': '64px',
-				'80': '80px',
-				'96': '96px',
-			},
 			borderRadius: {
-				'sm': '4px',
-				'md': '8px',
-				'lg': '12px',
-				'xl': '16px',
-				DEFAULT: '8px'
-			},
-			boxShadow: {
-				'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-				'card-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-			},
-			transitionDuration: {
-				'150': '150ms',
-				'200': '200ms',
-				'300': '300ms',
-			},
-			transitionTimingFunction: {
-				'smooth': 'cubic-bezier(0.4, 0, 0.2, 1)',
+				lg: 'var(--radius)',
+				md: 'calc(var(--radius) - 2px)',
+				sm: 'calc(var(--radius) - 4px)'
 			},
 			keyframes: {
 				'accordion-down': {
