@@ -12,23 +12,23 @@ export const useBrandCampaignsData = (view: CampaignView) => {
     queryFn: async () => {
       console.log('Fetching brand campaigns for view:', view);
       
-      // Map view to database status
-      let statusFilter: string;
+      // Map view to database status - Updated to include more statuses for published tab
+      let statusFilter: string[];
       switch (view) {
         case 'active':
-          statusFilter = 'active';
+          statusFilter = ['active'];
           break;
         case 'published':
-          statusFilter = 'published';
+          statusFilter = ['published', 'active']; // Include both published and active campaigns
           break;
         case 'completed':
-          statusFilter = 'completed';
+          statusFilter = ['completed'];
           break;
         case 'archived':
-          statusFilter = 'archived';
+          statusFilter = ['archived'];
           break;
         default:
-          statusFilter = 'active';
+          statusFilter = ['active'];
       }
 
       // First get the brands associated with the current user
@@ -66,7 +66,7 @@ export const useBrandCampaignsData = (view: CampaignView) => {
             name
           )
         `)
-        .eq('status', statusFilter)
+        .in('status', statusFilter) // Use array of statuses instead of single status
         .in('brand_id', brandIds)
         .order('created_at', { ascending: false });
 
@@ -157,11 +157,35 @@ export const useBrandCampaignsData = (view: CampaignView) => {
     }
   });
 
+  // Add a new mutation to publish campaigns (set status to 'published')
+  const publishCampaignMutation = useMutation({
+    mutationFn: async (campaignId: string) => {
+      console.log('Publishing campaign:', campaignId);
+      
+      const { error } = await supabase
+        .from('campaigns')
+        .update({ 
+          status: 'published',
+          is_public: true // Also make it public when publishing
+        })
+        .eq('id', campaignId);
+
+      if (error) throw error;
+
+      return { success: true };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['brand-campaigns-management'] });
+      queryClient.invalidateQueries({ queryKey: ['brand-campaigns'] });
+    }
+  });
+
   return {
     campaigns,
     loading,
     error: error?.message || null,
     archiveCampaign: archiveCampaignMutation.mutate,
+    publishCampaign: publishCampaignMutation.mutate,
     updateCampaign: (campaignId: string, updates: any) => 
       updateCampaignMutation.mutate({ campaignId, updates })
   };
