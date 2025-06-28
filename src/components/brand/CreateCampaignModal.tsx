@@ -150,7 +150,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
         console.log('Created new brand:', brandId);
       }
 
-      // Create brand_user association using profile.id (not user.id)
+      // Create brand_user association using profile.id with proper conflict handling
       console.log('Creating brand user association with profile ID:', profile.id);
       const { error: brandUserError } = await supabase
         .from('brand_users')
@@ -158,6 +158,9 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
           user_id: profile.id, // Use profile.id instead of user.id
           brand_id: brandId,
           role: 'admin'
+        }, {
+          onConflict: 'user_id,brand_id', // Handle conflicts on the unique constraint
+          ignoreDuplicates: false // Update existing records if they exist
         });
 
       if (brandUserError) {
