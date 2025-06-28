@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import BrandSidebar from '@/components/brand/BrandSidebar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -55,6 +54,7 @@ const BrandCampaignsPage: React.FC = () => {
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1DDCD3] mx-auto mb-4"></div>
               <p className="text-gray-500 text-lg">Loading campaigns...</p>
             </div>
           </div>
@@ -164,10 +164,12 @@ const BrandCampaignsPage: React.FC = () => {
         />
       )}
 
-      <CreateCampaignModal
-        isOpen={isCreateModalOpen}
-        onClose={handleCloseCreateModal}
-      />
+      {isCreateModalOpen && (
+        <CreateCampaignModal
+          isOpen={isCreateModalOpen}
+          onClose={handleCloseCreateModal}
+        />
+      )}
     </div>
   );
 };

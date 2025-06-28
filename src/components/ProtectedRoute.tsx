@@ -14,7 +14,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredUserT
 
   console.log('ProtectedRoute - User:', user?.id, 'Profile:', profile?.user_type, 'Loading:', loading, 'Path:', location.pathname);
 
-  // Show loading spinner while authentication is being determined
+  // Always render loading state first
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -26,41 +26,40 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredUserT
     );
   }
 
-  // Redirect to login if not authenticated
+  // Handle authentication check
   if (!user || !profile) {
     console.log('Redirecting to login - no user or profile');
     return <Navigate to="/" replace />;
   }
 
-  // Handle specific route redirections for user types
-  try {
-    // Brand/Agency users trying to access influencer campaigns should go to brand campaigns
-    if ((profile.user_type === 'Agency' || profile.user_type === 'Brand') && location.pathname === '/campaigns') {
-      console.log('Redirecting brand/agency user from /campaigns to /brand/campaigns');
-      return <Navigate to="/brand/campaigns" replace />;
+  // Handle specific route redirections
+  const userType = profile.user_type;
+  const currentPath = location.pathname;
+
+  // Brand/Agency users trying to access influencer campaigns should go to brand campaigns
+  if ((userType === 'Agency' || userType === 'Brand') && currentPath === '/campaigns') {
+    console.log('Redirecting brand/agency user from /campaigns to /brand/campaigns');
+    return <Navigate to="/brand/campaigns" replace />;
+  }
+  
+  // Influencer users trying to access brand routes should go to influencer dashboard
+  if (userType === 'Influencer' && currentPath.startsWith('/brand/')) {
+    console.log('Redirecting influencer user from brand routes to dashboard');
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // Check user type requirement if specified
+  if (requiredUserType && userType !== requiredUserType) {
+    console.log('User type mismatch - required:', requiredUserType, 'actual:', userType);
+    
+    // Redirect to appropriate dashboard based on user type
+    if (userType === 'Influencer') {
+      return <Navigate to="/dashboard" replace />;
+    } else if (userType === 'Agency' || userType === 'Brand') {
+      return <Navigate to="/brand-dashboard" replace />;
     }
     
-    // Influencer users trying to access brand routes should go to influencer dashboard
-    if (profile.user_type === 'Influencer' && location.pathname.startsWith('/brand/')) {
-      console.log('Redirecting influencer user from brand routes to dashboard');
-      return <Navigate to="/dashboard" replace />;
-    }
-
-    // Check user type if specified
-    if (requiredUserType && profile.user_type !== requiredUserType) {
-      console.log('User type mismatch - required:', requiredUserType, 'actual:', profile.user_type);
-      // Redirect to appropriate dashboard based on user type
-      if (profile.user_type === 'Influencer') {
-        return <Navigate to="/dashboard" replace />;
-      } else if (profile.user_type === 'Agency' || profile.user_type === 'Brand') {
-        return <Navigate to="/brand-dashboard" replace />;
-      }
-      
-      // Fallback to login if user type is unrecognized
-      return <Navigate to="/" replace />;
-    }
-  } catch (error) {
-    console.error('Error in ProtectedRoute navigation logic:', error);
+    // Fallback to login if user type is unrecognized
     return <Navigate to="/" replace />;
   }
 
