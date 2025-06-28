@@ -7,10 +7,18 @@ import { useDashboardData } from '@/hooks/useDashboardData';
 import CampaignCard from '@/components/dashboard/CampaignCard';
 import InvitationCard from '@/components/dashboard/InvitationCard';
 import ProgressBar from '@/components/dashboard/ProgressBar';
+import { useToast } from '@/components/ui/use-toast';
 
 const InfluencerDashboard = () => {
   const { user, profile, loading } = useAuth();
-  const { data: dashboardData, isLoading: dashboardLoading } = useDashboardData();
+  const { 
+    invitations, 
+    activeCampaigns, 
+    loading: dashboardLoading, 
+    acceptInvitation, 
+    declineInvitation 
+  } = useDashboardData();
+  const { toast } = useToast();
 
   if (loading || dashboardLoading) {
     return (
@@ -27,6 +35,24 @@ const InfluencerDashboard = () => {
   if (profile?.user_type !== 'Influencer') {
     return <Navigate to="/brand-dashboard" replace />;
   }
+
+  const handleAcceptInvitation = async (campaignId: string) => {
+    const result = await acceptInvitation(campaignId);
+    toast({
+      title: result.success ? "Success" : "Error",
+      description: result.message,
+      variant: result.success ? "default" : "destructive"
+    });
+  };
+
+  const handleDeclineInvitation = async (campaignId: string) => {
+    const result = await declineInvitation(campaignId);
+    toast({
+      title: result.success ? "Success" : "Error", 
+      description: result.message,
+      variant: result.success ? "default" : "destructive"
+    });
+  };
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -51,7 +77,7 @@ const InfluencerDashboard = () => {
                 <div className="ml-4">
                   <p className="text-sm text-gray-600">Active Campaigns</p>
                   <p className="text-2xl font-bold text-[#1a1f2e]">
-                    {dashboardData?.activeCampaigns?.length || 0}
+                    {activeCampaigns?.length || 0}
                   </p>
                 </div>
               </div>
@@ -64,9 +90,7 @@ const InfluencerDashboard = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm text-gray-600">Completed</p>
-                  <p className="text-2xl font-bold text-[#1a1f2e]">
-                    {dashboardData?.completedCampaigns?.length || 0}
-                  </p>
+                  <p className="text-2xl font-bold text-[#1a1f2e]">0</p>
                 </div>
               </div>
             </div>
@@ -78,9 +102,7 @@ const InfluencerDashboard = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm text-gray-600">Total Earnings</p>
-                  <p className="text-2xl font-bold text-[#1a1f2e]">
-                    ${dashboardData?.totalEarnings?.toLocaleString() || '0'}
-                  </p>
+                  <p className="text-2xl font-bold text-[#1a1f2e]">$0</p>
                 </div>
               </div>
             </div>
@@ -92,9 +114,7 @@ const InfluencerDashboard = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm text-gray-600">Success Rate</p>
-                  <p className="text-2xl font-bold text-[#1a1f2e]">
-                    {dashboardData?.successRate || 0}%
-                  </p>
+                  <p className="text-2xl font-bold text-[#1a1f2e]">0%</p>
                 </div>
               </div>
             </div>
@@ -105,8 +125,8 @@ const InfluencerDashboard = () => {
             <div>
               <h2 className="text-xl font-semibold text-[#1a1f2e] mb-4">Active Campaigns</h2>
               <div className="space-y-4">
-                {dashboardData?.activeCampaigns?.length > 0 ? (
-                  dashboardData.activeCampaigns.map((campaign: any) => (
+                {activeCampaigns?.length > 0 ? (
+                  activeCampaigns.map((campaign: any) => (
                     <CampaignCard
                       key={campaign.id}
                       campaign={campaign}
@@ -125,11 +145,13 @@ const InfluencerDashboard = () => {
             <div>
               <h2 className="text-xl font-semibold text-[#1a1f2e] mb-4">Recent Invitations</h2>
               <div className="space-y-4">
-                {dashboardData?.recentInvitations?.length > 0 ? (
-                  dashboardData.recentInvitations.map((invitation: any) => (
+                {invitations?.length > 0 ? (
+                  invitations.map((campaign: any) => (
                     <InvitationCard
-                      key={invitation.id}
-                      invitation={invitation}
+                      key={campaign.id}
+                      campaign={campaign}
+                      onAccept={handleAcceptInvitation}
+                      onDecline={handleDeclineInvitation}
                     />
                   ))
                 ) : (
@@ -142,12 +164,12 @@ const InfluencerDashboard = () => {
             </div>
           </div>
 
-          {/* Progress Overview */}
-          {dashboardData?.progressData && (
+          {/* Progress Overview - Only show if there are active campaigns */}
+          {activeCampaigns?.length > 0 && (
             <div className="mt-8">
-              <h2 className="text-xl font-semibold text-[#1a1f2e] mb-4">Monthly Progress</h2>
+              <h2 className="text-xl font-semibold text-[#1a1f2e] mb-4">Overall Progress</h2>
               <div className="bg-white rounded-lg p-6">
-                <ProgressBar data={dashboardData.progressData} />
+                <ProgressBar progress={75} />
               </div>
             </div>
           )}
