@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,6 +68,9 @@ const CampaignReviewPage = () => {
       // Calculate budget in cents (multiply by 100)
       const budgetInCents = Math.round((campaignData.budget_max || 0) * 100);
       
+      // Ensure both columns have exactly the same data
+      const llmCampaignData = campaignResults || null;
+      
       // Insert campaign into database
       const { data: campaign, error: campaignError } = await supabase
         .from('campaigns')
@@ -83,7 +87,7 @@ const CampaignReviewPage = () => {
           compensation_min: Math.round((campaignData.budget_min || 0) * 100),
           compensation_max: budgetInCents,
           application_deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 days from now
-          llm_campaign: campaignResults || null,
+          llm_campaign: llmCampaignData, // Same data as raw_output
           requirements: {
             goals: campaignData.goals,
             total_influencers: campaignData.total_influencers,
@@ -99,8 +103,8 @@ const CampaignReviewPage = () => {
         throw campaignError;
       }
 
-      // Store LLM interaction data if we have campaign results
-      if (campaignResults && campaign) {
+      // Store LLM interaction data with the same data as llm_campaign
+      if (llmCampaignData && campaign) {
         const { error: llmError } = await supabase
           .from('llm_interactions')
           .insert({
@@ -116,7 +120,7 @@ const CampaignReviewPage = () => {
                 total_influencers: campaignData.total_influencers
               })
             }],
-            raw_output: campaignResults
+            raw_output: llmCampaignData // Exactly the same data as llm_campaign
           });
 
         if (llmError) {
