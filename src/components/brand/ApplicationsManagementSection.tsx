@@ -45,9 +45,10 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
           application_message,
           ai_match_score,
           created_at,
-          profiles!inner(name)
+          profiles(name)
         `)
-        .eq('campaign_id', campaignId);
+        .eq('campaign_id', campaignId)
+        .in('status', ['applied', 'pending', 'approved', 'rejected', 'accepted', 'invited']);
 
       if (error) {
         console.error('Error fetching applications:', error);
@@ -75,22 +76,49 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
   const handleApplicationAction = async (applicationId: string, action: 'approved' | 'rejected') => {
     setProcessingApplication(applicationId);
     try {
-      const { error } = await supabase
+      // Update the application status
+      const { error: updateError } = await supabase
         .from('campaign_participants')
         .update({ 
-          status: action,
-          updated_at: new Date().toISOString()
+          status: action === 'approved' ? 'accepted' : 'rejected',
+          updated_at: new Date().toISOString(),
+          accepted_at: action === 'approved' ? new Date().toISOString() : null
         })
         .eq('id', applicationId);
 
-      if (error) {
-        console.error('Error updating application:', error);
+      if (updateError) {
+        console.error('Error updating application:', updateError);
         toast({
           title: "Error",
           description: "Failed to update application status.",
           variant: "destructive"
         });
         return;
+      }
+
+      // If approved, we might want to create initial tasks for the influencer
+      if (action === 'approved') {
+        // Get the application details to create tasks
+        const { data: appData } = await supabase
+          .from('campaign_participants')
+          .select('influencer_id, campaign_id')
+          .eq('id', applicationId)
+          .single();
+
+        if (appData) {
+          // Create an initial content requirement task
+          await supabase
+            .from('campaign_tasks')
+            .insert({
+              campaign_id: appData.campaign_id,
+              influencer_id: appData.influencer_id,
+              title: 'Content Creation',
+              task_type: 'content_creation',
+              description: 'Create content according to campaign requirements',
+              status: 'content_requirement',
+              progress: 0
+            });
+        }
       }
 
       toast({

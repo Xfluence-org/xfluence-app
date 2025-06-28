@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -48,7 +47,24 @@ const InfluencerPerformanceSection: React.FC<InfluencerPerformanceSectionProps> 
     queryFn: async () => {
       console.log('Fetching campaign tasks for:', campaignId);
       
-      const { data, error } = await supabase
+      // First get accepted influencers for this campaign
+      const { data: acceptedInfluencers, error: influencersError } = await supabase
+        .from('campaign_participants')
+        .select(`
+          influencer_id,
+          status,
+          profiles(name)
+        `)
+        .eq('campaign_id', campaignId)
+        .in('status', ['accepted', 'active']);
+
+      if (influencersError) {
+        console.error('Error fetching accepted influencers:', influencersError);
+        throw influencersError;
+      }
+
+      // Then get tasks for those influencers
+      const { data: tasksData, error: tasksError } = await supabase
         .from('campaign_tasks')
         .select(`
           id,
@@ -65,12 +81,33 @@ const InfluencerPerformanceSection: React.FC<InfluencerPerformanceSectionProps> 
         `)
         .eq('campaign_id', campaignId);
 
-      if (error) {
-        console.error('Error fetching campaign tasks:', error);
-        throw error;
+      if (tasksError) {
+        console.error('Error fetching campaign tasks:', tasksError);
+        throw tasksError;
       }
 
-      return data?.map(task => ({
+      // Combine the data - create tasks for accepted influencers who don't have tasks yet
+      const existingTaskInfluencers = new Set(tasksData?.map(task => task.influencer_id) || []);
+      const allTasks = [...(tasksData || [])];
+
+      // Add placeholder tasks for accepted influencers without tasks
+      acceptedInfluencers?.forEach(influencer => {
+        if (!existingTaskInfluencers.has(influencer.influencer_id)) {
+          allTasks.push({
+            id: `placeholder_${influencer.influencer_id}`,
+            influencer_id: influencer.influencer_id,
+            task_type: 'content_creation',
+            title: 'Content Creation',
+            description: 'Initial content creation task',
+            status: 'content_requirement',
+            progress: 0,
+            next_deadline: null,
+            profiles: influencer.profiles
+          });
+        }
+      });
+
+      return allTasks.map(task => ({
         ...task,
         influencer_name: task.profiles?.name || 'Unknown'
       })) || [];
@@ -323,6 +360,9 @@ const InfluencerPerformanceSection: React.FC<InfluencerPerformanceSectionProps> 
       ) : (
         <div className="text-center py-8">
           <p className="text-gray-500">No influencers assigned to this campaign yet.</p>
+          <p className="text-gray-400 text-sm mt-1">
+            Approve applications in the Applications tab to see influencers here.
+          </p>
         </div>
       )}
     </div>
