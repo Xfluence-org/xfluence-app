@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Facebook, Mail, Apple } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 
 const AuthFlow = () => {
@@ -20,18 +21,16 @@ const AuthFlow = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const { signUp, signIn, resetPassword, user, profile, loading } = useAuth();
+  const { signUp, signIn, resetPassword, redirectPath } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Redirect authenticated users immediately
+  // Handle redirect when redirectPath changes
   useEffect(() => {
-    if (user && profile && !loading) {
-      console.log('User authenticated, redirecting...', { user, profile });
-      const dashboardPath = profile.user_type === 'Influencer' ? '/dashboard' : '/brand-dashboard';
-      navigate(dashboardPath, { replace: true });
+    if (redirectPath) {
+      navigate(redirectPath);
     }
-  }, [user, profile, loading, navigate]);
+  }, [redirectPath, navigate]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -115,7 +114,6 @@ const AuthFlow = () => {
             title: "Login Successful",
             description: "Welcome back!"
           });
-          // Don't manually navigate here - let the useEffect handle it
         }
       } else {
         // Validation for signup
