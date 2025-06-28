@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -12,6 +11,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCampaignDetail } from '@/hooks/useCampaignDetail';
 import InfluencerPerformanceSection from '@/components/brand/InfluencerPerformanceSection';
+import ContentStrategySection from '@/components/brand/ContentStrategySection';
+import InfluencerAllocationSection from '@/components/brand/InfluencerAllocationSection';
 import { Save, Edit, X } from 'lucide-react';
 
 interface CampaignDetailModalProps {
@@ -359,9 +360,16 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                   </div>
                 )}
               </div>
+
+              {/* Content Strategy Section */}
+              <ContentStrategySection llmInteractions={campaign.llmInteractions || []} />
             </TabsContent>
 
             <TabsContent value="influencers" className="space-y-6 mt-6">
+              {/* Influencer Allocation Section */}
+              <InfluencerAllocationSection llmInteractions={campaign.llmInteractions || []} />
+              
+              {/* Existing Influencer Performance Section */}
               <InfluencerPerformanceSection campaignId={campaignId} />
             </TabsContent>
           </Tabs>

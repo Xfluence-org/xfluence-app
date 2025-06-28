@@ -10,7 +10,8 @@ export const useCampaignDetail = (campaignId: string | null) => {
       
       console.log('Fetching campaign detail for:', campaignId);
       
-      const { data, error } = await supabase
+      // Fetch campaign data
+      const { data: campaignData, error: campaignError } = await supabase
         .from('campaigns')
         .select(`
           id,
@@ -31,18 +32,30 @@ export const useCampaignDetail = (campaignId: string | null) => {
         .eq('id', campaignId)
         .single();
 
-      if (error) {
-        console.error('Error fetching campaign detail:', error);
-        throw error;
+      if (campaignError) {
+        console.error('Error fetching campaign detail:', campaignError);
+        throw campaignError;
       }
 
-      console.log('Fetched campaign detail:', data);
+      // Fetch LLM interactions for this campaign
+      const { data: llmInteractions, error: llmError } = await supabase
+        .from('llm_interactions')
+        .select('*')
+        .eq('campaign_id', campaignId)
+        .order('created_at', { ascending: false });
+
+      if (llmError) {
+        console.error('Error fetching LLM interactions:', llmError);
+      }
+
+      console.log('Fetched campaign detail:', campaignData);
+      console.log('Fetched LLM interactions:', llmInteractions);
+      
       return {
-        ...data,
-        budget: data.budget || data.amount || 0,
-        // Handle category array properly - keep as array for internal use
-        // but provide first element for display compatibility
-        category: data.category
+        ...campaignData,
+        budget: campaignData.budget || campaignData.amount || 0,
+        category: campaignData.category,
+        llmInteractions: llmInteractions || []
       };
     },
     enabled: !!campaignId
