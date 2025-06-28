@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -21,6 +22,7 @@ export const useCampaignDetail = (campaignId: string | null) => {
           amount,
           due_date,
           created_at,
+          llm_campaign,
           brands (
             name,
             logo_url

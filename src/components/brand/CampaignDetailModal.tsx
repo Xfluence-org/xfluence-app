@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCampaignDetail } from '@/hooks/useCampaignDetail';
 import InfluencerPerformanceSection from '@/components/brand/InfluencerPerformanceSection';
 import { Save, Edit, X } from 'lucide-react';
@@ -26,6 +27,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
   campaignId,
   onUpdate
 }) => {
+  const [activeTab, setActiveTab] = useState('overview');
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
     title: '',
@@ -88,13 +90,13 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-2xl font-bold text-[#1a1f2e]">
               Campaign Details
             </DialogTitle>
-            {!isEditing ? (
+            {!isEditing && activeTab === 'overview' ? (
               <Button 
                 variant="outline" 
                 onClick={() => setIsEditing(true)}
@@ -103,7 +105,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
               </Button>
-            ) : (
+            ) : isEditing && activeTab === 'overview' ? (
               <div className="flex gap-2">
                 <Button 
                   variant="outline" 
@@ -120,7 +122,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                   Save
                 </Button>
               </div>
-            )}
+            ) : null}
           </div>
         </DialogHeader>
 
@@ -133,90 +135,202 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
             <p className="text-red-500">Error loading campaign details</p>
           </div>
         ) : campaign ? (
-          <div className="space-y-6">
-            {/* Campaign Info Section */}
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-[#1a1f2e] mb-4">Campaign Information</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Campaign Title
-                  </label>
-                  {isEditing ? (
-                    <Input
-                      value={editForm.title}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
-                      placeholder="Enter campaign title"
-                    />
-                  ) : (
-                    <p className="text-gray-900">{campaign.title}</p>
-                  )}
-                </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="overview">Campaign Overview</TabsTrigger>
+              <TabsTrigger value="strategy">Campaign Strategy</TabsTrigger>
+              <TabsTrigger value="influencers">Influencers</TabsTrigger>
+            </TabsList>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Category
-                  </label>
-                  {isEditing ? (
-                    <Input
-                      value={editForm.category}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, category: e.target.value }))}
-                      placeholder="Enter category"
-                    />
-                  ) : (
+            <TabsContent value="overview" className="space-y-6 mt-6">
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-[#1a1f2e] mb-4">Campaign Information</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Campaign Title
+                    </label>
+                    {isEditing ? (
+                      <Input
+                        value={editForm.title}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
+                        placeholder="Enter campaign title"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{campaign.title}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Category
+                    </label>
+                    {isEditing ? (
+                      <Input
+                        value={editForm.category}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, category: e.target.value }))}
+                        placeholder="Enter category"
+                      />
+                    ) : (
+                      <p className="text-gray-900">
+                        {getCategoryDisplay(campaign.category)}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Budget
+                    </label>
+                    {isEditing ? (
+                      <Input
+                        type="number"
+                        value={editForm.budget}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, budget: parseInt(e.target.value) || 0 }))}
+                        placeholder="Enter budget"
+                      />
+                    ) : (
+                      <p className="text-gray-900">${campaign.budget?.toLocaleString()}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Status
+                    </label>
+                    <span className="inline-block px-3 py-1 rounded-full text-white text-sm font-medium bg-[#1DDCD3]">
+                      {campaign.status}
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Due Date
+                    </label>
                     <p className="text-gray-900">
-                      {getCategoryDisplay(campaign.category)}
+                      {campaign.due_date ? new Date(campaign.due_date).toLocaleDateString() : 'Not set'}
                     </p>
-                  )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Created
+                    </label>
+                    <p className="text-gray-900">
+                      {new Date(campaign.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
 
-                <div>
+                <div className="mt-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Budget
+                    Description
                   </label>
                   {isEditing ? (
-                    <Input
-                      type="number"
-                      value={editForm.budget}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, budget: parseInt(e.target.value) || 0 }))}
-                      placeholder="Enter budget"
+                    <Textarea
+                      value={editForm.description}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Enter campaign description"
+                      rows={3}
                     />
                   ) : (
-                    <p className="text-gray-900">${campaign.budget?.toLocaleString()}</p>
+                    <p className="text-gray-900">{campaign.description || 'No description available'}</p>
                   )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Status
-                  </label>
-                  <span className="inline-block px-3 py-1 rounded-full text-white text-sm font-medium bg-[#1DDCD3]">
-                    {campaign.status}
-                  </span>
                 </div>
               </div>
+            </TabsContent>
 
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
-                {isEditing ? (
-                  <Textarea
-                    value={editForm.description}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Enter campaign description"
-                    rows={3}
-                  />
+            <TabsContent value="strategy" className="space-y-6 mt-6">
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-[#1a1f2e] mb-4">AI Generated Campaign Strategy</h3>
+                
+                {campaign.llm_campaign ? (
+                  <div className="space-y-4">
+                    {campaign.llm_campaign.campaign_name && (
+                      <div>
+                        <h4 className="font-medium text-gray-700 mb-2">Campaign Name</h4>
+                        <p className="text-gray-900">{campaign.llm_campaign.campaign_name}</p>
+                      </div>
+                    )}
+                    
+                    {campaign.llm_campaign.campaign_objective && (
+                      <div>
+                        <h4 className="font-medium text-gray-700 mb-2">Campaign Objective</h4>
+                        <p className="text-gray-900">{campaign.llm_campaign.campaign_objective}</p>
+                      </div>
+                    )}
+                    
+                    {campaign.llm_campaign.target_audience && (
+                      <div>
+                        <h4 className="font-medium text-gray-700 mb-2">Target Audience</h4>
+                        <p className="text-gray-900">{campaign.llm_campaign.target_audience}</p>
+                      </div>
+                    )}
+                    
+                    {campaign.llm_campaign.content_guidelines && (
+                      <div>
+                        <h4 className="font-medium text-gray-700 mb-2">Content Guidelines</h4>
+                        <p className="text-gray-900">{campaign.llm_campaign.content_guidelines}</p>
+                      </div>
+                    )}
+                    
+                    {campaign.llm_campaign.key_messages && (
+                      <div>
+                        <h4 className="font-medium text-gray-700 mb-2">Key Messages</h4>
+                        <div className="text-gray-900">
+                          {Array.isArray(campaign.llm_campaign.key_messages) ? (
+                            <ul className="list-disc list-inside space-y-1">
+                              {campaign.llm_campaign.key_messages.map((message, index) => (
+                                <li key={index}>{message}</li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p>{campaign.llm_campaign.key_messages}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {campaign.llm_campaign.success_metrics && (
+                      <div>
+                        <h4 className="font-medium text-gray-700 mb-2">Success Metrics</h4>
+                        <div className="text-gray-900">
+                          {Array.isArray(campaign.llm_campaign.success_metrics) ? (
+                            <ul className="list-disc list-inside space-y-1">
+                              {campaign.llm_campaign.success_metrics.map((metric, index) => (
+                                <li key={index}>{metric}</li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p>{campaign.llm_campaign.success_metrics}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {campaign.llm_campaign.timeline && (
+                      <div>
+                        <h4 className="font-medium text-gray-700 mb-2">Timeline</h4>
+                        <p className="text-gray-900">{campaign.llm_campaign.timeline}</p>
+                      </div>
+                    )}
+                  </div>
                 ) : (
-                  <p className="text-gray-900">{campaign.description || 'No description available'}</p>
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">No campaign strategy available</p>
+                    <p className="text-gray-400 text-sm mt-1">
+                      Campaign strategy is generated during campaign creation with AI assistance
+                    </p>
+                  </div>
                 )}
               </div>
-            </div>
+            </TabsContent>
 
-            {/* Influencers & Performance Section */}
-            <InfluencerPerformanceSection campaignId={campaignId} />
-          </div>
+            <TabsContent value="influencers" className="space-y-6 mt-6">
+              <InfluencerPerformanceSection campaignId={campaignId} />
+            </TabsContent>
+          </Tabs>
         ) : null}
       </DialogContent>
     </Dialog>
