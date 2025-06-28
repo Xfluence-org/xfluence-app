@@ -150,12 +150,12 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
         console.log('Created new brand:', brandId);
       }
 
-      // Create brand_user association using profile.id with proper conflict handling
-      console.log('Creating brand user association with profile ID:', profile.id);
+      // Create brand_user association using user.id (which matches auth.uid()) with proper conflict handling
+      console.log('Creating brand user association with user ID:', user.id);
       const { error: brandUserError } = await supabase
         .from('brand_users')
         .upsert({
-          user_id: profile.id, // Use profile.id instead of user.id
+          user_id: user.id, // Use user.id which corresponds to auth.uid()
           brand_id: brandId,
           role: 'admin'
         }, {
