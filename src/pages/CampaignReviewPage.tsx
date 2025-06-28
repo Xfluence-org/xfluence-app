@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,13 +7,17 @@ import BrandSidebar from '@/components/brand/BrandSidebar';
 import ContentStrategySection from '@/components/brand/ContentStrategySection';
 import InfluencerAllocationSection from '@/components/brand/InfluencerAllocationSection';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, Save, Eye, Target, Users, Hash, Globe } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { ArrowLeft, Save, Eye, Target, Users, Hash, Globe, Loader2 } from 'lucide-react';
 
 const CampaignReviewPage = () => {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [campaignData, setCampaignData] = useState<any>(null);
   const [campaignResults, setCampaignResults] = useState<any>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     // Load campaign data from localStorage
@@ -48,17 +51,102 @@ const CampaignReviewPage = () => {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const handleSaveCampaign = () => {
-    // TODO: Implement actual campaign saving
-    console.log('Saving campaign:', campaignData);
-    console.log('Campaign results:', campaignResults);
+  const handleSaveCampaign = async () => {
+    if (!campaignData) {
+      toast({
+        title: "Error",
+        description: "No campaign data to save",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSaving(true);
     
-    // Clear temporary data
-    localStorage.removeItem('temp_campaign');
-    localStorage.removeItem('temp_campaign_results');
-    
-    // Navigate to campaigns page
-    navigate('/brand/campaigns');
+    try {
+      // Calculate budget in cents (multiply by 100)
+      const budgetInCents = Math.round((campaignData.budget_max || 0) * 100);
+      
+      // Insert campaign into database
+      const { data: campaign, error: campaignError } = await supabase
+        .from('campaigns')
+        .insert({
+          title: `${campaignData.brand_name} Campaign`,
+          description: campaignData.campaign_description,
+          brand_id: campaignData.brand_id,
+          category: campaignData.categories || ['General'],
+          budget: budgetInCents,
+          amount: budgetInCents,
+          due_date: campaignData.due_date,
+          status: 'published',
+          is_public: true,
+          compensation_min: Math.round((campaignData.budget_min || 0) * 100),
+          compensation_max: budgetInCents,
+          application_deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 days from now
+          llm_campaign: campaignResults || null,
+          requirements: {
+            goals: campaignData.goals,
+            total_influencers: campaignData.total_influencers,
+            influencer_tiers: campaignData.influencer_tiers || [],
+            content_types: campaignData.content_types || []
+          }
+        })
+        .select()
+        .single();
+
+      if (campaignError) {
+        console.error('Error saving campaign:', campaignError);
+        throw campaignError;
+      }
+
+      // Store LLM interaction data if we have campaign results
+      if (campaignResults && campaign) {
+        const { error: llmError } = await supabase
+          .from('llm_interactions')
+          .insert({
+            campaign_id: campaign.id,
+            user_id: user.id,
+            call_type: 'campaign_planner',
+            input_messages: [{
+              role: 'user',
+              content: JSON.stringify({
+                goals: campaignData.goals,
+                campaign_description: campaignData.campaign_description,
+                categories: campaignData.categories,
+                total_influencers: campaignData.total_influencers
+              })
+            }],
+            raw_output: campaignResults
+          });
+
+        if (llmError) {
+          console.error('Error saving LLM interaction:', llmError);
+          // Don't throw here, as the campaign was saved successfully
+        }
+      }
+
+      // Clear temporary data
+      localStorage.removeItem('temp_campaign');
+      localStorage.removeItem('temp_campaign_results');
+      
+      toast({
+        title: "Success",
+        description: "Campaign saved successfully!",
+      });
+      
+      // Navigate to campaigns page
+      navigate('/brand/campaigns');
+      
+    } catch (error) {
+      console.error('Error saving campaign:', error);
+      toast({
+        title: "Error",
+        description: `Failed to save campaign: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleGoBack = () => {
@@ -204,9 +292,22 @@ const CampaignReviewPage = () => {
                 <p className="text-gray-600">Review your AI-generated campaign strategy</p>
               </div>
             </div>
-            <Button onClick={handleSaveCampaign} className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90">
-              <Save className="h-4 w-4 mr-2" />
-              Save Campaign
+            <Button 
+              onClick={handleSaveCampaign} 
+              disabled={isSaving}
+              className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Campaign
+                </>
+              )}
             </Button>
           </div>
 
