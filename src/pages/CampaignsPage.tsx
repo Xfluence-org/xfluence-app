@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import ModernSidebar from '@/components/dashboard/ModernSidebar';
+import Sidebar from '@/components/dashboard/Sidebar';
 import TabNavigation from '@/components/campaigns/TabNavigation';
 import CampaignSearch from '@/components/campaigns/CampaignSearch';
 import DetailedCampaignCard from '@/components/campaigns/DetailedCampaignCard';
@@ -17,12 +17,14 @@ const CampaignsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
+  // Update active tab when URL changes
   useEffect(() => {
     if (tabFromUrl && ['Active', 'Completed', 'Requests'].includes(tabFromUrl)) {
       setActiveTab(tabFromUrl);
     }
   }, [tabFromUrl]);
 
+  // Use the updated hook with tab filtering
   const { data: campaigns, isLoading: loading, error } = useCampaignData(activeTab);
 
   const {
@@ -35,11 +37,13 @@ const CampaignsPage: React.FC = () => {
     deleteFile
   } = useTaskDetail(selectedTaskId);
 
+  // Filter campaigns based on search query only (tab filtering is now done server-side)
   const filteredCampaigns = useMemo(() => {
     if (!campaigns) return [];
     
     let filtered = campaigns;
 
+    // Filter by search query only
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(campaign =>
@@ -61,6 +65,7 @@ const CampaignsPage: React.FC = () => {
 
   const handleFilterClick = () => {
     console.log('Filter clicked');
+    // Implement filter modal
   };
 
   const handleViewTaskDetails = (taskId: string) => {
@@ -98,12 +103,12 @@ const CampaignsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex h-screen bg-background">
-        <ModernSidebar userName="Name" />
+      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <Sidebar activeItem="campaigns" userName="Name" />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
-              <p className="text-muted-foreground text-lg">Loading campaigns...</p>
+              <p className="text-gray-500 text-lg">Loading campaigns...</p>
             </div>
           </div>
         </main>
@@ -113,12 +118,12 @@ const CampaignsPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="flex h-screen bg-background">
-        <ModernSidebar userName="Name" />
+      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <Sidebar activeItem="campaigns" userName="Name" />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
-              <p className="text-destructive text-lg">Error loading campaigns. Please try again.</p>
+              <p className="text-red-500 text-lg">Error loading campaigns. Please try again.</p>
             </div>
           </div>
         </main>
@@ -127,18 +132,18 @@ const CampaignsPage: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen bg-background">
-      <ModernSidebar userName="Name" />
+    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <Sidebar activeItem="campaigns" userName="Name" />
       
       <main className="flex-1 overflow-y-auto">
         <div className="p-8">
           <header className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Campaigns</h1>
+            <h1 className="text-3xl font-bold text-[#1a1f2e] mb-2">Campaigns</h1>
           </header>
 
           <section>
-            <div className="bg-card rounded-lg p-8 shadow-sm border border-border">
-              <h2 className="text-2xl font-bold text-foreground mb-6">My Campaigns</h2>
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
+              <h2 className="text-2xl font-bold text-[#1a1f2e] mb-6">My Campaigns</h2>
               
               <CampaignSearch
                 searchQuery={searchQuery}
@@ -162,10 +167,10 @@ const CampaignsPage: React.FC = () => {
                   ))
                 ) : (
                   <div className="text-center py-12">
-                    <p className="text-muted-foreground text-lg">
+                    <p className="text-gray-500 text-lg">
                       No campaigns found in the {activeTab.toLowerCase()} section.
                     </p>
-                    <p className="text-muted-foreground mt-2">
+                    <p className="text-gray-400 mt-2">
                       {activeTab === 'Active' && "Start applying to opportunities to see active campaigns here."}
                       {activeTab === 'Completed' && "Completed campaigns will appear here once you finish them."}
                       {activeTab === 'Requests' && "Campaign invitations will appear here."}
