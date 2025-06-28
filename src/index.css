@@ -1,4 +1,5 @@
 
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -55,35 +56,6 @@
 
   body {
     @apply bg-background text-foreground font-sans;
-  }
-
-  /* Typography Classes */
-  .text-h1 {
-    @apply text-h1;
-  }
-  
-  .text-h2 {
-    @apply text-h2;
-  }
-  
-  .text-h3 {
-    @apply text-h3;
-  }
-  
-  .text-h4 {
-    @apply text-h4;
-  }
-  
-  .text-body-lg {
-    @apply text-body-lg;
-  }
-  
-  .text-body {
-    @apply text-body;
-  }
-  
-  .text-body-sm {
-    @apply text-body-sm;
   }
 }
 
@@ -180,3 +152,4 @@
     @apply focus:ring-2 focus:ring-primary/50 focus:ring-offset-2;
   }
 }
+
