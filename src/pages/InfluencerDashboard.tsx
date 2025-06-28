@@ -15,8 +15,8 @@ const InfluencerDashboard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { 
-    invitations, 
-    activeCampaigns, 
+    invitations = [], 
+    activeCampaigns = [], 
     loading, 
     error, 
     acceptInvitation, 
@@ -29,47 +29,70 @@ const InfluencerDashboard = () => {
   };
 
   const handleAcceptInvitation = async (campaignId: string) => {
-    const result = await acceptInvitation(campaignId);
-    if (result.success) {
-      toast({
-        title: "Success",
-        description: result.message,
-      });
-      // Invalidate and refetch queries to update the UI
-      queryClient.invalidateQueries({ queryKey: ['dashboard-invitations'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-active-campaigns'] });
-    } else {
+    try {
+      const result = await acceptInvitation(campaignId);
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: result.message,
+        });
+        // Invalidate and refetch queries to update the UI
+        queryClient.invalidateQueries({ queryKey: ['dashboard-invitations'] });
+        queryClient.invalidateQueries({ queryKey: ['dashboard-active-campaigns'] });
+      } else {
+        toast({
+          title: "Error",
+          description: result.message,
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      console.error('Error accepting invitation:', err);
       toast({
         title: "Error",
-        description: result.message,
+        description: "Failed to accept invitation",
         variant: "destructive",
       });
     }
   };
 
   const handleDeclineInvitation = async (campaignId: string) => {
-    const result = await declineInvitation(campaignId);
-    if (result.success) {
+    try {
+      const result = await declineInvitation(campaignId);
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: result.message,
+        });
+        // Invalidate and refetch queries to update the UI
+        queryClient.invalidateQueries({ queryKey: ['dashboard-invitations'] });
+        queryClient.invalidateQueries({ queryKey: ['dashboard-active-campaigns'] });
+      } else {
+        toast({
+          title: "Error", 
+          description: result.message,
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      console.error('Error declining invitation:', err);
       toast({
-        title: "Success",
-        description: result.message,
-      });
-      // Invalidate and refetch queries to update the UI
-      queryClient.invalidateQueries({ queryKey: ['dashboard-invitations'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-active-campaigns'] });
-    } else {
-      toast({
-        title: "Error", 
-        description: result.message,
+        title: "Error",
+        description: "Failed to decline invitation",
         variant: "destructive",
       });
     }
   };
 
   // Filter invitations to only show invited/pending ones for the invitations section
-  const pendingInvitations = invitations.filter(invitation => 
-    ['invited', 'pending'].includes(invitation.status.toLowerCase())
-  );
+  const pendingInvitations = Array.isArray(invitations) 
+    ? invitations.filter(invitation => 
+        invitation && ['invited', 'pending'].includes(invitation.status?.toLowerCase())
+      ) 
+    : [];
+
+  // Ensure activeCampaigns is an array
+  const safeCampaigns = Array.isArray(activeCampaigns) ? activeCampaigns : [];
 
   if (loading) {
     return (
@@ -136,25 +159,27 @@ const InfluencerDashboard = () => {
           <section>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-[#1a1f2e]">Active Campaigns</h2>
-              {activeCampaigns.length > 0 && (
+              {safeCampaigns.length > 0 && (
                 <span className="text-sm text-gray-600">
-                  {activeCampaigns.length} active
+                  {safeCampaigns.length} active
                 </span>
               )}
             </div>
             
-            {activeCampaigns.length === 0 ? (
+            {safeCampaigns.length === 0 ? (
               <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
                 <p className="text-gray-500">No active campaigns. Accept an invitation to get started!</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {activeCampaigns.map((campaign) => (
-                  <CampaignCard
-                    key={campaign.id}
-                    campaign={campaign}
-                    onClick={handleCampaignClick}
-                  />
+                {safeCampaigns.map((campaign) => (
+                  campaign && campaign.id ? (
+                    <CampaignCard
+                      key={campaign.id}
+                      campaign={campaign}
+                      onClick={handleCampaignClick}
+                    />
+                  ) : null
                 ))}
               </div>
             )}

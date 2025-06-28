@@ -1,3 +1,4 @@
+
 import React from 'react';
 import ProgressBar from './ProgressBar';
 
@@ -52,7 +53,7 @@ const CampaignCard: React.FC<CampaignCardProps> = ({ campaign, onClick }) => {
 
       <div className="flex items-center gap-3 text-sm">
         {workflowSteps.map((step, index) => (
-          <React.Fragment key={step}>
+          <div key={step} className="flex items-center gap-3">
             <span
               className={`font-medium transition-colors duration-200 ${
                 index < currentStep
@@ -67,7 +68,7 @@ const CampaignCard: React.FC<CampaignCardProps> = ({ campaign, onClick }) => {
             {index < workflowSteps.length - 1 && (
               <span className="text-gray-300">→</span>
             )}
-          </React.Fragment>
+          </div>
         ))}
       </div>
     </div>
