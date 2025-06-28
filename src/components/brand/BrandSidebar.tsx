@@ -16,7 +16,7 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName = 'Brand Name' }) 
   const getActiveItem = () => {
     if (location.pathname.includes('/brand-dashboard')) return 'dashboard';
     if (location.pathname.includes('/brand/campaigns')) return 'campaigns';
-    if (location.pathname.includes('/brand/applications')) return 'applications';
+    if (location.pathname.includes('/brand/analytics')) return 'analytics';
     if (location.pathname.includes('/brand/ai-assistant')) return 'ai-assistant';
     if (location.pathname.includes('/brand/settings')) return 'settings';
     return 'dashboard';
@@ -38,10 +38,10 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName = 'Brand Name' }) 
       onClick: () => navigate('/brand/campaigns')
     },
     { 
-      id: 'applications', 
-      label: 'Applications', 
-      icon: '📝',
-      onClick: () => navigate('/brand/applications')
+      id: 'analytics', 
+      label: 'Analytics', 
+      icon: '📈',
+      onClick: () => navigate('/brand/analytics')
     },
     { 
       id: 'ai-assistant', 

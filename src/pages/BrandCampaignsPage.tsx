@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import BrandSidebar from '@/components/brand/BrandSidebar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -5,14 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useBrandCampaignsData } from '@/hooks/useBrandCampaignsData';
 import BrandCampaignCard from '@/components/brand/BrandCampaignCard';
-import CampaignDetailModal from '@/components/brand/CampaignDetailModal';
 import CreateCampaignModal from '@/components/brand/CreateCampaignModal';
+import { useNavigate } from 'react-router-dom';
 
 type CampaignView = 'active' | 'published' | 'completed' | 'archived';
 
 const BrandCampaignsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<CampaignView>('active');
-  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   
   const { 
@@ -24,19 +25,11 @@ const BrandCampaignsPage: React.FC = () => {
   } = useBrandCampaignsData(activeTab);
 
   const handleViewCampaign = (campaignId: string) => {
-    setSelectedCampaignId(campaignId);
-  };
-
-  const handleCloseCampaign = () => {
-    setSelectedCampaignId(null);
+    navigate(`/brand/campaigns/${campaignId}`);
   };
 
   const handleArchiveCampaign = async (campaignId: string) => {
     await archiveCampaign(campaignId);
-  };
-
-  const handleUpdateCampaign = async (campaignId: string, updates: any) => {
-    await updateCampaign(campaignId, updates);
   };
 
   const handleCreateCampaign = () => {
@@ -201,13 +194,6 @@ const BrandCampaignsPage: React.FC = () => {
           </div>
         </div>
       </main>
-
-      <CampaignDetailModal
-        isOpen={!!selectedCampaignId}
-        onClose={handleCloseCampaign}
-        campaignId={selectedCampaignId}
-        onUpdate={handleUpdateCampaign}
-      />
 
       <CreateCampaignModal
         isOpen={isCreateModalOpen}
