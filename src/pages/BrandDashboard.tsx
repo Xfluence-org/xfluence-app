@@ -1,18 +1,18 @@
 
 import React from 'react';
 import BrandSidebar from '@/components/brand/BrandSidebar';
-import MetricsCard from '@/components/brand/MetricsCard';
+import MetricCard from '@/components/dashboard/MetricCard';
 import CampaignOverviewCard from '@/components/brand/CampaignOverviewCard';
 import ApplicationCard from '@/components/brand/ApplicationCard';
 import { InfluencerApplication } from '@/types/brandDashboard';
 import { useBrandDashboardData } from '@/hooks/useBrandDashboardData';
 import { useBrandApplications } from '@/hooks/useBrandApplications';
+import { Users, DollarSign, TrendingUp, Award } from 'lucide-react';
 
 const BrandDashboard: React.FC = () => {
   const { campaigns, metrics, loading, error } = useBrandDashboardData();
   const { data: applicationsData = [], isLoading: applicationsLoading, error: applicationsError } = useBrandApplications(10);
 
-  // Transform applications data to match component expectations
   const recentApplications: InfluencerApplication[] = applicationsData.map((app: any) => ({
     id: app.application_id,
     campaignId: app.campaign_id,
@@ -33,32 +33,28 @@ const BrandDashboard: React.FC = () => {
 
   const handleViewCampaignDetails = (campaignId: string) => {
     console.log('View campaign details:', campaignId);
-    // Navigate to campaign details page
   };
 
   const handleApproveApplication = (applicationId: string) => {
     console.log('Approve application:', applicationId);
-    // Handle application approval
   };
 
   const handleRejectApplication = (applicationId: string) => {
     console.log('Reject application:', applicationId);
-    // Handle application rejection
   };
 
   const handleViewProfile = (applicationId: string) => {
     console.log('View influencer profile:', applicationId);
-    // Navigate to influencer profile
   };
 
   if (loading || applicationsLoading) {
     return (
-      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="flex h-screen bg-background">
         <BrandSidebar userName="Brand Team" />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">Loading dashboard...</p>
+              <p className="text-muted-foreground text-lg">Loading dashboard...</p>
             </div>
           </div>
         </main>
@@ -68,13 +64,13 @@ const BrandDashboard: React.FC = () => {
 
   if (error || applicationsError) {
     return (
-      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="flex h-screen bg-background">
         <BrandSidebar userName="Brand Team" />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
-              <p className="text-red-500 text-lg">Error loading dashboard</p>
-              <p className="text-gray-500 mt-2">{error || applicationsError?.message}</p>
+              <p className="text-destructive text-lg">Error loading dashboard</p>
+              <p className="text-muted-foreground mt-2">{error || applicationsError?.message}</p>
             </div>
           </div>
         </main>
@@ -82,57 +78,70 @@ const BrandDashboard: React.FC = () => {
     );
   }
 
+  const dashboardMetrics = [
+    {
+      title: 'Active Campaigns',
+      value: metrics.activeCampaigns,
+      subtitle: `${metrics.totalCampaigns} total campaigns`,
+      trend: { value: 12, isPositive: true },
+      icon: <Users className="h-5 w-5" />
+    },
+    {
+      title: 'Total Budget',
+      value: `$${metrics.totalBudget.toLocaleString()}`,
+      subtitle: `$${metrics.totalSpent.toLocaleString()} spent`,
+      trend: { value: 8, isPositive: true },
+      icon: <DollarSign className="h-5 w-5" />
+    },
+    {
+      title: 'Pending Applications',
+      value: recentApplications.length,
+      subtitle: 'Awaiting review',
+      icon: <Award className="h-5 w-5" />
+    },
+    {
+      title: 'Total Reach',
+      value: `${(metrics.totalReach / 1000000).toFixed(1)}M`,
+      subtitle: `${metrics.avgEngagementRate}% avg engagement`,
+      trend: { value: 15, isPositive: true },
+      icon: <TrendingUp className="h-5 w-5" />
+    },
+  ];
+
   return (
-    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="flex h-screen bg-background">
       <BrandSidebar userName="Brand Team" />
       
       <main className="flex-1 overflow-y-auto">
         <div className="p-8">
           <header className="mb-8">
-            <h1 className="text-3xl font-bold text-[#1a1f2e] mb-2">Dashboard</h1>
-            <p className="text-gray-600">Welcome back! Here's an overview of your campaigns.</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard</h1>
+            <p className="text-muted-foreground">Welcome back! Here's an overview of your campaigns.</p>
           </header>
 
           {/* Metrics Overview */}
           <section className="mb-12">
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
-              <h2 className="text-2xl font-bold text-[#1a1f2e] mb-6">Overview</h2>
+            <div className="bg-card rounded-lg p-8 shadow-sm border border-border">
+              <h2 className="text-2xl font-bold text-foreground mb-6">Overview</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <MetricsCard
-                  title="Active Campaigns"
-                  value={metrics.activeCampaigns}
-                  subtitle={`${metrics.totalCampaigns} total campaigns`}
-                  trend={{ value: 12, isPositive: true }}
-                  icon="📱"
-                />
-                <MetricsCard
-                  title="Total Budget"
-                  value={`$${metrics.totalBudget.toLocaleString()}`}
-                  subtitle={`$${metrics.totalSpent.toLocaleString()} spent`}
-                  trend={{ value: 8, isPositive: true }}
-                  icon="💰"
-                />
-                <MetricsCard
-                  title="Pending Applications"
-                  value={recentApplications.length}
-                  subtitle="Awaiting review"
-                  icon="📝"
-                />
-                <MetricsCard
-                  title="Total Reach"
-                  value={`${(metrics.totalReach / 1000000).toFixed(1)}M`}
-                  subtitle={`${metrics.avgEngagementRate}% avg engagement`}
-                  trend={{ value: 15, isPositive: true }}
-                  icon="📈"
-                />
+                {dashboardMetrics.map((metric, index) => (
+                  <MetricCard
+                    key={index}
+                    title={metric.title}
+                    value={metric.value}
+                    subtitle={metric.subtitle}
+                    trend={metric.trend}
+                    icon={metric.icon}
+                  />
+                ))}
               </div>
             </div>
           </section>
 
           {/* Active Campaigns */}
           <section className="mb-12">
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
-              <h2 className="text-2xl font-bold text-[#1a1f2e] mb-6">Active Campaigns</h2>
+            <div className="bg-card rounded-lg p-8 shadow-sm border border-border">
+              <h2 className="text-2xl font-bold text-foreground mb-6">Active Campaigns</h2>
               {campaigns.length > 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {campaigns.map((campaign) => (
@@ -145,7 +154,7 @@ const BrandDashboard: React.FC = () => {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">No campaigns found. Create your first campaign to get started!</p>
+                  <p className="text-muted-foreground">No campaigns found. Create your first campaign to get started!</p>
                 </div>
               )}
             </div>
@@ -153,10 +162,10 @@ const BrandDashboard: React.FC = () => {
 
           {/* Recent Applications */}
           <section>
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
+            <div className="bg-card rounded-lg p-8 shadow-sm border border-border">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-[#1a1f2e]">Recent Applications</h2>
-                <button className="text-gray-600 hover:text-[#1DDCD3] font-medium transition-colors duration-200">
+                <h2 className="text-2xl font-bold text-foreground">Recent Applications</h2>
+                <button className="text-muted-foreground hover:text-primary font-medium transition-colors duration-200">
                   View All →
                 </button>
               </div>
@@ -174,7 +183,7 @@ const BrandDashboard: React.FC = () => {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">No recent applications found.</p>
+                  <p className="text-muted-foreground">No recent applications found.</p>
                 </div>
               )}
             </div>
