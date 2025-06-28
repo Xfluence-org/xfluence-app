@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Facebook, Mail, Apple } from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 const AuthFlow = () => {
@@ -20,18 +20,18 @@ const AuthFlow = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const { signUp, signIn, resetPassword, user, profile } = useAuth();
+  const { signUp, signIn, resetPassword, user, profile, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   // Redirect authenticated users immediately
   useEffect(() => {
-    if (user && profile) {
+    if (user && profile && !loading) {
       console.log('User authenticated, redirecting...', { user, profile });
       const dashboardPath = profile.user_type === 'Influencer' ? '/dashboard' : '/brand-dashboard';
       navigate(dashboardPath, { replace: true });
     }
-  }, [user, profile, navigate]);
+  }, [user, profile, loading, navigate]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
