@@ -3,118 +3,140 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import React from "react";
 import Index from "./pages/Index";
 import InfluencerDashboard from "./pages/InfluencerDashboard";
-import CampaignsPage from "./pages/CampaignsPage";
 import OpportunitiesPage from "./pages/OpportunitiesPage";
-import SettingsPage from "./pages/SettingsPage";
+import CampaignsPage from "./pages/CampaignsPage";
 import BrandDashboard from "./pages/BrandDashboard";
 import BrandCampaignsPage from "./pages/BrandCampaignsPage";
-import BrandCampaignDetailPage from "./pages/BrandCampaignDetailPage";
-import BrandAIAssistantPage from "./pages/BrandAIAssistantPage";
-import BrandSettingsPage from "./pages/BrandSettingsPage";
 import CampaignReviewPage from "./pages/CampaignReviewPage";
+import SettingsPage from "./pages/SettingsPage";
+import BrandSettingsPage from "./pages/BrandSettingsPage";
+import BrandAIAssistantPage from "./pages/BrandAIAssistantPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+interface AuthRouteProps {
+  children: React.ReactNode;
+  requiredUserType?: 'Agency' | 'Brand' | 'Influencer';
+}
+
+const AuthRoute: React.FC<AuthRouteProps> = ({ children, requiredUserType }) => {
+  const storedAuth = localStorage.getItem('auth_state');
+  
+  if (!storedAuth) {
+    return <Navigate to="/" replace />;
+  }
+  
+  try {
+    const { user, profile } = JSON.parse(storedAuth);
+    
+    if (!user || !profile) {
+      return <Navigate to="/" replace />;
+    }
+    
+    if (requiredUserType && profile.user_type !== requiredUserType) {
+      if (profile.user_type === 'Influencer') {
+        return <Navigate to="/dashboard" replace />;
+      } else {
+        return <Navigate to="/brand-dashboard" replace />;
+      }
+    }
+    
+    return <>{children}</>;
+  } catch (error) {
+    return <Navigate to="/" replace />;
+  }
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
             <Route path="/" element={<Index />} />
-            <Route
-              path="/dashboard"
+            <Route 
+              path="/dashboard" 
               element={
-                <ProtectedRoute>
+                <AuthRoute requiredUserType="Influencer">
                   <InfluencerDashboard />
-                </ProtectedRoute>
-              }
+                </AuthRoute>
+              } 
             />
-            <Route
-              path="/campaigns"
+            <Route 
+              path="/settings" 
               element={
-                <ProtectedRoute>
-                  <CampaignsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/opportunities"
-              element={
-                <ProtectedRoute>
-                  <OpportunitiesPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <ProtectedRoute>
+                <AuthRoute requiredUserType="Influencer">
                   <SettingsPage />
-                </ProtectedRoute>
-              }
+                </AuthRoute>
+              } 
             />
-            <Route
-              path="/brand-dashboard"
+            <Route 
+              path="/brand-dashboard" 
               element={
-                <ProtectedRoute>
+                <AuthRoute>
                   <BrandDashboard />
-                </ProtectedRoute>
-              }
+                </AuthRoute>
+              } 
             />
-            <Route
-              path="/brand/campaigns"
+            <Route 
+              path="/brand/campaigns" 
               element={
-                <ProtectedRoute>
+                <AuthRoute>
                   <BrandCampaignsPage />
-                </ProtectedRoute>
-              }
+                </AuthRoute>
+              } 
             />
-            <Route
-              path="/brand/campaigns/:campaignId"
+            <Route 
+              path="/brand/settings" 
               element={
-                <ProtectedRoute>
-                  <BrandCampaignDetailPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/brand/ai-assistant"
-              element={
-                <ProtectedRoute>
-                  <BrandAIAssistantPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/brand/settings"
-              element={
-                <ProtectedRoute>
+                <AuthRoute>
                   <BrandSettingsPage />
-                </ProtectedRoute>
-              }
+                </AuthRoute>
+              } 
             />
-            <Route
-              path="/campaign-review/:campaignId"
+            <Route 
+              path="/brand/ai-assistant" 
               element={
-                <ProtectedRoute>
-                  <CampaignReviewPage />
-                </ProtectedRoute>
-              }
+                <AuthRoute>
+                  <BrandAIAssistantPage />
+                </AuthRoute>
+              } 
             />
+            <Route 
+              path="/campaign-review" 
+              element={
+                <AuthRoute>
+                  <CampaignReviewPage />
+                </AuthRoute>
+              } 
+            />
+            <Route 
+              path="/opportunities" 
+              element={
+                <AuthRoute>
+                  <OpportunitiesPage />
+                </AuthRoute>
+              } 
+            />
+            <Route 
+              path="/campaigns" 
+              element={
+                <AuthRoute>
+                  <CampaignsPage />
+                </AuthRoute>
+              } 
+            />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+      </BrowserRouter>
+    </TooltipProvider>
   </QueryClientProvider>
 );
 
