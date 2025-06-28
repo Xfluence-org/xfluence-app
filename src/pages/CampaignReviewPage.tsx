@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,12 +20,17 @@ const CampaignReviewPage = () => {
     const tempCampaign = localStorage.getItem('temp_campaign');
     const tempResults = localStorage.getItem('temp_campaign_results');
     
+    console.log('Loading campaign data:', tempCampaign);
+    console.log('Loading campaign results:', tempResults);
+    
     if (tempCampaign) {
       setCampaignData(JSON.parse(tempCampaign));
     }
     
     if (tempResults) {
-      setCampaignResults(JSON.parse(tempResults));
+      const results = JSON.parse(tempResults);
+      console.log('Parsed campaign results:', results);
+      setCampaignResults(results);
     }
   }, []);
 
@@ -65,7 +69,12 @@ const CampaignReviewPage = () => {
 
   // Helper function to create mock LLM interactions for the strategy sections
   const createMockLLMInteractions = () => {
-    if (!campaignResults) return [];
+    if (!campaignResults) {
+      console.log('No campaign results available for LLM interactions');
+      return [];
+    }
+    
+    console.log('Creating LLM interactions with results:', campaignResults);
     
     return [{
       raw_output: campaignResults
@@ -73,7 +82,12 @@ const CampaignReviewPage = () => {
   };
 
   const renderStrategyOverview = () => {
-    if (!campaignResults) return null;
+    if (!campaignResults) {
+      console.log('No campaign results for strategy overview');
+      return null;
+    }
+
+    console.log('Rendering strategy overview with data:', campaignResults);
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -81,7 +95,9 @@ const CampaignReviewPage = () => {
           <CardContent className="p-4 text-center">
             <Users className="h-8 w-8 text-[#1DDCD3] mx-auto mb-2" />
             <div className="text-2xl font-bold text-[#1a1f2e]">
-              {campaignResults.influencer_allocation?.total_influencers || 0}
+              {campaignResults.influencer_allocation?.total_influencers || 
+               campaignResults.total_influencers || 
+               'N/A'}
             </div>
             <div className="text-sm text-gray-600">Total Influencers</div>
           </CardContent>
@@ -91,7 +107,8 @@ const CampaignReviewPage = () => {
           <CardContent className="p-4 text-center">
             <Target className="h-8 w-8 text-[#1DDCD3] mx-auto mb-2" />
             <div className="text-2xl font-bold text-[#1a1f2e]">
-              {Object.keys(campaignResults.influencer_allocation?.allocation_by_category || {}).length}
+              {Object.keys(campaignResults.influencer_allocation?.allocation_by_category || 
+                           campaignResults.allocation_by_category || {}).length || 'N/A'}
             </div>
             <div className="text-sm text-gray-600">Categories</div>
           </CardContent>
@@ -101,7 +118,9 @@ const CampaignReviewPage = () => {
           <CardContent className="p-4 text-center">
             <Hash className="h-8 w-8 text-[#1DDCD3] mx-auto mb-2" />
             <div className="text-2xl font-bold text-[#1a1f2e]">
-              {campaignResults.actionable_search_tactics?.niche_hashtags?.length || 0}
+              {campaignResults.actionable_search_tactics?.niche_hashtags?.length || 
+               campaignResults.niche_hashtags?.length || 
+               'N/A'}
             </div>
             <div className="text-sm text-gray-600">Niche Hashtags</div>
           </CardContent>
@@ -111,7 +130,9 @@ const CampaignReviewPage = () => {
           <CardContent className="p-4 text-center">
             <Globe className="h-8 w-8 text-[#1DDCD3] mx-auto mb-2" />
             <div className="text-2xl font-bold text-[#1a1f2e]">
-              {campaignResults.actionable_search_tactics?.platform_tools?.length || 0}
+              {campaignResults.actionable_search_tactics?.platform_tools?.length || 
+               campaignResults.platform_tools?.length || 
+               'N/A'}
             </div>
             <div className="text-sm text-gray-600">Platform Tools</div>
           </CardContent>
@@ -121,7 +142,28 @@ const CampaignReviewPage = () => {
   };
 
   const renderSearchStrategy = () => {
-    if (!campaignResults.actionable_search_tactics) return null;
+    const searchTactics = campaignResults?.actionable_search_tactics || campaignResults;
+    
+    if (!searchTactics) {
+      console.log('No search tactics available');
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-[#1DDCD3]" />
+              Search Strategy & Tactics
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8">
+              <p className="text-gray-500">No search strategy data available</p>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    console.log('Rendering search strategy with tactics:', searchTactics);
 
     return (
       <Card>
@@ -133,19 +175,21 @@ const CampaignReviewPage = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {campaignResults.search_strategy_summary && (
+            {(campaignResults.search_strategy_summary || campaignResults.strategy_summary) && (
               <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
                 <h4 className="font-medium text-blue-800 mb-2">Strategy Summary</h4>
-                <p className="text-blue-700 text-sm">{campaignResults.search_strategy_summary}</p>
+                <p className="text-blue-700 text-sm">
+                  {campaignResults.search_strategy_summary || campaignResults.strategy_summary}
+                </p>
               </div>
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {campaignResults.actionable_search_tactics.niche_hashtags && (
+              {(searchTactics.niche_hashtags || campaignResults.niche_hashtags) && (
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="font-medium text-gray-700 mb-3">Niche Hashtags</h4>
                   <div className="flex flex-wrap gap-2">
-                    {campaignResults.actionable_search_tactics.niche_hashtags.map((hashtag: string, index: number) => (
+                    {(searchTactics.niche_hashtags || campaignResults.niche_hashtags).map((hashtag: string, index: number) => (
                       <span key={index} className="bg-[#1DDCD3] text-white px-2 py-1 rounded text-sm">
                         {hashtag}
                       </span>
@@ -154,11 +198,11 @@ const CampaignReviewPage = () => {
                 </div>
               )}
 
-              {campaignResults.actionable_search_tactics.platform_tools && (
+              {(searchTactics.platform_tools || campaignResults.platform_tools) && (
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="font-medium text-gray-700 mb-3">Platform Tools</h4>
                   <div className="space-y-2">
-                    {campaignResults.actionable_search_tactics.platform_tools.map((tool: string, index: number) => (
+                    {(searchTactics.platform_tools || campaignResults.platform_tools).map((tool: string, index: number) => (
                       <div key={index} className="flex items-center gap-2">
                         <Globe className="h-4 w-4 text-[#1DDCD3]" />
                         <span className="text-sm text-gray-700">{tool}</span>
@@ -169,10 +213,12 @@ const CampaignReviewPage = () => {
               )}
             </div>
 
-            {campaignResults.justification && (
+            {(campaignResults.justification || campaignResults.strategy_justification) && (
               <div className="bg-green-50 border-l-4 border-green-400 p-4">
                 <h4 className="font-medium text-green-800 mb-2">Strategy Justification</h4>
-                <p className="text-green-700 text-sm">{campaignResults.justification}</p>
+                <p className="text-green-700 text-sm">
+                  {campaignResults.justification || campaignResults.strategy_justification}
+                </p>
               </div>
             )}
           </div>
