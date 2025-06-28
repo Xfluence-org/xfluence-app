@@ -67,7 +67,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (userType === 'Influencer') {
       return !currentPath.startsWith('/dashboard') && 
              !currentPath.startsWith('/opportunities') && 
-             !currentPath.startsWith('/campaigns');
+             !currentPath.startsWith('/campaigns') &&
+             !currentPath.startsWith('/settings');
     } else {
       return !currentPath.startsWith('/brand-dashboard') && 
              !currentPath.startsWith('/brand/') && 
@@ -101,9 +102,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const userProfile = await fetchUserProfile(session.user.id);
             setProfile(userProfile);
             
-            // Only redirect on actual sign-in, not on token refresh or other events
+            // Only redirect on actual sign-in events, not on token refresh or initial load
             // Also prevent redirects after initial load to avoid tab switch issues
-            if (userProfile && event === 'SIGNED_IN' && !hasInitialized) {
+            if (userProfile && event === 'SIGNED_IN' && !hasInitialized && location.pathname === '/') {
               redirectToDashboard(userProfile.user_type);
             }
           }, 0);
