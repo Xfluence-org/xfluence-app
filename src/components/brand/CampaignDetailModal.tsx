@@ -423,7 +423,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                                       <p className="text-sm font-medium text-gray-600 mb-1">Best Practices:</p>
                                       <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
                                         {llmCampaignData.content_strategy.platform_specific_strategies.post.best_practices.map((practice, index) => (
-                                          <li key={index}>{practice}</li>
+                                          <li key={index}>{String(practice)}</li>
                                         ))}
                                       </ul>
                                     </div>
@@ -445,7 +445,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                                       <p className="text-sm font-medium text-gray-600 mb-1">Best Practices:</p>
                                       <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
                                         {llmCampaignData.content_strategy.platform_specific_strategies.reel.best_practices.map((practice, index) => (
-                                          <li key={index}>{practice}</li>
+                                          <li key={index}>{String(practice)}</li>
                                         ))}
                                       </ul>
                                     </div>
@@ -480,7 +480,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                                 {Object.entries(llmCampaignData.influencer_allocation.allocation_by_category || {}).map(([category, count]) => (
                                   <div key={category} className="flex justify-between text-sm">
                                     <span className="text-gray-600">{category}</span>
-                                    <span className="font-medium">{count}</span>
+                                    <span className="font-medium">{String(count)}</span>
                                   </div>
                                 ))}
                               </div>
@@ -515,7 +515,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                                     {Object.entries(tiers as any).map(([tier, count]) => (
                                       <div key={tier} className="text-center p-3 bg-white rounded-lg">
                                         <div className="text-2xl mb-1">{getTierIcon(tier)}</div>
-                                        <div className="font-bold text-lg text-[#1a1f2e]">{count}</div>
+                                        <div className="font-bold text-lg text-[#1a1f2e]">{String(count)}</div>
                                         <div className="text-sm font-medium text-gray-700 capitalize">{tier}</div>
                                         <div className="text-xs text-gray-500">{getTierDescription(tier)}</div>
                                       </div>
