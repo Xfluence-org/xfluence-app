@@ -1,107 +1,96 @@
 
 import React from 'react';
 import { DetailedCampaign } from '@/types/campaigns';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import TaskCard from './TaskCard';
+import ProgressBar from '@/components/dashboard/ProgressBar';
 
 interface DetailedCampaignCardProps {
   campaign: DetailedCampaign;
-  onViewDetails: (campaignId: string) => void;
+  onViewTaskDetails: (taskId: string) => void;
 }
 
 const DetailedCampaignCard: React.FC<DetailedCampaignCardProps> = ({ 
   campaign, 
-  onViewDetails 
+  onViewTaskDetails 
 }) => {
   const getStatusBadge = (status: string) => {
-    switch (status.toLowerCase()) {
+    const baseClasses = "px-3 py-1 rounded-full text-white text-xs font-medium";
+    switch (status) {
       case 'invited':
-        return <Badge variant="secondary">Invited</Badge>;
-      case 'pending':
-        return <Badge variant="outline">Pending</Badge>;
-      case 'approved':
-        return <Badge className="bg-green-500 hover:bg-green-600">Approved</Badge>;
-      case 'rejected':
-        return <Badge variant="destructive">Rejected</Badge>;
+        return `${baseClasses} bg-blue-500`;
       case 'active':
-        return <Badge className="bg-[#1DDCD3] hover:bg-[#00D4C7]">Active</Badge>;
+        return `${baseClasses} bg-[#1DDCD3]`;
       case 'completed':
-        return <Badge className="bg-gray-600 hover:bg-gray-700">Completed</Badge>;
+        return `${baseClasses} bg-emerald-500`;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return `${baseClasses} bg-gray-400`;
     }
   };
 
-  const formatAmount = (amount: number) => {
-    return `$${amount.toLocaleString()}`;
-  };
-
   return (
-    <Card className="hover:shadow-lg transition-all duration-200 border border-gray-200">
-      <CardHeader className="pb-4">
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <CardTitle className="text-xl font-bold text-[#1a1f2e] mb-2">
-              {campaign.title}
-            </CardTitle>
-            <p className="text-gray-600 mb-2">by {campaign.brand}</p>
-            <div className="flex items-center gap-2 mb-3">
-              {getStatusBadge(campaign.status)}
-              <span className="text-sm text-gray-500">
-                Due: {campaign.dueDate}
+    <div className="bg-white border border-gray-200 rounded-2xl p-8 mb-6 shadow-lg hover:shadow-xl transition-all duration-200">
+      {/* Campaign Header */}
+      <div className="flex items-start justify-between mb-6">
+        <div className="flex items-start gap-4">
+          {/* Brand Logo Placeholder */}
+          <div className="w-12 h-12 bg-gradient-to-br from-[#1DDCD3] to-[#1DDCD3]/70 rounded-xl flex-shrink-0 flex items-center justify-center">
+            <span className="text-white font-bold text-lg">{campaign.brand.charAt(0)}</span>
+          </div>
+          
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <h2 className="text-xl font-bold text-[#1a1f2e]">{campaign.title}</h2>
+              <span className={getStatusBadge(campaign.status)}>
+                {campaign.status}
+              </span>
+            </div>
+            <p className="text-gray-600 mb-1">
+              {campaign.brand} • {campaign.taskCount} tasks • Due {campaign.dueDate}
+            </p>
+            <div className="flex items-center gap-4 text-sm text-gray-600">
+              <span>
+                <span className="font-medium">Platforms:</span> {campaign.platforms.join(', ')}
               </span>
             </div>
           </div>
-          <div className="text-right">
-            <p className="text-2xl font-bold text-[#1DDCD3]">
-              {formatAmount(campaign.amount)}
-            </p>
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardContent className="pt-0">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div>
-            <p className="text-sm text-gray-500">Tasks</p>
-            <p className="font-semibold text-[#1a1f2e]">
-              {campaign.completedTasks}/{campaign.taskCount} completed
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Progress</p>
-            <p className="font-semibold text-[#1a1f2e]">{campaign.overallProgress}%</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Platforms</p>
-            <p className="font-semibold text-[#1a1f2e]">
-              {campaign.platforms.join(', ')}
-            </p>
-          </div>
         </div>
 
-        {campaign.overallProgress > 0 && (
-          <div className="mb-4">
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-[#1DDCD3] h-2 rounded-full transition-all duration-300"
-                style={{ width: `${campaign.overallProgress}%` }}
-              />
-            </div>
-          </div>
-        )}
-
-        <div className="flex justify-end">
-          <Button 
-            onClick={() => onViewDetails(campaign.id)}
-            className="bg-[#1DDCD3] hover:bg-[#00D4C7] text-white"
-          >
-            View Details
-          </Button>
+        <div className="text-right">
+          <p className="text-2xl font-bold text-[#1DDCD3]">
+            ${campaign.amount.toLocaleString()}
+          </p>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Progress Section */}
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm font-medium text-gray-700">Overall Progress</span>
+          <span className="text-sm font-bold text-[#1a1f2e]">{campaign.overallProgress}% Progress</span>
+        </div>
+        <ProgressBar progress={campaign.overallProgress} />
+      </div>
+
+      {/* Tasks Section */}
+      <div className="mb-4">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-[#1a1f2e]">Tasks</h3>
+          <span className="text-sm text-gray-600">
+            {campaign.completedTasks}/{campaign.taskCount} Tasks complete
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {campaign.tasks.map((task) => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              onViewDetails={onViewTaskDetails}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 };
 

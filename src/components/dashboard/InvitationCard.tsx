@@ -1,7 +1,7 @@
 
 import React from 'react';
 
-interface Invitation {
+interface Campaign {
   id: string;
   brand: string;
   title: string;
@@ -13,12 +13,12 @@ interface Invitation {
     reels?: number;
   };
   progress?: number;
-  status: 'invited' | 'pending' | 'rejected' | 'approved';
+  status: 'invited' | 'accepted' | 'active' | 'completed' | 'declined';
   currentStage?: string;
 }
 
 interface InvitationCardProps {
-  campaign: Invitation;
+  campaign: Campaign;
   onAccept: (id: string) => void;
   onDecline: (id: string) => void;
 }

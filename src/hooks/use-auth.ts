@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,21 +16,48 @@ interface AuthState {
   profile: UserProfile | null;
   session: Session | null;
   loading: boolean;
-  initialized: boolean;
 }
 
-export const useAuth = () => {
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    profile: null,
-    session: null,
-    loading: true,
-    initialized: false
-  });
+const STORAGE_KEY = 'auth_state';
 
-  const fetchUserProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
+const getStoredAuth = (): AuthState => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (error) {
+    console.error('Error reading auth from localStorage:', error);
+  }
+  return { user: null, profile: null, session: null, loading: true };
+};
+
+const setStoredAuth = (state: AuthState) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (error) {
+    console.error('Error saving auth to localStorage:', error);
+  }
+};
+
+const clearStoredAuth = () => {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (error) {
+    console.error('Error clearing auth from localStorage:', error);
+  }
+};
+
+export const useAuth = () => {
+  const storedAuth = getStoredAuth();
+  
+  const [user, setUser] = useState<User | null>(storedAuth.user);
+  const [profile, setProfile] = useState<UserProfile | null>(storedAuth.profile);
+  const [session, setSession] = useState<Session | null>(storedAuth.session);
+  const [loading, setLoading] = useState(!storedAuth.user);
+
+  const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
-      console.log('Fetching profile for user:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -43,112 +69,91 @@ export const useAuth = () => {
         return null;
       }
 
-      console.log('Profile fetched successfully:', data);
       return data;
     } catch (error) {
       console.error('Error fetching profile:', error);
       return null;
     }
-  }, []);
+  };
 
-  const getDashboardPath = useCallback((userType: UserType) => {
+  const getDashboardPath = (userType: UserType) => {
     return userType === 'Influencer' ? '/dashboard' : '/brand-dashboard';
-  }, []);
+  };
 
-  const updateAuthState = useCallback((user: User | null, profile: UserProfile | null, session: Session | null) => {
-    console.log('Updating auth state:', { userId: user?.id, profileType: profile?.user_type });
-    setAuthState({
-      user,
-      profile,
-      session,
-      loading: false,
-      initialized: true
-    });
-  }, []);
-
-  const clearAuthState = useCallback(() => {
-    console.log('Clearing auth state');
-    setAuthState({
-      user: null,
-      profile: null,
-      session: null,
-      loading: false,
-      initialized: true
-    });
-  }, []);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const initializeAuth = async () => {
-      try {
-        console.log('Initializing auth...');
-        
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Error getting session:', error);
-          if (mounted) {
-            clearAuthState();
-          }
-          return;
-        }
-
-        console.log('Initial session:', session?.user?.id || 'No session');
-
-        if (mounted) {
-          if (session?.user) {
-            const userProfile = await fetchUserProfile(session.user.id);
-            updateAuthState(session.user, userProfile, session);
-          } else {
-            clearAuthState();
-          }
-        }
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-        if (mounted) {
-          clearAuthState();
-        }
-      }
+  const updateAuthState = (newState: Partial<AuthState>) => {
+    const updatedState = {
+      user: newState.user !== undefined ? newState.user : user,
+      profile: newState.profile !== undefined ? newState.profile : profile,
+      session: newState.session !== undefined ? newState.session : session,
+      loading: newState.loading !== undefined ? newState.loading : loading,
     };
 
+    setUser(updatedState.user);
+    setProfile(updatedState.profile);
+    setSession(updatedState.session);
+    setLoading(updatedState.loading);
+
+    if (updatedState.user) {
+      setStoredAuth(updatedState);
+    } else {
+      clearStoredAuth();
+    }
+  };
+
+  // Track if we need to redirect after sign in
+  const [redirectPath, setRedirectPath] = useState<string | null>(null);
+
+  useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id || 'No session');
+        console.log('Auth state changed:', event, session);
         
-        if (!mounted) return;
-
-        if (event === 'SIGNED_OUT' || !session) {
-          console.log('User signed out or no session, clearing state');
-          clearAuthState();
-          return;
-        }
-
         if (session?.user) {
-          console.log('Setting user session');
-          try {
-            const userProfile = await fetchUserProfile(session.user.id);
-            updateAuthState(session.user, userProfile, session);
-          } catch (error) {
-            console.error('Error in auth state change:', error);
-            clearAuthState();
+          const userProfile = await fetchUserProfile(session.user.id);
+          updateAuthState({
+            user: session.user,
+            profile: userProfile,
+            session: session,
+            loading: false
+          });
+          
+          // Set redirect path on sign in events
+          if (userProfile && event === 'SIGNED_IN') {
+            setRedirectPath(getDashboardPath(userProfile.user_type));
           }
+        } else {
+          updateAuthState({
+            user: null,
+            profile: null,
+            session: null,
+            loading: false
+          });
+          setRedirectPath(null);
         }
       }
     );
 
-    initializeAuth();
+    // Check for existing session on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        fetchUserProfile(session.user.id).then((userProfile) => {
+          updateAuthState({
+            user: session.user,
+            profile: userProfile,
+            session: session,
+            loading: false
+          });
+        });
+      } else {
+        updateAuthState({ loading: false });
+      }
+    });
 
-    return () => {
-      console.log('Cleaning up auth hook');
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [fetchUserProfile, clearAuthState, updateAuthState]);
+    return () => subscription.unsubscribe();
+  }, []);
 
-  const signUp = useCallback(async (email: string, password: string, userType: UserType, name: string) => {
+  const signUp = async (email: string, password: string, userType: UserType, name: string) => {
     try {
-      console.log('Signing up user:', email, userType);
       const redirectUrl = `${window.location.origin}/`;
       
       const { error } = await supabase.auth.signUp({
@@ -165,14 +170,12 @@ export const useAuth = () => {
 
       return { error };
     } catch (error) {
-      console.error('Sign up error:', error);
       return { error };
     }
-  }, []);
+  };
 
-  const signIn = useCallback(async (email: string, password: string) => {
+  const signIn = async (email: string, password: string) => {
     try {
-      console.log('Signing in user:', email);
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -180,14 +183,12 @@ export const useAuth = () => {
 
       return { error };
     } catch (error) {
-      console.error('Sign in error:', error);
       return { error };
     }
-  }, []);
+  };
 
-  const resetPassword = useCallback(async (email: string) => {
+  const resetPassword = async (email: string) => {
     try {
-      console.log('Resetting password for:', email);
       const redirectUrl = `${window.location.origin}/`;
       
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -196,41 +197,50 @@ export const useAuth = () => {
 
       return { error };
     } catch (error) {
-      console.error('Reset password error:', error);
       return { error };
     }
-  }, []);
+  };
 
-  const signOut = useCallback(async () => {
+  const signOut = async () => {
     try {
-      console.log('Starting sign out process');
-      
-      // Clear state immediately to prevent UI flashing
-      clearAuthState();
-      
+      // Sign out from Supabase first
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         console.error('Error signing out:', error);
-      } else {
-        console.log('Successfully signed out');
       }
       
+      // Clear local state
+      updateAuthState({
+        user: null,
+        profile: null,
+        session: null,
+        loading: false
+      });
+      
+      // Clear storage
+      clearStoredAuth();
+      
+      // Clear any Supabase auth tokens from localStorage
+      localStorage.removeItem('supabase.auth.token');
+      
+      // Clear redirect path
+      setRedirectPath(null);
     } catch (error) {
       console.error('Error during sign out:', error);
-      clearAuthState();
     }
-  }, [clearAuthState]);
+  };
 
   return {
-    user: authState.user,
-    profile: authState.profile,
-    session: authState.session,
-    loading: authState.loading || !authState.initialized,
+    user,
+    profile,
+    session,
+    loading,
     signUp,
     signIn,
     signOut,
     resetPassword,
+    redirectPath,
     getDashboardPath
   };
 };

@@ -19,13 +19,13 @@ interface BrandApplication {
   application_message: string;
 }
 
-export const useBrandApplications = (limit: number = 50) => {
-  const query = useQuery({
+export const useBrandApplications = (limit: number = 10) => {
+  return useQuery({
     queryKey: ['brand-applications', limit],
     queryFn: async () => {
-      console.log('Fetching brand applications with limit:', limit);
+      console.log('Fetching brand applications');
       
-      const { data, error } = await supabase.rpc('get_brand_applications_all', {
+      const { data, error } = await supabase.rpc('get_brand_applications', {
         limit_count: limit
       });
 
@@ -38,9 +38,4 @@ export const useBrandApplications = (limit: number = 50) => {
       return data || [];
     }
   });
-
-  return {
-    ...query,
-    refetch: query.refetch
-  };
 };

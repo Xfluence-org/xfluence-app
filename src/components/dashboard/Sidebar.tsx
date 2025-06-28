@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -56,14 +55,13 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard', userName = 
         ))}
       </nav>
 
-      {/* Logout Section */}
+      {/* User Section */}
       <div className="p-4 border-t border-gray-700">
         <button 
           onClick={handleLogout}
-          className="w-full px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-all duration-200 flex items-center justify-center"
-          title="Logout"
+          className="w-full text-left px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-all duration-200"
         >
-          <LogOut className="h-5 w-5" />
+          {userName} [log out →]
         </button>
       </div>
     </div>
