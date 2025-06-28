@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import BrandSidebar from '@/components/brand/BrandSidebar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -107,112 +108,110 @@ const BrandCampaignsPage: React.FC = () => {
               </TabsList>
 
               <TabsContent value="active" className="mt-6">
-                <div className="space-y-6">
-                  {campaigns.length > 0 ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {campaigns.map((campaign) => (
-                        <BrandCampaignCard
-                          key={campaign.campaign_id}
-                          campaign={campaign}
-                          onView={handleViewCampaign}
-                          onArchive={handleArchiveCampaign}
-                          showArchiveButton={true}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <p className="text-gray-500 text-lg">No active campaigns found</p>
-                      <p className="text-gray-400 mt-2">Active campaigns will appear here</p>
-                    </div>
-                  )}
-                </div>
+                <CampaignTabContent 
+                  campaigns={campaigns}
+                  onViewCampaign={handleViewCampaign}
+                  onArchiveCampaign={handleArchiveCampaign}
+                  showArchiveButton={true}
+                  emptyMessage="No active campaigns found"
+                  emptySubMessage="Active campaigns will appear here"
+                />
               </TabsContent>
 
               <TabsContent value="published" className="mt-6">
-                <div className="space-y-6">
-                  {campaigns.length > 0 ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {campaigns.map((campaign) => (
-                        <BrandCampaignCard
-                          key={campaign.campaign_id}
-                          campaign={campaign}
-                          onView={handleViewCampaign}
-                          onArchive={handleArchiveCampaign}
-                          showArchiveButton={true}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <p className="text-gray-500 text-lg">No published campaigns found</p>
-                      <p className="text-gray-400 mt-2">Create a campaign to get started</p>
-                    </div>
-                  )}
-                </div>
+                <CampaignTabContent 
+                  campaigns={campaigns}
+                  onViewCampaign={handleViewCampaign}
+                  onArchiveCampaign={handleArchiveCampaign}
+                  showArchiveButton={true}
+                  emptyMessage="No published campaigns found"
+                  emptySubMessage="Create a campaign to get started"
+                />
               </TabsContent>
 
               <TabsContent value="completed" className="mt-6">
-                <div className="space-y-6">
-                  {campaigns.length > 0 ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {campaigns.map((campaign) => (
-                        <BrandCampaignCard
-                          key={campaign.campaign_id}
-                          campaign={campaign}
-                          onView={handleViewCampaign}
-                          onArchive={handleArchiveCampaign}
-                          showArchiveButton={true}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <p className="text-gray-500 text-lg">No completed campaigns found</p>
-                      <p className="text-gray-400 mt-2">Completed campaigns will appear here</p>
-                    </div>
-                  )}
-                </div>
+                <CampaignTabContent 
+                  campaigns={campaigns}
+                  onViewCampaign={handleViewCampaign}
+                  onArchiveCampaign={handleArchiveCampaign}
+                  showArchiveButton={true}
+                  emptyMessage="No completed campaigns found"
+                  emptySubMessage="Completed campaigns will appear here"
+                />
               </TabsContent>
 
               <TabsContent value="archived" className="mt-6">
-                <div className="space-y-6">
-                  {campaigns.length > 0 ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {campaigns.map((campaign) => (
-                        <BrandCampaignCard
-                          key={campaign.campaign_id}
-                          campaign={campaign}
-                          onView={handleViewCampaign}
-                          onArchive={handleArchiveCampaign}
-                          showArchiveButton={false}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <p className="text-gray-500 text-lg">No archived campaigns found</p>
-                      <p className="text-gray-400 mt-2">Archived campaigns will appear here</p>
-                    </div>
-                  )}
-                </div>
+                <CampaignTabContent 
+                  campaigns={campaigns}
+                  onViewCampaign={handleViewCampaign}
+                  onArchiveCampaign={handleArchiveCampaign}
+                  showArchiveButton={false}
+                  emptyMessage="No archived campaigns found"
+                  emptySubMessage="Archived campaigns will appear here"
+                />
               </TabsContent>
             </Tabs>
           </div>
         </div>
       </main>
 
-      <CampaignDetailModal
-        isOpen={!!selectedCampaignId}
-        onClose={handleCloseCampaign}
-        campaignId={selectedCampaignId}
-        onUpdate={handleUpdateCampaign}
-      />
+      {selectedCampaignId && (
+        <CampaignDetailModal
+          isOpen={true}
+          onClose={handleCloseCampaign}
+          campaignId={selectedCampaignId}
+          onUpdate={handleUpdateCampaign}
+        />
+      )}
 
       <CreateCampaignModal
         isOpen={isCreateModalOpen}
         onClose={handleCloseCreateModal}
       />
+    </div>
+  );
+};
+
+// Extracted component to reduce complexity and prevent rendering issues
+interface CampaignTabContentProps {
+  campaigns: any[];
+  onViewCampaign: (id: string) => void;
+  onArchiveCampaign: (id: string) => void;
+  showArchiveButton: boolean;
+  emptyMessage: string;
+  emptySubMessage: string;
+}
+
+const CampaignTabContent: React.FC<CampaignTabContentProps> = ({
+  campaigns,
+  onViewCampaign,
+  onArchiveCampaign,
+  showArchiveButton,
+  emptyMessage,
+  emptySubMessage
+}) => {
+  if (!campaigns || campaigns.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500 text-lg">{emptyMessage}</p>
+        <p className="text-gray-400 mt-2">{emptySubMessage}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {campaigns.map((campaign) => (
+          <BrandCampaignCard
+            key={campaign.campaign_id}
+            campaign={campaign}
+            onView={onViewCampaign}
+            onArchive={onArchiveCampaign}
+            showArchiveButton={showArchiveButton}
+          />
+        ))}
+      </div>
     </div>
   );
 };

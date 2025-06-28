@@ -12,91 +12,105 @@ export const useBrandCampaignsData = (view: CampaignView) => {
     queryFn: async () => {
       console.log('Fetching brand campaigns for view:', view);
       
-      // Map view to database status
-      let statusFilter: string;
-      switch (view) {
-        case 'active':
-          statusFilter = 'active';
-          break;
-        case 'published':
-          statusFilter = 'published';
-          break;
-        case 'completed':
-          statusFilter = 'completed';
-          break;
-        case 'archived':
-          statusFilter = 'archived';
-          break;
-        default:
-          statusFilter = 'active';
+      try {
+        // Map view to database status
+        let statusFilter: string;
+        switch (view) {
+          case 'active':
+            statusFilter = 'active';
+            break;
+          case 'published':
+            statusFilter = 'published';
+            break;
+          case 'completed':
+            statusFilter = 'completed';
+            break;
+          case 'archived':
+            statusFilter = 'archived';
+            break;
+          default:
+            statusFilter = 'active';
+        }
+
+        // First get the brands associated with the current user
+        const { data: userSession } = await supabase.auth.getUser();
+        
+        if (!userSession?.user?.id) {
+          console.log('No authenticated user found');
+          return [];
+        }
+
+        const { data: userBrands, error: brandsError } = await supabase
+          .from('brand_users')
+          .select('brand_id')
+          .eq('user_id', userSession.user.id);
+
+        if (brandsError) {
+          console.error('Error fetching user brands:', brandsError);
+          throw brandsError;
+        }
+
+        if (!userBrands || userBrands.length === 0) {
+          console.log('No brands found for current user');
+          return [];
+        }
+
+        const brandIds = userBrands.map(ub => ub.brand_id);
+
+        const { data, error } = await supabase
+          .from('campaigns')
+          .select(`
+            id,
+            title,
+            status,
+            budget,
+            amount,
+            due_date,
+            category,
+            created_at,
+            is_public,
+            brand_id,
+            brands (
+              name
+            )
+          `)
+          .eq('status', statusFilter)
+          .in('brand_id', brandIds)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching brand campaigns:', error);
+          throw error;
+        }
+
+        console.log('Fetched brand campaigns:', data);
+        
+        // Transform data to match expected interface with safety checks
+        return (data || []).map(campaign => ({
+          campaign_id: campaign.id || '',
+          campaign_title: campaign.title || 'Untitled Campaign',
+          campaign_status: campaign.status || 'active',
+          budget: campaign.budget || campaign.amount || 0,
+          spent: 0, // This would come from actual spending data
+          applicants: 0, // This would be calculated from campaign_participants
+          accepted: 0, // This would be calculated from campaign_participants
+          due_date: campaign.due_date || null,
+          platforms: ['Instagram', 'TikTok'], // Default platforms
+          category: Array.isArray(campaign.category) && campaign.category.length > 0 
+            ? campaign.category[0] 
+            : 'General', // Handle array category properly
+          progress: campaign.status === 'completed' ? 100 : 
+                   campaign.status === 'active' ? 75 : 
+                   campaign.status === 'published' ? 50 : 25,
+          is_public: campaign.is_public || false
+        }));
+      } catch (err) {
+        console.error('Error in useBrandCampaignsData:', err);
+        throw err;
       }
-
-      // First get the brands associated with the current user
-      const { data: userBrands, error: brandsError } = await supabase
-        .from('brand_users')
-        .select('brand_id')
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
-
-      if (brandsError) {
-        console.error('Error fetching user brands:', brandsError);
-        throw brandsError;
-      }
-
-      if (!userBrands || userBrands.length === 0) {
-        console.log('No brands found for current user');
-        return [];
-      }
-
-      const brandIds = userBrands.map(ub => ub.brand_id);
-
-      const { data, error } = await supabase
-        .from('campaigns')
-        .select(`
-          id,
-          title,
-          status,
-          budget,
-          amount,
-          due_date,
-          category,
-          created_at,
-          is_public,
-          brand_id,
-          brands (
-            name
-          )
-        `)
-        .eq('status', statusFilter)
-        .in('brand_id', brandIds)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching brand campaigns:', error);
-        throw error;
-      }
-
-      console.log('Fetched brand campaigns:', data);
-      
-      // Transform data to match expected interface
-      return (data || []).map(campaign => ({
-        campaign_id: campaign.id,
-        campaign_title: campaign.title,
-        campaign_status: campaign.status,
-        budget: campaign.budget || campaign.amount || 0,
-        spent: 0, // This would come from actual spending data
-        applicants: 0, // This would be calculated from campaign_participants
-        accepted: 0, // This would be calculated from campaign_participants
-        due_date: campaign.due_date,
-        platforms: ['Instagram', 'TikTok'], // Default platforms
-        category: Array.isArray(campaign.category) && campaign.category.length > 0 
-          ? campaign.category[0] 
-          : 'General', // Handle array category properly
-        progress: campaign.status === 'completed' ? 100 : 
-                 campaign.status === 'active' ? 75 : 
-                 campaign.status === 'published' ? 50 : 25,
-        is_public: campaign.is_public || false
-      }));
-    }
+    },
+    retry: 1,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const archiveCampaignMutation = useMutation({
@@ -158,7 +172,7 @@ export const useBrandCampaignsData = (view: CampaignView) => {
   });
 
   return {
-    campaigns,
+    campaigns: campaigns || [],
     loading,
     error: error?.message || null,
     archiveCampaign: archiveCampaignMutation.mutate,
