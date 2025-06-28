@@ -93,6 +93,16 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
     console.log('Campaign creation data:', data);
     
     try {
+      // Ensure we have both user and profile
+      if (!user?.id || !profile?.id) {
+        toast({
+          title: "Authentication Error",
+          description: "User not properly authenticated. Please try logging in again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       // First, create or get the brand
       let brandId: string;
       
@@ -115,6 +125,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
 
       if (existingBrand) {
         brandId = existingBrand.id;
+        console.log('Using existing brand:', brandId);
       } else {
         // Create new brand
         const { data: newBrand, error: brandError } = await supabase
@@ -136,13 +147,15 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
         }
 
         brandId = newBrand.id;
+        console.log('Created new brand:', brandId);
       }
 
-      // Create brand_user association if it doesn't exist
+      // Create brand_user association using profile.id (not user.id)
+      console.log('Creating brand user association with profile ID:', profile.id);
       const { error: brandUserError } = await supabase
         .from('brand_users')
         .upsert({
-          user_id: user?.id,
+          user_id: profile.id, // Use profile.id instead of user.id
           brand_id: brandId,
           role: 'admin'
         });
@@ -151,11 +164,13 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
         console.error('Error creating brand user association:', brandUserError);
         toast({
           title: "Error",
-          description: "Failed to associate user with brand.",
+          description: `Failed to associate user with brand: ${brandUserError.message}`,
           variant: "destructive"
         });
         return;
       }
+
+      console.log('Successfully created brand user association');
 
       // Calculate due date
       const dueDate = calculateDueDate(data.campaign_validity_days);
