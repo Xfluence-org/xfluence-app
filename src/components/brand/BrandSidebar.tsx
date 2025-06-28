@@ -14,20 +14,20 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName = 'Brand Name' }) 
   const { signOut } = useAuth();
   
   const getActiveItem = () => {
-    if (location.pathname.includes('/brand-dashboard')) return 'analytics';
+    if (location.pathname.includes('/brand-dashboard')) return 'dashboard';
     if (location.pathname.includes('/brand/campaigns')) return 'campaigns';
     if (location.pathname.includes('/brand/applications')) return 'applications';
     if (location.pathname.includes('/brand/ai-assistant')) return 'ai-assistant';
     if (location.pathname.includes('/brand/settings')) return 'settings';
-    return 'analytics';
+    return 'dashboard';
   };
 
   const activeItem = getActiveItem();
 
   const menuItems = [
     { 
-      id: 'analytics', 
-      label: 'Analytics', 
+      id: 'dashboard', 
+      label: 'Dashboard', 
       icon: '📊',
       onClick: () => navigate('/brand-dashboard')
     },
