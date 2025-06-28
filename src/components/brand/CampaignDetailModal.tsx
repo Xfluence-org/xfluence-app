@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -127,25 +126,59 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
     return category || 'General';
   };
 
-  // Helper function to safely get LLM campaign data from llm_campaign field
+  // Helper function to safely get LLM campaign data
   const getLLMCampaignData = (): LLMCampaignData | null => {
     if (!campaign?.llm_campaign) return null;
     
+    console.log('Raw llm_campaign data:', campaign.llm_campaign);
+    
+    let parsedData = null;
+    
     // Check if it's already an object
     if (typeof campaign.llm_campaign === 'object' && campaign.llm_campaign !== null && !Array.isArray(campaign.llm_campaign)) {
-      return campaign.llm_campaign as LLMCampaignData;
+      parsedData = campaign.llm_campaign;
     }
     
     // If it's a string, try to parse it as JSON
     if (typeof campaign.llm_campaign === 'string') {
       try {
-        return JSON.parse(campaign.llm_campaign) as LLMCampaignData;
-      } catch {
+        parsedData = JSON.parse(campaign.llm_campaign);
+      } catch (e) {
+        console.error('Error parsing llm_campaign JSON:', e);
         return null;
       }
     }
     
-    return null;
+    if (!parsedData) return null;
+    
+    // Handle different data structures - check for nested plan or direct access
+    let campaignData = null;
+    
+    // If there's a 'plan' key, use that
+    if (parsedData.plan) {
+      campaignData = parsedData.plan;
+    }
+    // If there's success and plan keys, use plan
+    else if (parsedData.success && parsedData.plan) {
+      campaignData = parsedData.plan;
+    }
+    // Otherwise use the data directly
+    else if (parsedData.justification || parsedData.content_strategy || parsedData.influencer_allocation) {
+      campaignData = parsedData;
+    }
+    
+    console.log('Processed campaign data:', campaignData);
+    return campaignData as LLMCampaignData;
+  };
+
+  // Create mock LLM interactions for components that expect that format
+  const createMockLLMInteractions = () => {
+    const llmData = getLLMCampaignData();
+    if (!llmData) return [];
+    
+    return [{
+      raw_output: llmData
+    }];
   };
 
   const handlePublicToggle = (isPublic: boolean) => {
@@ -357,178 +390,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                       </div>
                     )}
 
-                    {llmCampaignData.content_strategy && (
-                      <div className="space-y-4">
-                        <h4 className="text-lg font-semibold text-[#1a1f2e]">Content Strategy</h4>
-                        
-                        {llmCampaignData.content_strategy.content_distribution && (
-                          <div className="bg-white rounded-lg p-4">
-                            <h5 className="font-medium text-gray-700 mb-3">Content Distribution</h5>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                              {llmCampaignData.content_strategy.content_distribution.post && (
-                                <div className="bg-gray-50 rounded-lg p-3">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <h6 className="font-medium text-gray-700">Posts</h6>
-                                    <span className="bg-[#1DDCD3] text-white px-2 py-1 rounded text-sm">
-                                      {llmCampaignData.content_strategy.content_distribution.post.percentage}%
-                                    </span>
-                                  </div>
-                                  <p className="text-gray-600 text-sm">
-                                    {llmCampaignData.content_strategy.content_distribution.post.purpose}
-                                  </p>
-                                </div>
-                              )}
-                              
-                              {llmCampaignData.content_strategy.content_distribution.reel && (
-                                <div className="bg-gray-50 rounded-lg p-3">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <h6 className="font-medium text-gray-700">Reels</h6>
-                                    <span className="bg-[#1DDCD3] text-white px-2 py-1 rounded text-sm">
-                                      {llmCampaignData.content_strategy.content_distribution.reel.percentage}%
-                                    </span>
-                                  </div>
-                                  <p className="text-gray-600 text-sm">
-                                    {llmCampaignData.content_strategy.content_distribution.reel.purpose}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                            
-                            {llmCampaignData.content_strategy.content_distribution.rationale && (
-                              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3">
-                                <h6 className="font-medium text-yellow-800 mb-1">Content Rationale</h6>
-                                <p className="text-yellow-700 text-sm">{llmCampaignData.content_strategy.content_distribution.rationale}</p>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {llmCampaignData.content_strategy.platform_specific_strategies && (
-                          <div className="bg-white rounded-lg p-4">
-                            <h5 className="font-medium text-gray-700 mb-3">Platform Specific Strategies</h5>
-                            
-                            <div className="space-y-4">
-                              {llmCampaignData.content_strategy.platform_specific_strategies.post && (
-                                <div className="bg-gray-50 rounded-lg p-3">
-                                  <h6 className="font-medium text-gray-700 mb-2">Post Strategy</h6>
-                                  <div className="space-y-2">
-                                    <div>
-                                      <p className="text-sm font-medium text-gray-600 mb-1">Creative Approach:</p>
-                                      <p className="text-sm text-gray-700">
-                                        {llmCampaignData.content_strategy.platform_specific_strategies.post.creative_approach}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <p className="text-sm font-medium text-gray-600 mb-1">Best Practices:</p>
-                                      <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-                                        {llmCampaignData.content_strategy.platform_specific_strategies.post.best_practices.map((practice, index) => (
-                                          <li key={index}>{String(practice)}</li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                              
-                              {llmCampaignData.content_strategy.platform_specific_strategies.reel && (
-                                <div className="bg-gray-50 rounded-lg p-3">
-                                  <h6 className="font-medium text-gray-700 mb-2">Reel Strategy</h6>
-                                  <div className="space-y-2">
-                                    <div>
-                                      <p className="text-sm font-medium text-gray-600 mb-1">Creative Approach:</p>
-                                      <p className="text-sm text-gray-700">
-                                        {llmCampaignData.content_strategy.platform_specific_strategies.reel.creative_approach}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <p className="text-sm font-medium text-gray-600 mb-1">Best Practices:</p>
-                                      <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-                                        {llmCampaignData.content_strategy.platform_specific_strategies.reel.best_practices.map((practice, index) => (
-                                          <li key={index}>{String(practice)}</li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* New Influencer Allocation Section */}
-                    {llmCampaignData.influencer_allocation && (
-                      <div className="space-y-4">
-                        <h4 className="text-lg font-semibold text-[#1a1f2e]">Influencer Allocation</h4>
-                        
-                        {/* Overview */}
-                        <div className="bg-white rounded-lg p-4">
-                          <h5 className="font-medium text-gray-700 mb-3">Campaign Overview</h5>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="bg-gray-50 rounded-lg p-4 text-center">
-                              <div className="text-2xl font-bold text-[#1DDCD3]">
-                                {llmCampaignData.influencer_allocation.total_influencers || 0}
-                              </div>
-                              <div className="text-sm text-gray-600">Total Influencers</div>
-                            </div>
-                            
-                            <div className="bg-gray-50 rounded-lg p-4">
-                              <h6 className="font-medium text-gray-700 mb-2">By Category</h6>
-                              <div className="space-y-1">
-                                {Object.entries(llmCampaignData.influencer_allocation.allocation_by_category || {}).map(([category, count]) => (
-                                  <div key={category} className="flex justify-between text-sm">
-                                    <span className="text-gray-600">{category}</span>
-                                    <span className="font-medium">{String(count)}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-
-                            <div className="bg-gray-50 rounded-lg p-4">
-                              <h6 className="font-medium text-gray-700 mb-2">Categories</h6>
-                              <div className="flex flex-wrap gap-2">
-                                {Object.keys(llmCampaignData.influencer_allocation.allocation_by_tier || {}).map((category) => (
-                                  <span
-                                    key={category}
-                                    className="px-2 py-1 bg-[#1DDCD3] text-white rounded text-xs"
-                                  >
-                                    {category}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Tier Breakdown */}
-                        {llmCampaignData.influencer_allocation.allocation_by_tier && (
-                          <div className="bg-white rounded-lg p-4">
-                            <h5 className="font-medium text-gray-700 mb-3">Influencer Tier Distribution</h5>
-                            
-                            <div className="space-y-4">
-                              {Object.entries(llmCampaignData.influencer_allocation.allocation_by_tier).map(([category, tiers]) => (
-                                <div key={category} className="bg-gray-50 rounded-lg p-4">
-                                  <h6 className="font-medium text-gray-700 mb-3">{category} Distribution</h6>
-                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    {Object.entries(tiers as any).map(([tier, count]) => (
-                                      <div key={tier} className="text-center p-3 bg-white rounded-lg">
-                                        <div className="text-2xl mb-1">{getTierIcon(tier)}</div>
-                                        <div className="font-bold text-lg text-[#1a1f2e]">{String(count)}</div>
-                                        <div className="text-sm font-medium text-gray-700 capitalize">{tier}</div>
-                                        <div className="text-xs text-gray-500">{getTierDescription(tier)}</div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
+                    {/* Search Strategy Summary */}
                     {llmCampaignData.search_strategy_summary && (
                       <div className="bg-green-50 border-l-4 border-green-400 p-4">
                         <h4 className="font-medium text-green-800 mb-2">Search Strategy Summary</h4>
@@ -536,6 +398,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                       </div>
                     )}
 
+                    {/* Actionable Search Tactics */}
                     {llmCampaignData.actionable_search_tactics && (
                       <div className="bg-purple-50 border-l-4 border-purple-400 p-4">
                         <h4 className="font-medium text-purple-800 mb-3">Actionable Search Tactics</h4>
@@ -565,6 +428,16 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                         </div>
                       </div>
                     )}
+
+                    {/* Content Strategy Section */}
+                    {llmCampaignData.content_strategy && (
+                      <ContentStrategySection llmInteractions={createMockLLMInteractions()} />
+                    )}
+
+                    {/* Influencer Allocation Section */}
+                    {llmCampaignData.influencer_allocation && (
+                      <InfluencerAllocationSection llmInteractions={createMockLLMInteractions()} />
+                    )}
                   </div>
                 ) : (
                   <div className="text-center py-8">
@@ -580,15 +453,12 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
             <TabsContent value="content" className="space-y-6 mt-6">
               <ContentRequirementsSection 
                 campaignId={campaignId}
-                llmInteractions={campaign.llmInteractions || []}
+                llmInteractions={createMockLLMInteractions()}
                 onRequirementsUpdated={handleRequirementsUpdated}
               />
             </TabsContent>
 
             <TabsContent value="influencers" className="space-y-6 mt-6">
-              {/* Influencer Allocation Section */}
-              <InfluencerAllocationSection llmInteractions={campaign.llmInteractions || []} />
-              
               <InfluencerPerformanceSection campaignId={campaignId} />
             </TabsContent>
 

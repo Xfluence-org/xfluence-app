@@ -43,9 +43,20 @@ const ContentStrategySection: React.FC<ContentStrategySectionProps> = ({ llmInte
             console.log('Found content_strategy after parsing string:', parsed.content_strategy);
             return parsed.content_strategy;
           }
+          // Check if it's nested under plan
+          if (parsed.plan?.content_strategy) {
+            console.log('Found content_strategy in parsed plan:', parsed.plan.content_strategy);
+            return parsed.plan.content_strategy;
+          }
         } catch (e) {
           console.log('Could not parse LLM interaction raw_output string:', e);
         }
+      }
+      
+      // Check for nested plan structure
+      if (interaction.raw_output?.plan?.content_strategy) {
+        console.log('Found content_strategy in plan:', interaction.raw_output.plan.content_strategy);
+        return interaction.raw_output.plan.content_strategy;
       }
       
       // Legacy check for nested structure

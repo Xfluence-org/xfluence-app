@@ -10,6 +10,7 @@ interface InfluencerAllocationData {
       micro?: number;
       macro?: number;
       mega?: number;
+      mid?: number;
     };
   };
   allocation_by_category?: {
@@ -43,9 +44,20 @@ const InfluencerAllocationSection: React.FC<InfluencerAllocationSectionProps> = 
             console.log('Found influencer_allocation after parsing string:', parsed.influencer_allocation);
             return parsed.influencer_allocation;
           }
+          // Check if it's nested under plan
+          if (parsed.plan?.influencer_allocation) {
+            console.log('Found influencer_allocation in parsed plan:', parsed.plan.influencer_allocation);
+            return parsed.plan.influencer_allocation;
+          }
         } catch (e) {
           console.log('Could not parse LLM interaction raw_output string:', e);
         }
+      }
+      
+      // Check for nested plan structure
+      if (interaction.raw_output?.plan?.influencer_allocation) {
+        console.log('Found influencer_allocation in plan:', interaction.raw_output.plan.influencer_allocation);
+        return interaction.raw_output.plan.influencer_allocation;
       }
       
       // Legacy check for nested structure
@@ -91,6 +103,7 @@ const InfluencerAllocationSection: React.FC<InfluencerAllocationSectionProps> = 
     switch (tier) {
       case 'nano': return '🌱';
       case 'micro': return '📈';
+      case 'mid': return '🚀';
       case 'macro': return '🚀';
       case 'mega': return '⭐';
       default: return '👤';
@@ -101,6 +114,7 @@ const InfluencerAllocationSection: React.FC<InfluencerAllocationSectionProps> = 
     switch (tier) {
       case 'nano': return '1K - 10K followers';
       case 'micro': return '10K - 100K followers';
+      case 'mid': return '50K - 500K followers';
       case 'macro': return '100K - 1M followers';
       case 'mega': return '1M+ followers';
       default: return '';
