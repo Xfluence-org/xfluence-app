@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -21,16 +20,18 @@ const AuthFlow = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const { signUp, signIn, resetPassword, redirectPath } = useAuth();
+  const { signUp, signIn, resetPassword, user, profile } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Handle redirect when redirectPath changes
+  // Redirect authenticated users immediately
   useEffect(() => {
-    if (redirectPath) {
-      navigate(redirectPath);
+    if (user && profile) {
+      console.log('User authenticated, redirecting...', { user, profile });
+      const dashboardPath = profile.user_type === 'Influencer' ? '/dashboard' : '/brand-dashboard';
+      navigate(dashboardPath, { replace: true });
     }
-  }, [redirectPath, navigate]);
+  }, [user, profile, navigate]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -114,6 +115,7 @@ const AuthFlow = () => {
             title: "Login Successful",
             description: "Welcome back!"
           });
+          // Don't manually navigate here - let the useEffect handle it
         }
       } else {
         // Validation for signup
