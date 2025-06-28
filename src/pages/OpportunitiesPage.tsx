@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Filter, MapPin, Calendar, DollarSign } from 'lucide-react';
+import { Search, Filter, Calendar, DollarSign } from 'lucide-react';
 
 interface Opportunity {
   id: string;
@@ -44,8 +44,8 @@ const OpportunitiesPage = () => {
       console.log('Fetching opportunities with filters:', { searchQuery, categoryFilter });
       
       const { data, error } = await supabase.rpc('get_opportunities', {
-        search_query: searchQuery,
-        category_filter: categoryFilter,
+        search_query: searchQuery || '',
+        category_filter: categoryFilter || '',
         min_compensation: 0,
         max_compensation: 999999999,
         platform_filter: ''
@@ -62,7 +62,17 @@ const OpportunitiesPage = () => {
   });
 
   const handleApplyClick = (opportunity: Opportunity) => {
-    setSelectedOpportunity(opportunity);
+    // Transform opportunity to match the expected interface for the modal
+    const transformedOpportunity = {
+      id: opportunity.id,
+      title: opportunity.title,
+      brand_name: opportunity.brand_name,
+      description: opportunity.description,
+      compensation_min: opportunity.compensation_min,
+      compensation_max: opportunity.compensation_max
+    };
+    
+    setSelectedOpportunity(transformedOpportunity);
     setIsApplicationModalOpen(true);
   };
 
@@ -92,7 +102,7 @@ const OpportunitiesPage = () => {
         <Sidebar />
         <main className="flex-1 ml-64 p-8">
           <div className="text-center py-12">
-            <p className="text-red-500 text-lg">Error loading opportunities</p>
+            <p className="text-red-500 text-lg">Error loading opportunities: {error.message}</p>
           </div>
         </main>
       </div>
@@ -201,12 +211,14 @@ const OpportunitiesPage = () => {
                       </span>
                     </div>
                     
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Calendar className="h-4 w-4" />
-                      <span>
-                        Apply by: {new Date(opportunity.application_deadline).toLocaleDateString()}
-                      </span>
-                    </div>
+                    {opportunity.application_deadline && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Calendar className="h-4 w-4" />
+                        <span>
+                          Apply by: {new Date(opportunity.application_deadline).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {opportunity.has_applied ? (

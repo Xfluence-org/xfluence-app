@@ -13,6 +13,7 @@ import { useCampaignDetail } from '@/hooks/useCampaignDetail';
 import InfluencerPerformanceSection from '@/components/brand/InfluencerPerformanceSection';
 import ContentStrategySection from '@/components/brand/ContentStrategySection';
 import InfluencerAllocationSection from '@/components/brand/InfluencerAllocationSection';
+import ContentRequirementsSection from '@/components/brand/ContentRequirementsSection';
 import { Save, Edit, X } from 'lucide-react';
 import PublicCampaignToggle from '@/components/brand/PublicCampaignToggle';
 import ApplicationsManagementSection from '@/components/brand/ApplicationsManagementSection';
@@ -51,7 +52,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
     budget: 0
   });
 
-  const { data: campaign, isLoading, error } = useCampaignDetail(campaignId);
+  const { data: campaign, isLoading, error, refetch } = useCampaignDetail(campaignId);
 
   useEffect(() => {
     if (campaign) {
@@ -129,6 +130,10 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
     setCampaignPublicStatus(isPublic);
   };
 
+  const handleRequirementsUpdated = () => {
+    refetch();
+  };
+
   if (!isOpen || !campaignId) return null;
 
   const llmCampaignData = getLLMCampaignData();
@@ -181,9 +186,10 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
           </div>
         ) : campaign ? (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="overview">Campaign Overview</TabsTrigger>
               <TabsTrigger value="strategy">Campaign Strategy</TabsTrigger>
+              <TabsTrigger value="content">Content Requirements</TabsTrigger>
               <TabsTrigger value="influencers">Influencers</TabsTrigger>
               <TabsTrigger value="applications">Applications</TabsTrigger>
             </TabsList>
@@ -381,6 +387,14 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
 
               {/* Content Strategy Section */}
               <ContentStrategySection llmInteractions={campaign.llmInteractions || []} />
+            </TabsContent>
+
+            <TabsContent value="content" className="space-y-6 mt-6">
+              <ContentRequirementsSection 
+                campaignId={campaignId}
+                llmInteractions={campaign.llmInteractions || []}
+                onRequirementsUpdated={handleRequirementsUpdated}
+              />
             </TabsContent>
 
             <TabsContent value="influencers" className="space-y-6 mt-6">
