@@ -14,20 +14,20 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName = 'Brand Name' }) 
   const { signOut } = useAuth();
   
   const getActiveItem = () => {
-    if (location.pathname.includes('/brand-dashboard')) return 'dashboard';
+    if (location.pathname.includes('/brand-dashboard')) return 'analytics';
     if (location.pathname.includes('/brand/campaigns')) return 'campaigns';
     if (location.pathname.includes('/brand/applications')) return 'applications';
     if (location.pathname.includes('/brand/ai-assistant')) return 'ai-assistant';
     if (location.pathname.includes('/brand/settings')) return 'settings';
-    return 'dashboard';
+    return 'analytics';
   };
 
   const activeItem = getActiveItem();
 
   const menuItems = [
     { 
-      id: 'dashboard', 
-      label: 'Dashboard', 
+      id: 'analytics', 
+      label: 'Analytics', 
       icon: '📊',
       onClick: () => navigate('/brand-dashboard')
     },
@@ -63,24 +63,24 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName = 'Brand Name' }) 
   };
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-screen shadow-sm">
+    <div className="w-70 bg-white border-r border-border flex flex-col h-screen">
       {/* Logo/Brand */}
-      <div className="p-6 border-b border-gray-200">
-        <h1 className="text-2xl font-bold text-[#1a1f2e]">Xfluence</h1>
-        <p className="text-sm text-gray-600 mt-1">Brand Portal</p>
+      <div className="p-6 border-b border-border">
+        <h1 className="text-h2 font-semibold text-text-primary">Xfluence</h1>
+        <p className="text-body text-text-secondary mt-1">Brand Portal</p>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-6 space-y-2">
         {menuItems.map((item) => (
           <button
             key={item.id}
             onClick={item.onClick}
             className={cn(
-              "w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3",
+              "w-full text-left px-4 py-3 rounded-md transition-smooth flex items-center gap-3 group",
               activeItem === item.id
-                ? "bg-[#1DDCD3] text-white shadow-lg"
-                : "text-gray-600 hover:bg-gray-100 hover:text-[#1a1f2e]"
+                ? "bg-background-tertiary text-primary font-semibold border-l-3 border-primary"
+                : "text-text-secondary hover:bg-background-tertiary hover:text-text-primary"
             )}
           >
             <span className="text-lg">{item.icon}</span>
@@ -90,10 +90,10 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName = 'Brand Name' }) 
       </nav>
 
       {/* User Section */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-6 border-t border-border">
         <button 
           onClick={handleLogout}
-          className="w-full text-left px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-[#1a1f2e] rounded-xl transition-all duration-200"
+          className="w-full text-left px-4 py-3 text-text-secondary hover:bg-background-tertiary hover:text-text-primary rounded-md transition-smooth font-medium"
         >
           {userName} [log out →]
         </button>
