@@ -43,14 +43,19 @@ export const useCampaignData = (tabFilter?: CampaignTab) => {
         };
 
         // Map database status to display status
-        const getDisplayStatus = (dbStatus: string): 'invited' | 'active' | 'completed' | 'pending' => {
+        const getDisplayStatus = (dbStatus: string): 'invited' | 'active' | 'completed' | 'pending' | 'rejected' | 'approved' => {
           switch (dbStatus) {
             case 'invited':
-            case 'applied':
               return 'invited';
+            case 'applied':
+            case 'pending':
+              return 'pending';
+            case 'approved':
             case 'accepted':
             case 'active':
               return 'active';
+            case 'rejected':
+              return 'rejected';
             case 'completed':
               return 'completed';
             default:
@@ -77,7 +82,7 @@ export const useCampaignData = (tabFilter?: CampaignTab) => {
           taskCount: Number(row.task_count),
           dueDate: formatDate(row.due_date),
           platforms: row.platforms || ['Instagram', 'TikTok'],
-          amount: row.amount ? Math.floor(row.amount / 100) : 0, // Convert from cents
+          amount: row.amount ? Math.floor(row.amount / 100) : 0,
           overallProgress: row.overall_progress || 0,
           completedTasks: Number(row.completed_tasks),
           tasks,

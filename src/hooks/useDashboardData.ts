@@ -14,7 +14,7 @@ interface Campaign {
     reels?: number;
   };
   progress?: number;
-  status: 'invited' | 'accepted' | 'active' | 'completed' | 'declined';
+  status: 'invited' | 'accepted' | 'active' | 'completed' | 'declined' | 'pending' | 'rejected' | 'approved';
   currentStage?: string;
 }
 
@@ -45,21 +45,21 @@ export const useDashboardData = () => {
         id: row.campaign_id,
         brand: row.brand_name,
         title: row.campaign_title,
-        amount: row.amount ? Math.floor(row.amount / 100) : 0, // Convert from cents
+        amount: row.amount ? Math.floor(row.amount / 100) : 0,
         dueDate: row.due_date ? new Date(row.due_date).toLocaleDateString('en-GB') : 'TBD',
         requirements: {
-          posts: 1, // Default values since we don't have this data in the function
+          posts: 1,
           stories: 1,
           reels: 1
         },
         progress: row.overall_progress || 0,
-        status: 'invited' as const,
+        status: row.campaign_status as 'invited' | 'pending' | 'rejected' | 'approved',
         currentStage: 'content_requirement'
       }));
     }
   });
 
-  // Fetch active campaigns (active tab)
+  // Fetch active campaigns (active tab) - only approved/accepted campaigns
   const { data: activeCampaignsData = [], isLoading: activeCampaignsLoading, error: activeCampaignsError } = useQuery({
     queryKey: ['dashboard-active-campaigns'],
     queryFn: async () => {
@@ -85,15 +85,15 @@ export const useDashboardData = () => {
         id: row.campaign_id,
         brand: row.brand_name,
         title: row.campaign_title,
-        amount: row.amount ? Math.floor(row.amount / 100) : 0, // Convert from cents
+        amount: row.amount ? Math.floor(row.amount / 100) : 0,
         dueDate: row.due_date ? new Date(row.due_date).toLocaleDateString('en-GB') : 'TBD',
         requirements: {
-          posts: 1, // Default values since we don't have this data in the function
+          posts: 1,
           stories: 1,
           reels: 1
         },
         progress: row.overall_progress || 0,
-        status: row.campaign_status === 'accepted' ? 'accepted' as const : 'active' as const,
+        status: 'active' as const,
         currentStage: 'content_requirement'
       }));
     }
@@ -109,7 +109,7 @@ export const useDashboardData = () => {
       const { error } = await supabase
         .from('campaign_participants')
         .update({ 
-          status: 'accepted',
+          status: 'approved',
           accepted_at: new Date().toISOString()
         })
         .eq('campaign_id', campaignId)
@@ -133,7 +133,7 @@ export const useDashboardData = () => {
       
       const { error } = await supabase
         .from('campaign_participants')
-        .update({ status: 'declined' })
+        .update({ status: 'rejected' })
         .eq('campaign_id', campaignId)
         .eq('influencer_id', (await supabase.auth.getUser()).data.user?.id);
 
@@ -150,7 +150,6 @@ export const useDashboardData = () => {
   };
 
   const refetch = () => {
-    // Note: With React Query, we don't need manual refetch as the queries will invalidate automatically
     console.log('Refetch called - queries will update automatically');
   };
 

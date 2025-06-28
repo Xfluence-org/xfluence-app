@@ -66,6 +66,11 @@ const InfluencerDashboard = () => {
     }
   };
 
+  // Filter invitations to only show invited/pending ones for the invitations section
+  const pendingInvitations = invitations.filter(campaign => 
+    ['invited', 'pending'].includes(campaign.status.toLowerCase())
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -102,20 +107,20 @@ const InfluencerDashboard = () => {
           <section className="mb-12">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-[#1a1f2e]">Campaign Invitations</h2>
-              {invitations.length > 0 && (
+              {pendingInvitations.length > 0 && (
                 <span className="px-3 py-1 bg-[#1DDCD3] text-white rounded-full text-sm font-medium">
-                  {invitations.length} new
+                  {pendingInvitations.length} new
                 </span>
               )}
             </div>
             
-            {invitations.length === 0 ? (
+            {pendingInvitations.length === 0 ? (
               <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-                <p className="text-gray-500">No new campaign invitations at the moment.</p>
+                <p className="text-gray-500">No pending campaign invitations at the moment.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {invitations.map((campaign) => (
+                {pendingInvitations.map((campaign) => (
                   <InvitationCard
                     key={campaign.id}
                     campaign={campaign}

@@ -1,5 +1,22 @@
 
-export interface Task {
+export type CampaignTab = 'Active' | 'Completed' | 'Requests';
+
+export interface DetailedCampaign {
+  id: string;
+  title: string;
+  brand: string;
+  status: 'invited' | 'active' | 'completed' | 'pending' | 'rejected' | 'approved';
+  taskCount: number;
+  dueDate: string;
+  platforms: string[];
+  amount: number;
+  overallProgress: number;
+  completedTasks: number;
+  tasks: CampaignTask[];
+  originalStatus?: string;
+}
+
+export interface CampaignTask {
   id: string;
   type: 'Posts' | 'Stories' | 'Reels';
   deliverable: string;
@@ -8,20 +25,3 @@ export interface Task {
   nextDeadline: string;
   feedback?: string;
 }
-
-export interface DetailedCampaign {
-  id: string;
-  title: string;
-  brand: string;
-  status: 'invited' | 'active' | 'completed' | 'pending';
-  taskCount: number;
-  dueDate: string;
-  platforms: string[];
-  amount: number;
-  overallProgress: number;
-  tasks: Task[];
-  completedTasks: number;
-  originalStatus?: string; // Store the original database status for filtering
-}
-
-export type CampaignTab = 'Active' | 'Completed' | 'Requests';
