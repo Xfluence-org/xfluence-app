@@ -10,7 +10,7 @@ export const useCampaignDetail = (campaignId: string | null) => {
       
       console.log('Fetching campaign detail for:', campaignId);
       
-      // Fetch campaign data (without llm_campaign field)
+      // Fetch campaign data
       const { data: campaignData, error: campaignError } = await supabase
         .from('campaigns')
         .select(`
@@ -23,6 +23,7 @@ export const useCampaignDetail = (campaignId: string | null) => {
           amount,
           due_date,
           created_at,
+          llm_campaign,
           is_public,
           brands (
             name,
@@ -51,29 +52,11 @@ export const useCampaignDetail = (campaignId: string | null) => {
       console.log('Fetched campaign detail:', campaignData);
       console.log('Fetched LLM interactions:', llmInteractions);
       
-      // Extract campaign strategy from LLM interactions
-      let llmCampaignData = null;
-      if (llmInteractions && llmInteractions.length > 0) {
-        // Look for campaign creation interaction or any interaction with campaign data
-        for (const interaction of llmInteractions) {
-          if (interaction.raw_output && typeof interaction.raw_output === 'object') {
-            // Check if this interaction contains campaign strategy data
-            if (interaction.raw_output.campaign_name || 
-                interaction.raw_output.campaign_objective || 
-                interaction.raw_output.target_audience) {
-              llmCampaignData = interaction.raw_output;
-              break;
-            }
-          }
-        }
-      }
-      
       return {
         ...campaignData,
         budget: campaignData.budget || campaignData.amount || 0,
         category: campaignData.category,
         is_public: campaignData.is_public || false,
-        llm_campaign: llmCampaignData, // Set from LLM interactions
         llmInteractions: llmInteractions || []
       };
     },
