@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Sidebar from '@/components/dashboard/Sidebar';
@@ -8,6 +9,7 @@ import TaskDetailModal from '@/components/campaigns/TaskDetailModal';
 import { CampaignTab } from '@/types/campaigns';
 import { useTaskDetail } from '@/hooks/useTaskDetail';
 import { useCampaignData } from '@/hooks/useCampaignData';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 const CampaignsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -38,7 +40,7 @@ const CampaignsPage: React.FC = () => {
 
   // Filter campaigns based on search query only (tab filtering is now done server-side)
   const filteredCampaigns = useMemo(() => {
-    if (!campaigns) return [];
+    if (!campaigns || !Array.isArray(campaigns)) return [];
     
     let filtered = campaigns;
 
@@ -46,8 +48,8 @@ const CampaignsPage: React.FC = () => {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(campaign =>
-        campaign.title.toLowerCase().includes(query) ||
-        campaign.brand.toLowerCase().includes(query)
+        campaign?.title?.toLowerCase().includes(query) ||
+        campaign?.brand?.toLowerCase().includes(query)
       );
     }
 
@@ -136,68 +138,70 @@ const CampaignsPage: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <Sidebar activeItem="campaigns" userName="Name" />
-      
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-8">
-          <header className="mb-8">
-            <h1 className="text-3xl font-bold text-[#1a1f2e] mb-2">Campaigns</h1>
-          </header>
+    <ErrorBoundary>
+      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <Sidebar activeItem="campaigns" userName="Name" />
+        
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-8">
+            <header className="mb-8">
+              <h1 className="text-3xl font-bold text-[#1a1f2e] mb-2">Campaigns</h1>
+            </header>
 
-          <section>
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
-              <h2 className="text-2xl font-bold text-[#1a1f2e] mb-6">My Campaigns</h2>
-              
-              <CampaignSearch
-                searchQuery={searchQuery}
-                onSearchChange={handleSearchChange}
-                onFilterClick={handleFilterClick}
-              />
-              
-              <TabNavigation 
-                activeTab={activeTab} 
-                onTabChange={handleTabChange} 
-              />
+            <section>
+              <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
+                <h2 className="text-2xl font-bold text-[#1a1f2e] mb-6">My Campaigns</h2>
+                
+                <CampaignSearch
+                  searchQuery={searchQuery}
+                  onSearchChange={handleSearchChange}
+                  onFilterClick={handleFilterClick}
+                />
+                
+                <TabNavigation 
+                  activeTab={activeTab} 
+                  onTabChange={handleTabChange} 
+                />
 
-              <div className="space-y-6">
-                {filteredCampaigns.length > 0 ? (
-                  filteredCampaigns.map((campaign) => (
-                    <DetailedCampaignCard
-                      key={campaign.id}
-                      campaign={campaign}
-                      onViewDetails={handleViewDetails}
-                    />
-                  ))
-                ) : (
-                  <div className="text-center py-12">
-                    <p className="text-gray-500 text-lg">
-                      No campaigns found in the {activeTab.toLowerCase()} section.
-                    </p>
-                    <p className="text-gray-400 mt-2">
-                      {activeTab === 'Active' && "Start applying to opportunities to see active campaigns here."}
-                      {activeTab === 'Completed' && "Completed campaigns will appear here once you finish them."}
-                      {activeTab === 'Requests' && "Campaign invitations will appear here."}
-                    </p>
-                  </div>
-                )}
+                <div className="space-y-6">
+                  {filteredCampaigns && filteredCampaigns.length > 0 ? (
+                    filteredCampaigns.map((campaign) => (
+                      <DetailedCampaignCard
+                        key={campaign.id}
+                        campaign={campaign}
+                        onViewDetails={handleViewDetails}
+                      />
+                    ))
+                  ) : (
+                    <div className="text-center py-12">
+                      <p className="text-gray-500 text-lg">
+                        No campaigns found in the {activeTab.toLowerCase()} section.
+                      </p>
+                      <p className="text-gray-400 mt-2">
+                        {activeTab === 'Active' && "Start applying to opportunities to see active campaigns here."}
+                        {activeTab === 'Completed' && "Completed campaigns will appear here once you finish them."}
+                        {activeTab === 'Requests' && "Campaign invitations will appear here."}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </section>
-        </div>
-      </main>
+            </section>
+          </div>
+        </main>
 
-      <TaskDetailModal
-        isOpen={!!selectedTaskId}
-        onClose={handleCloseTaskDetail}
-        taskDetail={taskDetail}
-        onSubmitForReview={handleSubmitForReview}
-        onDownloadBrief={handleDownloadBrief}
-        onSendMessage={handleSendMessage}
-        onFileUpload={handleFileUpload}
-        onDeleteFile={handleDeleteFile}
-      />
-    </div>
+        <TaskDetailModal
+          isOpen={!!selectedTaskId}
+          onClose={handleCloseTaskDetail}
+          taskDetail={taskDetail}
+          onSubmitForReview={handleSubmitForReview}
+          onDownloadBrief={handleDownloadBrief}
+          onSendMessage={handleSendMessage}
+          onFileUpload={handleFileUpload}
+          onDeleteFile={handleDeleteFile}
+        />
+      </div>
+    </ErrorBoundary>
   );
 };
 

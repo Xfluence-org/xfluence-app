@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -10,6 +10,7 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredUserType }) => {
   const { user, profile, loading } = useAuth();
+  const location = useLocation();
 
   // Show loading spinner while authentication is being determined
   if (loading) {
@@ -26,6 +27,17 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredUserT
   // Redirect to login if not authenticated
   if (!user || !profile) {
     return <Navigate to="/" replace />;
+  }
+
+  // Handle specific route redirections for user types
+  // Brand/Agency users trying to access influencer campaigns should go to brand campaigns
+  if ((profile.user_type === 'Agency' || profile.user_type === 'Brand') && location.pathname === '/campaigns') {
+    return <Navigate to="/brand/campaigns" replace />;
+  }
+  
+  // Influencer users trying to access brand routes should go to influencer dashboard
+  if (profile.user_type === 'Influencer' && location.pathname.startsWith('/brand/')) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   // Check user type if specified
