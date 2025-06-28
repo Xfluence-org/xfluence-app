@@ -13,7 +13,6 @@ import CampaignsPage from '@/pages/CampaignsPage';
 import CampaignReviewPage from '@/pages/CampaignReviewPage';
 import NotFound from '@/pages/NotFound';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import './App.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,50 +27,57 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <InfluencerDashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/brand-dashboard" element={
-            <ProtectedRoute>
-              <BrandDashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/brand/campaigns" element={
-            <ProtectedRoute>
-              <BrandCampaignsPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/brand/applications" element={
-            <ProtectedRoute>
-              <BrandApplicationsPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/brand/ai-assistant" element={
-            <ProtectedRoute>
-              <BrandAIAssistant />
-            </ProtectedRoute>
-          } />
-          <Route path="/opportunities" element={
-            <ProtectedRoute>
-              <OpportunitiesPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/campaigns" element={
-            <ProtectedRoute>
-              <CampaignsPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/campaign-review/:id" element={
-            <ProtectedRoute>
-              <CampaignReviewPage />
-            </ProtectedRoute>
-          } />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <div className="min-h-screen">
+          <Routes>
+            <Route path="/" element={<Index />} />
+            
+            {/* Influencer Routes */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute requiredUserType="Influencer">
+                <InfluencerDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/opportunities" element={
+              <ProtectedRoute requiredUserType="Influencer">
+                <OpportunitiesPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/campaigns" element={
+              <ProtectedRoute requiredUserType="Influencer">
+                <CampaignsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/campaign-review/:id" element={
+              <ProtectedRoute requiredUserType="Influencer">
+                <CampaignReviewPage />
+              </ProtectedRoute>
+            } />
+            
+            {/* Brand/Agency Routes */}
+            <Route path="/brand-dashboard" element={
+              <ProtectedRoute>
+                <BrandDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/brand/campaigns" element={
+              <ProtectedRoute>
+                <BrandCampaignsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/brand/applications" element={
+              <ProtectedRoute>
+                <BrandApplicationsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/brand/ai-assistant" element={
+              <ProtectedRoute>
+                <BrandAIAssistant />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
         <Toaster />
       </Router>
     </QueryClientProvider>

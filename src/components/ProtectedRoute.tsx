@@ -36,6 +36,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredUserT
     } else if (profile.user_type === 'Agency' || profile.user_type === 'Brand') {
       return <Navigate to="/brand-dashboard" replace />;
     }
+    
+    // Fallback to login if user type is unrecognized
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
