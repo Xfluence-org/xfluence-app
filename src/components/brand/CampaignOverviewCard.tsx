@@ -25,7 +25,10 @@ const CampaignOverviewCard: React.FC<CampaignOverviewCardProps> = ({ campaign, o
     }
   };
 
-  const budgetUsed = (campaign.spent / campaign.budget) * 100;
+  // Convert budget and spent from cents to dollars for display
+  const budgetInDollars = Math.round(campaign.budget / 100);
+  const spentInDollars = Math.round(campaign.spent / 100);
+  const budgetUsed = budgetInDollars > 0 ? (spentInDollars / budgetInDollars) * 100 : 0;
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200">
@@ -51,7 +54,7 @@ const CampaignOverviewCard: React.FC<CampaignOverviewCardProps> = ({ campaign, o
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm font-medium text-gray-700">Budget Usage</span>
           <span className="text-sm font-bold text-[#1a1f2e]">
-            ${campaign.spent.toLocaleString()} / ${campaign.budget.toLocaleString()}
+            ${spentInDollars.toLocaleString()} / ${budgetInDollars.toLocaleString()}
           </span>
         </div>
         <ProgressBar progress={budgetUsed} />

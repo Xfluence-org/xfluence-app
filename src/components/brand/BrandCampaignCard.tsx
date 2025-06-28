@@ -48,6 +48,10 @@ const BrandCampaignCard: React.FC<BrandCampaignCardProps> = ({
   const [isPublic, setIsPublic] = useState(campaign.is_public || false);
   const [isUpdating, setIsUpdating] = useState(false);
   const { toast } = useToast();
+
+  // Convert budget from cents to dollars for display
+  const budgetInDollars = Math.round(campaign.budget / 100);
+
   const getStatusBadge = (status: string) => {
     const baseClasses = "px-3 py-1 rounded-full text-white text-xs font-medium";
     switch (status.toLowerCase()) {
@@ -160,7 +164,7 @@ const BrandCampaignCard: React.FC<BrandCampaignCardProps> = ({
           <DollarSign className="h-4 w-4 text-[#1DDCD3]" />
           <div>
             <p className="text-sm text-gray-600">Budget</p>
-            <p className="font-semibold">${campaign.budget.toLocaleString()}</p>
+            <p className="font-semibold">${budgetInDollars.toLocaleString()}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
