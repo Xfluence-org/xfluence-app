@@ -1,17 +1,26 @@
-
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface SidebarProps {
-  activeItem?: string;
   userName?: string;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard', userName = 'Name' }) => {
+const Sidebar: React.FC<SidebarProps> = ({ userName = 'Name' }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signOut } = useAuth();
+
+  const getActiveItem = () => {
+    if (location.pathname === '/dashboard') return 'dashboard';
+    if (location.pathname === '/opportunities') return 'opportunities';
+    if (location.pathname === '/campaigns') return 'campaigns';
+    if (location.pathname === '/settings') return 'settings';
+    return 'dashboard';
+  };
+
+  const activeItem = getActiveItem();
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊', path: '/dashboard' },
