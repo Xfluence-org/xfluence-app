@@ -24,6 +24,7 @@ export const useCampaignDetail = (campaignId: string | null) => {
           due_date,
           created_at,
           llm_campaign,
+          is_public,
           brands (
             name,
             logo_url
@@ -55,6 +56,7 @@ export const useCampaignDetail = (campaignId: string | null) => {
         ...campaignData,
         budget: campaignData.budget || campaignData.amount || 0,
         category: campaignData.category,
+        is_public: campaignData.is_public || false,
         llmInteractions: llmInteractions || []
       };
     },
