@@ -20,27 +20,17 @@ const AuthFlow = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const { signUp, signIn, resetPassword, user, profile, redirectPath } = useAuth();
+  const { signUp, signIn, resetPassword, user, profile, getDashboardPath } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   // Redirect authenticated users to appropriate dashboard
   useEffect(() => {
     if (user && profile) {
-      if (profile.user_type === 'Influencer') {
-        navigate('/dashboard');
-      } else {
-        navigate('/brand-dashboard');
-      }
+      const dashboardPath = getDashboardPath(profile.user_type);
+      navigate(dashboardPath);
     }
-  }, [user, profile, navigate]);
-
-  // Handle redirect path from successful login
-  useEffect(() => {
-    if (redirectPath) {
-      navigate(redirectPath);
-    }
-  }, [redirectPath, navigate]);
+  }, [user, profile, navigate, getDashboardPath]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
