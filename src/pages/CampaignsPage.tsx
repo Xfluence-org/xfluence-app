@@ -104,7 +104,7 @@ const CampaignsPage: React.FC = () => {
   if (loading) {
     return (
       <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <Sidebar activeItem="campaigns" userName="Name" />
+        <Sidebar userName="Name" />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
@@ -119,7 +119,7 @@ const CampaignsPage: React.FC = () => {
   if (error) {
     return (
       <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <Sidebar activeItem="campaigns" userName="Name" />
+        <Sidebar userName="Name" />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
@@ -133,7 +133,7 @@ const CampaignsPage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <Sidebar activeItem="campaigns" userName="Name" />
+      <Sidebar userName="Name" />
       
       <main className="flex-1 overflow-y-auto">
         <div className="p-8">

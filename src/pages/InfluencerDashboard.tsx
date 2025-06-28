@@ -56,7 +56,7 @@ const InfluencerDashboard = () => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar activeItem="dashboard" userName={profile?.name} />
+      <Sidebar userName={profile?.name} />
       
       <div className="flex-1 overflow-y-auto">
         <div className="p-8">
