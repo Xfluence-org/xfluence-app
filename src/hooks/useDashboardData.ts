@@ -1,5 +1,22 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+
+interface Invitation {
+  id: string;
+  brand: string;
+  title: string;
+  amount: number;
+  dueDate: string;
+  requirements: {
+    posts?: number;
+    stories?: number;
+    reels?: number;
+  };
+  progress?: number;
+  status: 'invited' | 'pending' | 'rejected' | 'approved';
+  currentStage?: string;
+}
 
 interface Campaign {
   id: string;
@@ -13,7 +30,7 @@ interface Campaign {
     reels?: number;
   };
   progress?: number;
-  status: 'invited' | 'accepted' | 'active' | 'completed' | 'declined' | 'pending' | 'rejected' | 'approved';
+  status: 'invited' | 'accepted' | 'active' | 'completed' | 'declined';
   currentStage?: string;
 }
 
@@ -39,8 +56,8 @@ export const useDashboardData = () => {
         return [];
       }
 
-      // Transform data to match dashboard component expectations
-      return campaignData.map((row: any) => ({
+      // Transform data to match invitation component expectations
+      return campaignData.map((row: any): Invitation => ({
         id: row.campaign_id,
         brand: row.brand_name,
         title: row.campaign_title,
@@ -79,8 +96,8 @@ export const useDashboardData = () => {
         return [];
       }
 
-      // Transform data to match dashboard component expectations
-      return campaignData.map((row: any) => ({
+      // Transform data to match campaign component expectations
+      return campaignData.map((row: any): Campaign => ({
         id: row.campaign_id,
         brand: row.brand_name,
         title: row.campaign_title,

@@ -67,8 +67,8 @@ const InfluencerDashboard = () => {
   };
 
   // Filter invitations to only show invited/pending ones for the invitations section
-  const pendingInvitations = invitations.filter(campaign => 
-    ['invited', 'pending'].includes(campaign.status.toLowerCase())
+  const pendingInvitations = invitations.filter(invitation => 
+    ['invited', 'pending'].includes(invitation.status.toLowerCase())
   );
 
   if (loading) {
@@ -120,10 +120,10 @@ const InfluencerDashboard = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {pendingInvitations.map((campaign) => (
+                {pendingInvitations.map((invitation) => (
                   <InvitationCard
-                    key={campaign.id}
-                    campaign={campaign}
+                    key={invitation.id}
+                    campaign={invitation}
                     onAccept={handleAcceptInvitation}
                     onDecline={handleDeclineInvitation}
                   />
