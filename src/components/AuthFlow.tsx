@@ -20,20 +20,29 @@ const AuthFlow = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const { signUp, signIn, resetPassword, user, profile } = useAuth();
+  const { signUp, signIn, resetPassword, user, profile, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Handle redirect when user is authenticated
+  // Handle redirect when user is authenticated - fixed logic
   useEffect(() => {
-    if (user && profile) {
-      if (profile.user_type === 'Influencer') {
-        navigate('/dashboard');
-      } else {
-        navigate('/brand-dashboard');
-      }
+    console.log('AuthFlow - Auth state changed:', { user: !!user, profile, loading });
+    
+    if (!loading && user && profile) {
+      console.log('AuthFlow - Redirecting user based on profile type:', profile.user_type);
+      
+      // Use setTimeout to ensure the toast is shown before navigation
+      setTimeout(() => {
+        if (profile.user_type === 'Influencer') {
+          console.log('AuthFlow - Navigating to /dashboard');
+          navigate('/dashboard', { replace: true });
+        } else {
+          console.log('AuthFlow - Navigating to /brand-dashboard');
+          navigate('/brand-dashboard', { replace: true });
+        }
+      }, 100);
     }
-  }, [user, profile, navigate]);
+  }, [user, profile, loading, navigate]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -104,19 +113,23 @@ const AuthFlow = () => {
           backToLogin();
         }
       } else if (isLogin) {
+        console.log('AuthFlow - Attempting login');
         const { error } = await signIn(formData.email, formData.password);
         
         if (error) {
+          console.log('AuthFlow - Login error:', error);
           toast({
             title: "Login Failed",
             description: error.message || "Failed to login. Please try again.",
             variant: "destructive"
           });
         } else {
+          console.log('AuthFlow - Login successful');
           toast({
             title: "Login Successful",
             description: "Welcome back!"
           });
+          // Don't navigate here - let the useEffect handle it after profile is loaded
         }
       } else {
         // Validation for signup
@@ -168,6 +181,7 @@ const AuthFlow = () => {
         }
       }
     } catch (error) {
+      console.log('AuthFlow - Unexpected error:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
@@ -177,6 +191,15 @@ const AuthFlow = () => {
       setIsLoading(false);
     }
   };
+
+  // Show loading state while auth is being determined
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#1DDCD3]"></div>
+      </div>
+    );
+  }
 
   const getFormTitle = () => {
     if (isForgotPassword) return 'Reset Password';
