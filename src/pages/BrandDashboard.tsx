@@ -9,14 +9,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InfluencerApplication } from '@/types/brandDashboard';
 import { useBrandDashboardData } from '@/hooks/useBrandDashboardData';
 import { useBrandApplications } from '@/hooks/useBrandApplications';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 const BrandDashboard: React.FC = () => {
   const { campaigns, metrics, loading, error } = useBrandDashboardData();
-  const { data: applicationsData = [], isLoading: applicationsLoading, error: applicationsError } = useBrandApplications(10);
+  const { data: applicationsData = [], isLoading: applicationsLoading, error: applicationsError, refetch } = useBrandApplications(10);
   const [activeTab, setActiveTab] = useState('overview');
+  const queryClient = useQueryClient();
 
   // Transform applications data to match component expectations
-  const recentApplications: InfluencerApplication[] = applicationsData.map((app: any) => ({
+  const allApplications: InfluencerApplication[] = applicationsData.map((app: any) => ({
     id: app.application_id,
     campaignId: app.campaign_id,
     campaignTitle: app.campaign_title,
@@ -34,19 +37,70 @@ const BrandDashboard: React.FC = () => {
     aiScore: app.ai_score || 0
   }));
 
+  // Filter to only show pending applications in recent applications
+  const recentApplications = allApplications.filter(app => 
+    ['pending', 'applied', 'invited'].includes(app.status)
+  );
+
   const handleViewCampaignDetails = (campaignId: string) => {
     console.log('View campaign details:', campaignId);
     // Navigate to campaign details page
   };
 
-  const handleApproveApplication = (applicationId: string) => {
-    console.log('Approve application:', applicationId);
-    // Handle application approval
+  const handleApproveApplication = async (applicationId: string) => {
+    try {
+      console.log('Approving application:', applicationId);
+      
+      const { error } = await supabase
+        .from('campaign_participants')
+        .update({ 
+          status: 'approved',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', applicationId);
+
+      if (error) {
+        console.error('Error approving application:', error);
+        throw error;
+      }
+
+      // Invalidate and refetch queries to update the UI
+      queryClient.invalidateQueries({ queryKey: ['brand-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-active-campaigns'] });
+      refetch();
+      
+      console.log('Application approved successfully');
+    } catch (err) {
+      console.error('Failed to approve application:', err);
+    }
   };
 
-  const handleRejectApplication = (applicationId: string) => {
-    console.log('Reject application:', applicationId);
-    // Handle application rejection
+  const handleRejectApplication = async (applicationId: string) => {
+    try {
+      console.log('Rejecting application:', applicationId);
+      
+      const { error } = await supabase
+        .from('campaign_participants')
+        .update({ 
+          status: 'rejected',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', applicationId);
+
+      if (error) {
+        console.error('Error rejecting application:', error);
+        throw error;
+      }
+
+      // Invalidate and refetch queries to update the UI
+      queryClient.invalidateQueries({ queryKey: ['brand-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-active-campaigns'] });
+      refetch();
+      
+      console.log('Application rejected successfully');
+    } catch (err) {
+      console.error('Failed to reject application:', err);
+    }
   };
 
   const handleViewProfile = (applicationId: string) => {
@@ -162,7 +216,7 @@ const BrandDashboard: React.FC = () => {
                 </div>
               </section>
 
-              {/* Recent Applications */}
+              {/* Recent Applications - Only Pending */}
               <section>
                 <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
                   <div className="flex items-center justify-between mb-6">
@@ -188,7 +242,7 @@ const BrandDashboard: React.FC = () => {
                     </div>
                   ) : (
                     <div className="text-center py-8">
-                      <p className="text-gray-500">No recent applications found.</p>
+                      <p className="text-gray-500">No recent pending applications found.</p>
                     </div>
                   )}
                 </div>
@@ -198,7 +252,7 @@ const BrandDashboard: React.FC = () => {
             <TabsContent value="applications">
               <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
                 <h2 className="text-2xl font-bold text-[#1a1f2e] mb-6">Applications Management</h2>
-                <ApplicationsTab applications={recentApplications} />
+                <ApplicationsTab applications={allApplications} />
               </div>
             </TabsContent>
           </Tabs>

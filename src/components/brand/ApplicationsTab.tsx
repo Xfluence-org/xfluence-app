@@ -6,50 +6,39 @@ import ApplicationCard from './ApplicationCard';
 import CampaignSearch from './CampaignSearch';
 import { InfluencerApplication } from '@/types/brandDashboard';
 import { useBrandApplications } from '@/hooks/useBrandApplications';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ApplicationsTabProps {
   applications?: InfluencerApplication[];
 }
 
 const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ applications: propApplications }) => {
-  const { data: fetchedApplications = [], isLoading, error } = useBrandApplications(100); // Increased limit to get more data
+  const { data: fetchedApplications = [], isLoading, error, refetch } = useBrandApplications(100);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeTab, setActiveTab] = useState<string>('open');
-  const [localApplications, setLocalApplications] = useState<InfluencerApplication[]>([]);
+  const queryClient = useQueryClient();
 
   // Use fetched applications from database (prioritize database over props)
-  const sourceApplications = fetchedApplications.map((app: any) => ({
-    id: app.application_id,
-    campaignId: app.campaign_id,
-    campaignTitle: app.campaign_title,
-    influencer: {
-      name: app.influencer_name,
-      handle: app.influencer_handle,
-      followers: app.followers_count,
-      platform: app.platform
-    },
-    appliedAt: app.applied_at,
-    status: app.application_status as 'pending' | 'approved' | 'rejected',
-    engagementRate: parseFloat(app.engagement_rate?.toString() || '0'),
-    averageViews: app.average_views || 0,
-    niche: Array.isArray(app.niche) ? app.niche : [],
-    aiScore: app.ai_score || 0
-  }));
-
-  // Merge source applications with local updates
   const applications = useMemo(() => {
-    const merged = [...sourceApplications];
-    
-    // Apply local updates
-    localApplications.forEach(localApp => {
-      const index = merged.findIndex(app => app.id === localApp.id);
-      if (index !== -1) {
-        merged[index] = localApp;
-      }
-    });
-    
-    return merged;
-  }, [sourceApplications, localApplications]);
+    return fetchedApplications.map((app: any) => ({
+      id: app.application_id,
+      campaignId: app.campaign_id,
+      campaignTitle: app.campaign_title,
+      influencer: {
+        name: app.influencer_name,
+        handle: app.influencer_handle,
+        followers: app.followers_count,
+        platform: app.platform
+      },
+      appliedAt: app.applied_at,
+      status: app.application_status as 'pending' | 'approved' | 'rejected',
+      engagementRate: parseFloat(app.engagement_rate?.toString() || '0'),
+      averageViews: app.average_views || 0,
+      niche: Array.isArray(app.niche) ? app.niche : [],
+      aiScore: app.ai_score || 0
+    }));
+  }, [fetchedApplications]);
 
   // Filter applications by search query
   const filteredApplications = useMemo(() => {
@@ -69,33 +58,71 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ applications: propApp
   }, [applications, searchQuery]);
 
   // Separate applications by status
-  const openApplications = filteredApplications.filter(app => app.status === 'pending');
-  const approvedApplications = filteredApplications.filter(app => app.status === 'approved');
-  const rejectedApplications = filteredApplications.filter(app => app.status === 'rejected');
+  const openApplications = filteredApplications.filter(app => 
+    ['pending', 'applied', 'invited'].includes(app.status)
+  );
+  const approvedApplications = filteredApplications.filter(app => 
+    ['approved', 'accepted', 'active'].includes(app.status)
+  );
+  const rejectedApplications = filteredApplications.filter(app => 
+    app.status === 'rejected'
+  );
 
   // Handle application status updates
-  const handleApproveApplication = (applicationId: string) => {
-    const updatedApp = applications.find(app => app.id === applicationId);
-    if (updatedApp) {
-      const newApp = { ...updatedApp, status: 'approved' as const };
-      setLocalApplications(prev => {
-        const filtered = prev.filter(app => app.id !== applicationId);
-        return [...filtered, newApp];
-      });
+  const handleApproveApplication = async (applicationId: string) => {
+    try {
+      console.log('Approving application:', applicationId);
+      
+      const { error } = await supabase
+        .from('campaign_participants')
+        .update({ 
+          status: 'approved',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', applicationId);
+
+      if (error) {
+        console.error('Error approving application:', error);
+        throw error;
+      }
+
+      // Invalidate and refetch queries to update the UI
+      queryClient.invalidateQueries({ queryKey: ['brand-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-active-campaigns'] });
+      refetch();
+      
+      console.log('Application approved successfully');
+    } catch (err) {
+      console.error('Failed to approve application:', err);
     }
-    console.log('Application approved:', applicationId);
   };
 
-  const handleRejectApplication = (applicationId: string) => {
-    const updatedApp = applications.find(app => app.id === applicationId);
-    if (updatedApp) {
-      const newApp = { ...updatedApp, status: 'rejected' as const };
-      setLocalApplications(prev => {
-        const filtered = prev.filter(app => app.id !== applicationId);
-        return [...filtered, newApp];
-      });
+  const handleRejectApplication = async (applicationId: string) => {
+    try {
+      console.log('Rejecting application:', applicationId);
+      
+      const { error } = await supabase
+        .from('campaign_participants')
+        .update({ 
+          status: 'rejected',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', applicationId);
+
+      if (error) {
+        console.error('Error rejecting application:', error);
+        throw error;
+      }
+
+      // Invalidate and refetch queries to update the UI
+      queryClient.invalidateQueries({ queryKey: ['brand-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-active-campaigns'] });
+      refetch();
+      
+      console.log('Application rejected successfully');
+    } catch (err) {
+      console.error('Failed to reject application:', err);
     }
-    console.log('Application rejected:', applicationId);
   };
 
   const handleViewProfile = (applicationId: string) => {

@@ -20,7 +20,7 @@ interface BrandApplication {
 }
 
 export const useBrandApplications = (limit: number = 50) => {
-  return useQuery({
+  const query = useQuery({
     queryKey: ['brand-applications', limit],
     queryFn: async () => {
       console.log('Fetching brand applications with limit:', limit);
@@ -38,4 +38,9 @@ export const useBrandApplications = (limit: number = 50) => {
       return data || [];
     }
   });
+
+  return {
+    ...query,
+    refetch: query.refetch
+  };
 };
