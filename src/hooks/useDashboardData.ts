@@ -34,6 +34,20 @@ interface Campaign {
   currentStage?: string;
 }
 
+const validateCampaignData = (data: any): boolean => {
+  if (!data || typeof data !== 'object') {
+    console.error('Invalid campaign data - not an object:', data);
+    return false;
+  }
+  
+  if (!data.campaign_id || !data.brand_name || !data.campaign_title) {
+    console.error('Missing required campaign fields:', data);
+    return false;
+  }
+  
+  return true;
+};
+
 export const useDashboardData = () => {
   // Fetch invitations (requests tab)
   const { data: invitationsData = [], isLoading: invitationsLoading, error: invitationsError } = useQuery({
@@ -41,38 +55,57 @@ export const useDashboardData = () => {
     queryFn: async () => {
       console.log('Fetching invitations for dashboard');
       
-      const { data: campaignData, error } = await supabase.rpc('get_influencer_campaigns', {
-        tab_filter: 'requests'
-      });
+      try {
+        const { data: campaignData, error } = await supabase.rpc('get_influencer_campaigns', {
+          tab_filter: 'requests'
+        });
 
-      if (error) {
-        console.error('Error fetching invitations:', error);
-        throw error;
-      }
+        if (error) {
+          console.error('Error fetching invitations:', error);
+          throw error;
+        }
 
-      console.log('Raw invitations data:', campaignData);
+        console.log('Raw invitations data:', campaignData);
 
-      if (!campaignData || campaignData.length === 0) {
+        if (!Array.isArray(campaignData)) {
+          console.error('Invalid invitations data - not an array:', campaignData);
+          return [];
+        }
+
+        // Filter and validate data
+        const validData = campaignData.filter(validateCampaignData);
+        console.log('Valid invitations after filtering:', validData.length, 'out of', campaignData.length);
+
+        // Transform data to match invitation component expectations
+        return validData.map((row: any): Invitation => {
+          try {
+            return {
+              id: String(row.campaign_id || ''),
+              brand: String(row.brand_name || 'Unknown Brand'),
+              title: String(row.campaign_title || 'Untitled Campaign'),
+              amount: row.amount ? Math.floor(Number(row.amount) / 100) : 0,
+              dueDate: row.due_date ? new Date(row.due_date).toLocaleDateString('en-GB') : 'TBD',
+              requirements: {
+                posts: 1,
+                stories: 1,
+                reels: 1
+              },
+              progress: Number(row.overall_progress || 0),
+              status: (row.campaign_status as 'invited' | 'pending' | 'rejected' | 'approved') || 'pending',
+              currentStage: 'content_requirement'
+            };
+          } catch (error) {
+            console.error('Error transforming invitation data:', error, row);
+            return null;
+          }
+        }).filter(Boolean);
+      } catch (error) {
+        console.error('Error in invitations query:', error);
         return [];
       }
-
-      // Transform data to match invitation component expectations
-      return campaignData.map((row: any): Invitation => ({
-        id: row.campaign_id,
-        brand: row.brand_name,
-        title: row.campaign_title,
-        amount: row.amount ? Math.floor(row.amount / 100) : 0,
-        dueDate: row.due_date ? new Date(row.due_date).toLocaleDateString('en-GB') : 'TBD',
-        requirements: {
-          posts: 1,
-          stories: 1,
-          reels: 1
-        },
-        progress: row.overall_progress || 0,
-        status: row.campaign_status as 'invited' | 'pending' | 'rejected' | 'approved',
-        currentStage: 'content_requirement'
-      }));
-    }
+    },
+    retry: 1,
+    staleTime: 1000 * 60 * 2 // 2 minutes
   });
 
   // Fetch active campaigns (active tab) - only approved/accepted campaigns
@@ -81,38 +114,57 @@ export const useDashboardData = () => {
     queryFn: async () => {
       console.log('Fetching active campaigns for dashboard');
       
-      const { data: campaignData, error } = await supabase.rpc('get_influencer_campaigns', {
-        tab_filter: 'active'
-      });
+      try {
+        const { data: campaignData, error } = await supabase.rpc('get_influencer_campaigns', {
+          tab_filter: 'active'
+        });
 
-      if (error) {
-        console.error('Error fetching active campaigns:', error);
-        throw error;
-      }
+        if (error) {
+          console.error('Error fetching active campaigns:', error);
+          throw error;
+        }
 
-      console.log('Raw active campaigns data:', campaignData);
+        console.log('Raw active campaigns data:', campaignData);
 
-      if (!campaignData || campaignData.length === 0) {
+        if (!Array.isArray(campaignData)) {
+          console.error('Invalid active campaigns data - not an array:', campaignData);
+          return [];
+        }
+
+        // Filter and validate data
+        const validData = campaignData.filter(validateCampaignData);
+        console.log('Valid active campaigns after filtering:', validData.length, 'out of', campaignData.length);
+
+        // Transform data to match campaign component expectations
+        return validData.map((row: any): Campaign => {
+          try {
+            return {
+              id: String(row.campaign_id || ''),
+              brand: String(row.brand_name || 'Unknown Brand'),
+              title: String(row.campaign_title || 'Untitled Campaign'),
+              amount: row.amount ? Math.floor(Number(row.amount) / 100) : 0,
+              dueDate: row.due_date ? new Date(row.due_date).toLocaleDateString('en-GB') : 'TBD',
+              requirements: {
+                posts: 1,
+                stories: 1,
+                reels: 1
+              },
+              progress: Number(row.overall_progress || 0),
+              status: 'active' as const,
+              currentStage: 'content_requirement'
+            };
+          } catch (error) {
+            console.error('Error transforming campaign data:', error, row);
+            return null;
+          }
+        }).filter(Boolean);
+      } catch (error) {
+        console.error('Error in active campaigns query:', error);
         return [];
       }
-
-      // Transform data to match campaign component expectations
-      return campaignData.map((row: any): Campaign => ({
-        id: row.campaign_id,
-        brand: row.brand_name,
-        title: row.campaign_title,
-        amount: row.amount ? Math.floor(row.amount / 100) : 0,
-        dueDate: row.due_date ? new Date(row.due_date).toLocaleDateString('en-GB') : 'TBD',
-        requirements: {
-          posts: 1,
-          stories: 1,
-          reels: 1
-        },
-        progress: row.overall_progress || 0,
-        status: 'active' as const,
-        currentStage: 'content_requirement'
-      }));
-    }
+    },
+    retry: 1,
+    staleTime: 1000 * 60 * 2 // 2 minutes
   });
 
   const loading = invitationsLoading || activeCampaignsLoading;
@@ -122,6 +174,16 @@ export const useDashboardData = () => {
     try {
       console.log('Accepting invitation for campaign:', campaignId);
       
+      if (!campaignId) {
+        throw new Error('Campaign ID is required');
+      }
+      
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !userData.user) {
+        throw new Error('User not authenticated');
+      }
+      
       const { error } = await supabase
         .from('campaign_participants')
         .update({ 
@@ -129,13 +191,14 @@ export const useDashboardData = () => {
           accepted_at: new Date().toISOString()
         })
         .eq('campaign_id', campaignId)
-        .eq('influencer_id', (await supabase.auth.getUser()).data.user?.id);
+        .eq('influencer_id', userData.user.id);
 
       if (error) {
         console.error('Error accepting invitation:', error);
         throw error;
       }
 
+      console.log('Invitation accepted successfully');
       return { success: true, message: 'Invitation accepted successfully!' };
     } catch (err) {
       console.error('Error accepting invitation:', err);
@@ -147,17 +210,28 @@ export const useDashboardData = () => {
     try {
       console.log('Declining invitation for campaign:', campaignId);
       
+      if (!campaignId) {
+        throw new Error('Campaign ID is required');
+      }
+      
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !userData.user) {
+        throw new Error('User not authenticated');
+      }
+      
       const { error } = await supabase
         .from('campaign_participants')
         .update({ status: 'rejected' })
         .eq('campaign_id', campaignId)
-        .eq('influencer_id', (await supabase.auth.getUser()).data.user?.id);
+        .eq('influencer_id', userData.user.id);
 
       if (error) {
         console.error('Error declining invitation:', error);
         throw error;
       }
 
+      console.log('Invitation declined successfully');
       return { success: true, message: 'Invitation declined' };
     } catch (err) {
       console.error('Error declining invitation:', err);
@@ -170,8 +244,8 @@ export const useDashboardData = () => {
   };
 
   return {
-    invitations: invitationsData,
-    activeCampaigns: activeCampaignsData,
+    invitations: Array.isArray(invitationsData) ? invitationsData : [],
+    activeCampaigns: Array.isArray(activeCampaignsData) ? activeCampaignsData : [],
     loading,
     error,
     acceptInvitation,

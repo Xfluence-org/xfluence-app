@@ -29,6 +29,7 @@ export const useAuth = () => {
 
   const fetchUserProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
     try {
+      console.log('Fetching profile for user:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -40,6 +41,7 @@ export const useAuth = () => {
         return null;
       }
 
+      console.log('Profile fetched successfully:', data);
       return data;
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -51,17 +53,34 @@ export const useAuth = () => {
     return userType === 'Influencer' ? '/dashboard' : '/brand-dashboard';
   };
 
+  const clearAuthState = useCallback(() => {
+    console.log('Clearing auth state');
+    setUser(null);
+    setProfile(null);
+    setSession(null);
+    setLoading(false);
+  }, []);
+
   useEffect(() => {
     let mounted = true;
 
     const initializeAuth = async () => {
       try {
+        console.log('Initializing auth...');
+        
         // Get initial session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Error getting session:', error);
+          if (mounted) {
+            clearAuthState();
+            setInitialized(true);
+          }
+          return;
         }
+
+        console.log('Initial session:', session?.user?.id || 'No session');
 
         if (mounted) {
           if (session?.user) {
@@ -70,17 +89,14 @@ export const useAuth = () => {
             setProfile(userProfile);
             setSession(session);
           } else {
-            setUser(null);
-            setProfile(null);
-            setSession(null);
+            clearAuthState();
           }
-          setLoading(false);
           setInitialized(true);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
         if (mounted) {
-          setLoading(false);
+          clearAuthState();
           setInitialized(true);
         }
       }
@@ -89,26 +105,37 @@ export const useAuth = () => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id);
+        console.log('Auth state changed:', event, session?.user?.id || 'No session');
         
         if (!mounted) return;
 
+        // Handle sign out event specifically
+        if (event === 'SIGNED_OUT') {
+          console.log('User signed out, clearing state');
+          clearAuthState();
+          return;
+        }
+
         if (session?.user) {
-          // Defer profile fetch to avoid blocking the auth state change
+          console.log('Setting user session');
+          // Use setTimeout to prevent blocking the auth state change
           setTimeout(async () => {
             if (mounted) {
-              const userProfile = await fetchUserProfile(session.user.id);
-              setUser(session.user);
-              setProfile(userProfile);
-              setSession(session);
-              setLoading(false);
+              try {
+                const userProfile = await fetchUserProfile(session.user.id);
+                setUser(session.user);
+                setProfile(userProfile);
+                setSession(session);
+                setLoading(false);
+              } catch (error) {
+                console.error('Error in auth state change:', error);
+                clearAuthState();
+              }
             }
           }, 0);
         } else {
-          setUser(null);
-          setProfile(null);
-          setSession(null);
-          setLoading(false);
+          console.log('No session, clearing state');
+          clearAuthState();
         }
       }
     );
@@ -117,13 +144,15 @@ export const useAuth = () => {
     initializeAuth();
 
     return () => {
+      console.log('Cleaning up auth hook');
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchUserProfile]);
+  }, [fetchUserProfile, clearAuthState]);
 
   const signUp = async (email: string, password: string, userType: UserType, name: string) => {
     try {
+      console.log('Signing up user:', email, userType);
       const redirectUrl = `${window.location.origin}/`;
       
       const { error } = await supabase.auth.signUp({
@@ -140,12 +169,14 @@ export const useAuth = () => {
 
       return { error };
     } catch (error) {
+      console.error('Sign up error:', error);
       return { error };
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('Signing in user:', email);
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -153,12 +184,14 @@ export const useAuth = () => {
 
       return { error };
     } catch (error) {
+      console.error('Sign in error:', error);
       return { error };
     }
   };
 
   const resetPassword = async (email: string) => {
     try {
+      console.log('Resetting password for:', email);
       const redirectUrl = `${window.location.origin}/`;
       
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -167,26 +200,32 @@ export const useAuth = () => {
 
       return { error };
     } catch (error) {
+      console.error('Reset password error:', error);
       return { error };
     }
   };
 
   const signOut = async () => {
     try {
+      console.log('Starting sign out process');
+      
+      // Clear state first to prevent UI issues
+      clearAuthState();
+      
+      // Then sign out from Supabase
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         console.error('Error signing out:', error);
+        // Even if there's an error, we've cleared the local state
+      } else {
+        console.log('Successfully signed out');
       }
-      
-      // Clear state immediately
-      setUser(null);
-      setProfile(null);
-      setSession(null);
-      setLoading(false);
       
     } catch (error) {
       console.error('Error during sign out:', error);
+      // Ensure state is cleared even on error
+      clearAuthState();
     }
   };
 
