@@ -33,7 +33,7 @@ interface Opportunity {
 
 const OpportunitiesPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -45,7 +45,7 @@ const OpportunitiesPage = () => {
       
       const { data, error } = await supabase.rpc('get_opportunities', {
         search_query: searchQuery || '',
-        category_filter: categoryFilter || '',
+        category_filter: categoryFilter === 'all' ? '' : categoryFilter,
         min_compensation: 0,
         max_compensation: 999999999,
         platform_filter: ''
@@ -137,7 +137,7 @@ const OpportunitiesPage = () => {
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category} value={category}>
                       {category}
@@ -146,12 +146,12 @@ const OpportunitiesPage = () => {
                 </SelectContent>
               </Select>
               
-              {(searchQuery || categoryFilter) && (
+              {(searchQuery || categoryFilter !== 'all') && (
                 <Button
                   variant="outline"
                   onClick={() => {
                     setSearchQuery('');
-                    setCategoryFilter('');
+                    setCategoryFilter('all');
                   }}
                 >
                   Clear Filters
@@ -165,7 +165,7 @@ const OpportunitiesPage = () => {
             <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
               <p className="text-gray-500 text-lg">No opportunities found</p>
               <p className="text-gray-400 mt-2">
-                {searchQuery || categoryFilter 
+                {searchQuery || categoryFilter !== 'all'
                   ? 'Try adjusting your search filters' 
                   : 'Check back later for new campaigns'
                 }

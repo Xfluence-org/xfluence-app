@@ -47,13 +47,14 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
           created_at,
           profiles!inner(name)
         `)
-        .eq('campaign_id', campaignId)
-        .in('status', ['applied', 'pending']);
+        .eq('campaign_id', campaignId);
 
       if (error) {
         console.error('Error fetching applications:', error);
         throw error;
       }
+
+      console.log('Raw applications data:', data);
 
       // Transform data to match component expectations
       return data.map((app: any) => ({
@@ -117,9 +118,12 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
       case 'pending':
         return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Pending</Badge>;
       case 'approved':
+      case 'accepted':
         return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Approved</Badge>;
       case 'rejected':
         return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Rejected</Badge>;
+      case 'invited':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Invited</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
