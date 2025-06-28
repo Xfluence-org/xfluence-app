@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -480,7 +479,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                                 {Object.entries(llmCampaignData.influencer_allocation.allocation_by_category || {}).map(([category, count]) => (
                                   <div key={category} className="flex justify-between text-sm">
                                     <span className="text-gray-600">{category}</span>
-                                    <span className="font-medium">{count}</span>
+                                    <span className="font-medium">{String(count)}</span>
                                   </div>
                                 ))}
                               </div>
@@ -512,10 +511,10 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                                 <div key={category} className="bg-gray-50 rounded-lg p-4">
                                   <h6 className="font-medium text-gray-700 mb-3">{category} Distribution</h6>
                                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    {Object.entries(tiers as any).map(([tier, count]) => (
+                                    {Object.entries(tiers as Record<string, any>).map(([tier, count]) => (
                                       <div key={tier} className="text-center p-3 bg-white rounded-lg">
                                         <div className="text-2xl mb-1">{getTierIcon(tier)}</div>
-                                        <div className="font-bold text-lg text-[#1a1f2e]">{count}</div>
+                                        <div className="font-bold text-lg text-[#1a1f2e]">{String(count)}</div>
                                         <div className="text-sm font-medium text-gray-700 capitalize">{tier}</div>
                                         <div className="text-xs text-gray-500">{getTierDescription(tier)}</div>
                                       </div>
