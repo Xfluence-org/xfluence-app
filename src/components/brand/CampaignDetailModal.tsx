@@ -21,6 +21,17 @@ interface CampaignDetailModalProps {
   onUpdate: (campaignId: string, updates: any) => void;
 }
 
+// Type for the LLM campaign data structure
+interface LLMCampaignData {
+  campaign_name?: string;
+  campaign_objective?: string;
+  target_audience?: string;
+  content_guidelines?: string;
+  key_messages?: string[] | string;
+  success_metrics?: string[] | string;
+  timeline?: string;
+}
+
 const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
   isOpen,
   onClose,
@@ -86,7 +97,30 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
     return category || 'General';
   };
 
+  // Helper function to safely get LLM campaign data
+  const getLLMCampaignData = (): LLMCampaignData | null => {
+    if (!campaign?.llm_campaign) return null;
+    
+    // Check if it's already an object
+    if (typeof campaign.llm_campaign === 'object' && campaign.llm_campaign !== null && !Array.isArray(campaign.llm_campaign)) {
+      return campaign.llm_campaign as LLMCampaignData;
+    }
+    
+    // If it's a string, try to parse it as JSON
+    if (typeof campaign.llm_campaign === 'string') {
+      try {
+        return JSON.parse(campaign.llm_campaign) as LLMCampaignData;
+      } catch {
+        return null;
+      }
+    }
+    
+    return null;
+  };
+
   if (!isOpen || !campaignId) return null;
+
+  const llmCampaignData = getLLMCampaignData();
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -245,74 +279,74 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
               <div className="bg-gray-50 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-[#1a1f2e] mb-4">AI Generated Campaign Strategy</h3>
                 
-                {campaign.llm_campaign ? (
+                {llmCampaignData ? (
                   <div className="space-y-4">
-                    {campaign.llm_campaign.campaign_name && (
+                    {llmCampaignData.campaign_name && (
                       <div>
                         <h4 className="font-medium text-gray-700 mb-2">Campaign Name</h4>
-                        <p className="text-gray-900">{campaign.llm_campaign.campaign_name}</p>
+                        <p className="text-gray-900">{llmCampaignData.campaign_name}</p>
                       </div>
                     )}
                     
-                    {campaign.llm_campaign.campaign_objective && (
+                    {llmCampaignData.campaign_objective && (
                       <div>
                         <h4 className="font-medium text-gray-700 mb-2">Campaign Objective</h4>
-                        <p className="text-gray-900">{campaign.llm_campaign.campaign_objective}</p>
+                        <p className="text-gray-900">{llmCampaignData.campaign_objective}</p>
                       </div>
                     )}
                     
-                    {campaign.llm_campaign.target_audience && (
+                    {llmCampaignData.target_audience && (
                       <div>
                         <h4 className="font-medium text-gray-700 mb-2">Target Audience</h4>
-                        <p className="text-gray-900">{campaign.llm_campaign.target_audience}</p>
+                        <p className="text-gray-900">{llmCampaignData.target_audience}</p>
                       </div>
                     )}
                     
-                    {campaign.llm_campaign.content_guidelines && (
+                    {llmCampaignData.content_guidelines && (
                       <div>
                         <h4 className="font-medium text-gray-700 mb-2">Content Guidelines</h4>
-                        <p className="text-gray-900">{campaign.llm_campaign.content_guidelines}</p>
+                        <p className="text-gray-900">{llmCampaignData.content_guidelines}</p>
                       </div>
                     )}
                     
-                    {campaign.llm_campaign.key_messages && (
+                    {llmCampaignData.key_messages && (
                       <div>
                         <h4 className="font-medium text-gray-700 mb-2">Key Messages</h4>
                         <div className="text-gray-900">
-                          {Array.isArray(campaign.llm_campaign.key_messages) ? (
+                          {Array.isArray(llmCampaignData.key_messages) ? (
                             <ul className="list-disc list-inside space-y-1">
-                              {campaign.llm_campaign.key_messages.map((message, index) => (
+                              {llmCampaignData.key_messages.map((message, index) => (
                                 <li key={index}>{message}</li>
                               ))}
                             </ul>
                           ) : (
-                            <p>{campaign.llm_campaign.key_messages}</p>
+                            <p>{llmCampaignData.key_messages}</p>
                           )}
                         </div>
                       </div>
                     )}
                     
-                    {campaign.llm_campaign.success_metrics && (
+                    {llmCampaignData.success_metrics && (
                       <div>
                         <h4 className="font-medium text-gray-700 mb-2">Success Metrics</h4>
                         <div className="text-gray-900">
-                          {Array.isArray(campaign.llm_campaign.success_metrics) ? (
+                          {Array.isArray(llmCampaignData.success_metrics) ? (
                             <ul className="list-disc list-inside space-y-1">
-                              {campaign.llm_campaign.success_metrics.map((metric, index) => (
+                              {llmCampaignData.success_metrics.map((metric, index) => (
                                 <li key={index}>{metric}</li>
                               ))}
                             </ul>
                           ) : (
-                            <p>{campaign.llm_campaign.success_metrics}</p>
+                            <p>{llmCampaignData.success_metrics}</p>
                           )}
                         </div>
                       </div>
                     )}
                     
-                    {campaign.llm_campaign.timeline && (
+                    {llmCampaignData.timeline && (
                       <div>
                         <h4 className="font-medium text-gray-700 mb-2">Timeline</h4>
-                        <p className="text-gray-900">{campaign.llm_campaign.timeline}</p>
+                        <p className="text-gray-900">{llmCampaignData.timeline}</p>
                       </div>
                     )}
                   </div>
