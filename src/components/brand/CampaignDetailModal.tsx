@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -488,9 +487,6 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                   </div>
                 )}
               </div>
-
-              {/* Content Strategy Section */}
-              <ContentStrategySection llmInteractions={campaign.llmInteractions || []} />
             </TabsContent>
 
             <TabsContent value="content" className="space-y-6 mt-6">
