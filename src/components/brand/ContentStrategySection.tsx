@@ -112,6 +112,11 @@ const ContentStrategySection: React.FC<ContentStrategySectionProps> = ({ llmInte
     }
   };
 
+  // Helper function to check if a value is a content distribution item
+  const isContentDistributionItem = (value: any): value is { purpose: string; percentage: number } => {
+    return value && typeof value === 'object' && 'percentage' in value && 'purpose' in value;
+  };
+
   return (
     <div className="space-y-6">
       {/* Content Distribution */}
@@ -121,23 +126,26 @@ const ContentStrategySection: React.FC<ContentStrategySectionProps> = ({ llmInte
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             {Object.entries(contentStrategy.content_distribution)
-              .filter(([key]) => key !== 'rationale')
-              .map(([contentType, data]) => (
-                <div key={contentType} className="bg-white rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{getContentTypeIcon(contentType)}</span>
-                      <h5 className="font-medium text-gray-700">{getContentTypeDisplay(contentType)}</h5>
+              .filter(([key, value]) => key !== 'rationale' && isContentDistributionItem(value))
+              .map(([contentType, data]) => {
+                const contentData = data as { purpose: string; percentage: number };
+                return (
+                  <div key={contentType} className="bg-white rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{getContentTypeIcon(contentType)}</span>
+                        <h5 className="font-medium text-gray-700">{getContentTypeDisplay(contentType)}</h5>
+                      </div>
+                      <span className="bg-[#1DDCD3] text-white px-2 py-1 rounded text-sm">
+                        {contentData.percentage}%
+                      </span>
                     </div>
-                    <span className="bg-[#1DDCD3] text-white px-2 py-1 rounded text-sm">
-                      {data.percentage}%
-                    </span>
+                    <p className="text-gray-600 text-sm">
+                      {contentData.purpose}
+                    </p>
                   </div>
-                  <p className="text-gray-600 text-sm">
-                    {data.purpose}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
           </div>
           
           {contentStrategy.content_distribution.rationale && (

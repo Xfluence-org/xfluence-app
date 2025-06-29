@@ -10,6 +10,17 @@ interface InfluencerAssignmentSectionProps {
   llmInteractions: any[];
 }
 
+interface ContentDistributionItem {
+  percentage: number;
+  purpose: string;
+}
+
+interface ContentType {
+  type: string;
+  percentage: number;
+  purpose: string;
+}
+
 const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = ({ 
   campaignId, 
   llmInteractions 
@@ -47,17 +58,28 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
   const influencerAllocation = strategyData?.influencer_allocation;
   const contentStrategy = strategyData?.content_strategy;
 
+  // Helper function to check if a value is a content distribution item
+  const isContentDistributionItem = (value: unknown): value is ContentDistributionItem => {
+    return value !== null && typeof value === 'object' && value !== undefined &&
+           'percentage' in value && 'purpose' in value &&
+           typeof (value as any).percentage === 'number' &&
+           typeof (value as any).purpose === 'string';
+  };
+
   // Get content types from content distribution
-  const getContentTypes = () => {
+  const getContentTypes = (): ContentType[] => {
     if (!contentStrategy?.content_distribution) return [];
     
     return Object.entries(contentStrategy.content_distribution)
-      .filter(([key]) => key !== 'rationale')
-      .map(([contentType, data]) => ({
-        type: contentType,
-        percentage: data.percentage,
-        purpose: data.purpose
-      }));
+      .filter(([key, value]) => key !== 'rationale' && isContentDistributionItem(value))
+      .map(([contentType, data]) => {
+        const contentData = data as ContentDistributionItem;
+        return {
+          type: contentType,
+          percentage: contentData.percentage,
+          purpose: contentData.purpose
+        };
+      });
   };
 
   const contentTypes = getContentTypes();
@@ -109,6 +131,14 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
     }
   };
 
+  // Helper function to safely render values
+  const safeRender = (value: unknown): React.ReactNode => {
+    if (typeof value === 'string' || typeof value === 'number') {
+      return value;
+    }
+    return String(value || '');
+  };
+
   if (!influencerAllocation && !contentStrategy) {
     return (
       <div className="text-center py-8">
@@ -135,7 +165,7 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-gray-50 rounded-lg p-4 text-center">
                 <div className="text-2xl font-bold text-[#1DDCD3]">
-                  {influencerAllocation.total_influencers || 0}
+                  {safeRender(influencerAllocation.total_influencers || 0)}
                 </div>
                 <div className="text-sm text-gray-600">Total Influencers</div>
               </div>
@@ -146,7 +176,7 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
                   {Object.entries(influencerAllocation.allocation_by_category || {}).map(([category, count]) => (
                     <div key={category} className="flex justify-between text-sm">
                       <span className="text-gray-600">{category}</span>
-                      <Badge variant="secondary">{count}</Badge>
+                      <Badge variant="secondary">{safeRender(count)}</Badge>
                     </div>
                   ))}
                 </div>
@@ -203,7 +233,7 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
                         <div key={category} className="bg-gray-50 rounded-lg p-4">
                           <div className="flex items-center justify-between mb-3">
                             <h5 className="font-medium text-gray-700">{category}</h5>
-                            <Badge variant="outline">{totalCount} influencers</Badge>
+                            <Badge variant="outline">{safeRender(totalCount)} influencers</Badge>
                           </div>
                           
                           {/* Tier breakdown for this category */}
@@ -218,7 +248,7 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
                                   </div>
                                 </div>
                                 <div className="text-center">
-                                  <div className="text-sm font-bold">{count}</div>
+                                  <div className="text-sm font-bold">{safeRender(count)}</div>
                                   <button className="text-xs text-[#1DDCD3] hover:underline flex items-center gap-1">
                                     <Plus className="h-3 w-3" />
                                     Assign
