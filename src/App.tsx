@@ -1,114 +1,41 @@
-
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import React from "react";
-import { AuthProvider } from "@/contexts/AuthContext";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import Index from "./pages/Index";
-import InfluencerDashboard from "./pages/InfluencerDashboard";
-import OpportunitiesPage from "./pages/OpportunitiesPage";
-import CampaignsPage from "./pages/CampaignsPage";
-import BrandDashboard from "./pages/BrandDashboard";
-import BrandCampaignsPage from "./pages/BrandCampaignsPage";
-import CampaignReviewPage from "./pages/CampaignReviewPage";
-import SettingsPage from "./pages/SettingsPage";
-import BrandSettingsPage from "./pages/BrandSettingsPage";
-import BrandAIAssistantPage from "./pages/BrandAIAssistantPage";
-import NotFound from "./pages/NotFound";
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from 'react-hot-toast';
+import DashboardPage from './pages/DashboardPage';
+import CampaignsPage from './pages/CampaignsPage';
+import ApplicationsPage from './pages/ApplicationsPage';
+import AnalyticsPage from './pages/AnalyticsPage';
+import BrandDashboardPage from './pages/BrandDashboardPage';
+import BrandCampaignsPage from './pages/BrandCampaignsPage';
+import BrandApplicationsPage from './pages/BrandApplicationsPage';
+import InfluencerProfilePage from './pages/InfluencerProfilePage';
+import TaskManagementPage from '@/pages/TaskManagementPage';
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
+function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <Toaster />
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute requiredUserType="Influencer">
-                  <InfluencerDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/settings" 
-              element={
-                <ProtectedRoute requiredUserType="Influencer">
-                  <SettingsPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/brand-dashboard" 
-              element={
-                <ProtectedRoute>
-                  <BrandDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/brand/campaigns" 
-              element={
-                <ProtectedRoute>
-                  <BrandCampaignsPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/brand/settings" 
-              element={
-                <ProtectedRoute>
-                  <BrandSettingsPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/brand/ai-assistant" 
-              element={
-                <ProtectedRoute>
-                  <BrandAIAssistantPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/campaign-review" 
-              element={
-                <ProtectedRoute>
-                  <CampaignReviewPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/opportunities" 
-              element={
-                <ProtectedRoute>
-                  <OpportunitiesPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/campaigns" 
-              element={
-                <ProtectedRoute>
-                  <CampaignsPage />
-                </ProtectedRoute>
-              } 
-            />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/campaigns" element={<CampaignsPage />} />
+            <Route path="/applications" element={<ApplicationsPage />} />
+            <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/brand-dashboard" element={<BrandDashboardPage />} />
+            <Route path="/brand-campaigns" element={<BrandCampaignsPage />} />
+            <Route path="/brand-applications" element={<BrandApplicationsPage />} />
+            <Route path="/influencer-profile/:id" element={<InfluencerProfilePage />} />
+            <Route path="/task-management" element={<TaskManagementPage />} />
           </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+        </QueryClientProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}
 
 export default App;
