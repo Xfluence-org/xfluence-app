@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { FileText, Eye, BarChart3, RefreshCw } from 'lucide-react';
 import { taskWorkflowService, WorkflowState } from '@/services/taskWorkflowService';
 import { useAuth } from '@/contexts/AuthContext';
-import ContentDraftEditor from './ContentDraftEditor';
+import ContentRequirementEditor from './ContentRequirementEditor';
 import ContentReviewPanel from './ContentReviewPanel';
 import PublishAnalyticsView from './PublishAnalyticsView';
 import TaskFeedbackSection from './TaskFeedbackSection';
@@ -27,7 +27,6 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({
   const [activeTab, setActiveTab] = useState('content_requirement');
   const [loading, setLoading] = useState(true);
   const [phaseVisibility, setPhaseVisibility] = useState<Record<string, boolean>>({});
-  const [isInitializing, setIsInitializing] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -41,10 +40,7 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({
       setLoading(true);
       console.log('Initializing workflow for task:', taskId);
       
-      // First, try to initialize the workflow
       await taskWorkflowService.initializeWorkflow(taskId);
-      
-      // Then fetch the data
       await fetchWorkflowStates();
       await checkPhaseVisibility();
       
@@ -73,13 +69,11 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({
       setPhaseVisibility(visibility);
     } catch (error) {
       console.error('Error checking phase visibility:', error);
-      if (userType === 'brand') {
-        setPhaseVisibility({
-          content_requirement: true,
-          content_review: false,
-          publish_analytics: false
-        });
-      }
+      setPhaseVisibility({
+        content_requirement: true,
+        content_review: false,
+        publish_analytics: false
+      });
     }
   };
 
@@ -97,7 +91,7 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({
       case 'rejected':
         return <Badge className="bg-red-100 text-red-800">Needs Revision</Badge>;
       case 'not_started':
-        return <Badge variant="outline">Pending</Badge>;
+        return <Badge variant="outline">Not Started</Badge>;
       default:
         return <Badge variant="outline">Unknown</Badge>;
     }
@@ -112,17 +106,13 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({
       id: 'content_requirement',
       title: 'Content Requirements',
       icon: FileText,
-      description: userType === 'brand' 
-        ? 'Create and share content requirements with influencer'
-        : 'Review content guidelines'
+      description: 'Create and share content requirements with influencer'
     },
     {
       id: 'content_review',
       title: 'Content Review',
       icon: Eye,
-      description: userType === 'brand'
-        ? 'Review and approve influencer content'
-        : 'Upload content for approval'
+      description: 'Review and approve influencer content'
     },
     {
       id: 'publish_analytics',
@@ -131,9 +121,6 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({
       description: 'Monitor published content and analytics'
     }
   ];
-
-  // Filter phases based on visibility
-  const availablePhases = phases.filter(phase => phaseVisibility[phase.id]);
 
   if (loading) {
     return (
@@ -164,108 +151,87 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({
           </div>
         </CardHeader>
         <CardContent>
-          {workflowStates.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500 mb-4">No workflow states found for this task.</p>
-            </div>
-          ) : (
-            <>
-              {/* Progress Overview */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-4">Task Progress</h3>
-                <div className="space-y-3">
-                  {phases.map((phase, index) => {
-                    const status = getPhaseStatus(phase.id);
-                    const Icon = phase.icon;
-                    const isVisible = phaseVisibility[phase.id];
-                    
-                    return (
-                      <div 
-                        key={phase.id} 
-                        className={`flex items-center gap-4 p-3 border rounded-lg ${
-                          !isVisible ? 'opacity-50 bg-gray-50' : 
-                          status === 'in_progress' ? 'bg-blue-50 border-blue-200' : ''
-                        }`}
-                      >
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-200">
-                          {status === 'completed' ? (
-                            <div className="w-4 h-4 bg-green-500 rounded-full" />
-                          ) : status === 'in_progress' ? (
-                            <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse" />
-                          ) : (
-                            <span className="text-sm font-medium text-gray-600">{index + 1}</span>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Icon className="h-4 w-4 text-gray-600" />
-                            <span className="font-medium">{phase.title}</span>
-                            {getStatusBadge(status)}
-                          </div>
-                          <p className="text-sm text-gray-600">{phase.description}</p>
-                        </div>
+          {/* Progress Overview */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-4">Task Progress</h3>
+            <div className="space-y-3">
+              {phases.map((phase, index) => {
+                const status = getPhaseStatus(phase.id);
+                const Icon = phase.icon;
+                
+                return (
+                  <div 
+                    key={phase.id} 
+                    className={`flex items-center gap-4 p-3 border rounded-lg ${
+                      status === 'in_progress' ? 'bg-blue-50 border-blue-200' : ''
+                    }`}
+                  >
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-200">
+                      {status === 'completed' ? (
+                        <div className="w-4 h-4 bg-green-500 rounded-full" />
+                      ) : status === 'in_progress' ? (
+                        <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse" />
+                      ) : (
+                        <span className="text-sm font-medium text-gray-600">{index + 1}</span>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Icon className="h-4 w-4 text-gray-600" />
+                        <span className="font-medium">{phase.title}</span>
+                        {getStatusBadge(status)}
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
+                      <p className="text-sm text-gray-600">{phase.description}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
 
-              {availablePhases.length > 0 ? (
-                <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${availablePhases.length}, 1fr)` }}>
-                    {availablePhases.map((phase) => (
-                      <TabsTrigger key={phase.id} value={phase.id}>
-                        {phase.title}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
+          {/* Workflow Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-3">
+              {phases.map((phase) => (
+                <TabsTrigger key={phase.id} value={phase.id}>
+                  {phase.title}
+                </TabsTrigger>
+              ))}
+            </TabsList>
 
-                  <TabsContent value="content_requirement" className="mt-6 space-y-6">
-                    <ContentDraftEditor
-                      taskId={taskId}
-                      onDraftShared={handleRefresh}
-                    />
-                    <TaskFeedbackSection
-                      taskId={taskId}
-                      phase="content_requirement"
-                      userType={userType}
-                    />
-                  </TabsContent>
+            <TabsContent value="content_requirement" className="mt-6 space-y-6">
+              <ContentRequirementEditor
+                taskId={taskId}
+                onRequirementsShared={handleRefresh}
+              />
+              <TaskFeedbackSection
+                taskId={taskId}
+                phase="content_requirement"
+                userType={userType}
+              />
+            </TabsContent>
 
-                  <TabsContent value="content_review" className="mt-6 space-y-6">
-                    <ContentReviewPanel
-                      taskId={taskId}
-                      onReviewComplete={handleRefresh}
-                    />
-                    <TaskFeedbackSection
-                      taskId={taskId}
-                      phase="content_review"
-                      userType={userType}
-                    />
-                  </TabsContent>
+            <TabsContent value="content_review" className="mt-6 space-y-6">
+              <ContentReviewPanel
+                taskId={taskId}
+                onReviewComplete={handleRefresh}
+              />
+              <TaskFeedbackSection
+                taskId={taskId}
+                phase="content_review"
+                userType={userType}
+              />
+            </TabsContent>
 
-                  <TabsContent value="publish_analytics" className="mt-6 space-y-6">
-                    <PublishAnalyticsView taskId={taskId} />
-                    <TaskFeedbackSection
-                      taskId={taskId}
-                      phase="publish_analytics"
-                      userType={userType}
-                    />
-                  </TabsContent>
-                </Tabs>
-              ) : (
-                <Card>
-                  <CardContent className="p-6 text-center">
-                    <p className="text-gray-500">
-                      {userType === 'influencer' 
-                        ? 'Waiting for brand to share workflow phases with you.'
-                        : 'Start by creating content requirements to share with the influencer.'}
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-            </>
-          )}
+            <TabsContent value="publish_analytics" className="mt-6 space-y-6">
+              <PublishAnalyticsView taskId={taskId} />
+              <TaskFeedbackSection
+                taskId={taskId}
+                phase="publish_analytics"
+                userType={userType}
+              />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>
