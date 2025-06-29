@@ -127,10 +127,54 @@ const InfluencerDashboard = () => {
               <div className="space-y-4">
                 {activeCampaigns?.length > 0 ? (
                   activeCampaigns.map((campaign: any) => (
-                    <CampaignCard
-                      key={campaign.id}
-                      campaign={campaign}
-                    />
+                    <div key={campaign.id} className="bg-white rounded-lg p-6 shadow-sm border">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <h3 className="font-semibold text-lg text-[#1a1f2e] mb-1">
+                            {campaign.campaign_title}
+                          </h3>
+                          <p className="text-sm text-gray-600 mb-2">
+                            by {campaign.brand_name}
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                              {campaign.campaign_status}
+                            </span>
+                            {campaign.platforms?.map((platform: string) => (
+                              <span key={platform} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                                {platform}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-gray-500">Compensation</p>
+                          <p className="font-semibold text-[#1a1f2e]">${campaign.amount}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="mb-4">
+                        <div className="flex justify-between text-sm mb-1">
+                          <span>Progress</span>
+                          <span>{campaign.overall_progress}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-[#1DDCD3] h-2 rounded-full transition-all duration-300" 
+                            style={{ width: `${campaign.overall_progress}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">
+                          Due: {new Date(campaign.due_date).toLocaleDateString()}
+                        </span>
+                        <span className="text-gray-600">
+                          {campaign.completed_tasks}/{campaign.task_count} tasks completed
+                        </span>
+                      </div>
+                    </div>
                   ))
                 ) : (
                   <div className="bg-white rounded-lg p-6 text-center">

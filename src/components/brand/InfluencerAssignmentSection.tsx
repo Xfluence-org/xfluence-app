@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Users, Plus, UserCheck, UserPlus } from 'lucide-react';
 import InfluencerAssignmentModal from './InfluencerAssignmentModal';
 import AssignedInfluencerStages from './AssignedInfluencerStages';
+import { supabase } from '@/integrations/supabase/client';
 
 interface InfluencerAssignmentSectionProps {
   campaignId: string;
@@ -30,6 +31,13 @@ interface AssignmentRequest {
   requiredCount: number;
 }
 
+interface AssignmentCount {
+  content_type: string;
+  category: string;
+  tier: string;
+  count: number;
+}
+
 const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = ({ 
   campaignId, 
   llmInteractions 
@@ -38,7 +46,9 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [currentAssignmentRequest, setCurrentAssignmentRequest] = useState<AssignmentRequest | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [assignmentCounts, setAssignmentCounts] = useState<AssignmentCount[]>([]);
 
+  
   // Extract campaign strategy data
   const getCampaignStrategyData = () => {
     for (const interaction of llmInteractions) {
@@ -95,6 +105,53 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
   };
 
   const contentTypes = getContentTypes();
+
+  // Fetch current assignment counts
+  const fetchAssignmentCounts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('campaign_content_assignments')
+        .select('content_type, category, tier')
+        .eq('campaign_id', campaignId);
+
+      if (error) {
+        console.error('Error fetching assignment counts:', error);
+        return;
+      }
+
+      // Count assignments by content_type, category, and tier
+      const counts: { [key: string]: number } = {};
+      data?.forEach(assignment => {
+        const key = `${assignment.content_type}-${assignment.category}-${assignment.tier}`;
+        counts[key] = (counts[key] || 0) + 1;
+      });
+
+      const assignmentCountsArray: AssignmentCount[] = Object.entries(counts).map(([key, count]) => {
+        const [content_type, category, tier] = key.split('-');
+        return { content_type, category, tier, count };
+      });
+
+      setAssignmentCounts(assignmentCountsArray);
+    } catch (error) {
+      console.error('Error fetching assignment counts:', error);
+    }
+  };
+
+  // Get assigned count for a specific combination
+  const getAssignedCount = (contentType: string, category: string, tier: string): number => {
+    const assignment = assignmentCounts.find(a => 
+      a.content_type === contentType && 
+      a.category === category && 
+      a.tier === tier
+    );
+    return assignment ? assignment.count : 0;
+  };
+
+  // Get remaining count needed
+  const getRemainingCount = (contentType: string, category: string, tier: string, required: number): number => {
+    const assigned = getAssignedCount(contentType, category, tier);
+    return Math.max(0, required - assigned);
+  };
   
   // Set default active content type
   React.useEffect(() => {
@@ -103,12 +160,23 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
     }
   }, [contentTypes, activeContentType]);
 
+  // Fetch assignment counts on component mount and when refresh key changes
+  useEffect(() => {
+    fetchAssignmentCounts();
+  }, [campaignId, refreshKey]);
+
   const handleAssignInfluencers = (contentType: string, category: string, tier: string, requiredCount: number) => {
+    const remainingCount = getRemainingCount(contentType, category, tier, requiredCount);
+    if (remainingCount <= 0) {
+      // All required influencers are already assigned
+      return;
+    }
+
     setCurrentAssignmentRequest({
       contentType,
       category,
       tier,
-      requiredCount
+      requiredCount: remainingCount // Only assign the remaining count
     });
     setShowAssignmentModal(true);
   };
@@ -117,10 +185,11 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
     console.log('Assignment completed:', assignments);
     setShowAssignmentModal(false);
     setCurrentAssignmentRequest(null);
-    // Trigger refresh of the assigned influencers display
+    // Trigger refresh of the assigned influencers display and counts
     setRefreshKey(prev => prev + 1);
   };
 
+  
   const getContentTypeIcon = (type: string) => {
     switch (type) {
       case 'post': return '📝';
@@ -268,33 +337,60 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
                           
                           {/* Tier breakdown for this category */}
                           <div className="space-y-2">
-                            {Object.entries(influencerAllocation?.allocation_by_tier?.[category] || {}).map(([tier, count]) => (
-                              <div key={tier} className="flex items-center justify-between bg-white rounded p-3">
-                                <div className="flex items-center gap-3">
-                                  <span className="text-lg">{getTierIcon(tier)}</span>
-                                  <div>
-                                    <div className="text-sm font-medium capitalize">{tier}</div>
-                                    <div className="text-xs text-gray-500">{getTierDescription(tier)}</div>
+                            {Object.entries(influencerAllocation?.allocation_by_tier?.[category] || {}).map(([tier, count]) => {
+                              const assignedCount = getAssignedCount(getContentTypeDisplay(content.type), category, tier);
+                              const remainingCount = getRemainingCount(getContentTypeDisplay(content.type), category, tier, Number(count));
+                              const isFullyAssigned = remainingCount === 0;
+                              
+                              return (
+                                <div key={tier} className="flex items-center justify-between bg-white rounded p-3">
+                                  <div className="flex items-center gap-3">
+                                    <span className="text-lg">{getTierIcon(tier)}</span>
+                                    <div>
+                                      <div className="text-sm font-medium capitalize">{tier}</div>
+                                      <div className="text-xs text-gray-500">{getTierDescription(tier)}</div>
+                                    </div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="text-sm font-bold mb-1">
+                                      {assignedCount}/{safeRender(count)}
+                                      {remainingCount > 0 && (
+                                        <span className="text-orange-600 ml-1">
+                                          ({remainingCount} left)
+                                        </span>
+                                      )}
+                                    </div>
+                                    <Button
+                                      size="sm"
+                                      className={`${
+                                        isFullyAssigned 
+                                          ? 'bg-green-500 hover:bg-green-600' 
+                                          : 'bg-[#1DDCD3] hover:bg-[#1DDCD3]/90'
+                                      } text-white`}
+                                      onClick={() => handleAssignInfluencers(
+                                        getContentTypeDisplay(content.type),
+                                        category,
+                                        tier,
+                                        Number(count)
+                                      )}
+                                      disabled={isFullyAssigned}
+                                    >
+                                      {isFullyAssigned ? (
+                                        <>
+                                          <UserCheck className="h-3 w-3 mr-1" />
+                                          Complete
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Plus className="h-3 w-3 mr-1" />
+                                          Assign ({remainingCount})
+                                        </>
+                                      )}
+                                    </Button>
                                   </div>
                                 </div>
-                                <div className="text-center">
-                                  <div className="text-sm font-bold mb-1">{safeRender(count)}</div>
-                                  <Button
-                                    size="sm"
-                                    className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90 text-white"
-                                    onClick={() => handleAssignInfluencers(
-                                      getContentTypeDisplay(content.type),
-                                      category,
-                                      tier,
-                                      Number(count)
-                                    )}
-                                  >
-                                    <Plus className="h-3 w-3 mr-1" />
-                                    Assign
-                                  </Button>
-                                </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       ))}

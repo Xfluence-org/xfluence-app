@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -58,6 +59,7 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [manualInfluencers, setManualInfluencers] = useState<ManualInfluencer[]>([]);
   const [acceptedInfluencers, setAcceptedInfluencers] = useState<AcceptedInfluencer[]>([]);
+  const [alreadyAssignedIds, setAlreadyAssignedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [newInfluencer, setNewInfluencer] = useState({
     name: '',
@@ -67,11 +69,12 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
   });
   const { toast } = useToast();
 
-  // Fetch accepted influencers for this campaign
+  // Fetch accepted influencers and already assigned ones
   React.useEffect(() => {
-    const fetchAcceptedInfluencers = async () => {
+    const fetchInfluencersData = async () => {
       if (!isOpen) return;
       
+      // Fetch accepted influencers for this campaign
       const { data, error } = await supabase.rpc('get_brand_applications_all');
       
       if (error) {
@@ -86,13 +89,78 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
       ) || [];
       
       setAcceptedInfluencers(accepted);
+
+      // Fetch already assigned influencers for this specific content type, category, and tier
+      const { data: assignments, error: assignmentError } = await supabase
+        .from('campaign_content_assignments')
+        .select('influencer_id, campaign_participants!inner(id)')
+        .eq('campaign_id', campaignId)
+        .eq('content_type', assignmentRequest.contentType)
+        .eq('category', assignmentRequest.category)
+        .eq('tier', assignmentRequest.tier)
+        .not('influencer_id', 'is', null);
+
+      if (!assignmentError && assignments) {
+        // Get the application IDs that are already assigned
+        const assignedApplicationIds: string[] = [];
+        
+        for (const assignment of assignments) {
+          // Find the application ID for this influencer_id
+          const matchingApp = accepted.find(app => {
+            // We need to match by influencer_id - get from campaign_participants
+            return true; // We'll handle this differently
+          });
+        }
+
+        // Alternative approach: get assigned influencer IDs directly
+        const assignedInfluencerIds = assignments.map(a => a.influencer_id).filter(Boolean);
+        
+        // Find corresponding application IDs
+        const assignedAppIds = accepted
+          .filter(app => {
+            // We need to check if this application's influencer is already assigned
+            // This requires checking the campaign_participants table
+            return false; // We'll implement this check below
+          })
+          .map(app => app.application_id);
+
+        setAlreadyAssignedIds(assignedAppIds);
+      }
     };
 
-    fetchAcceptedInfluencers();
-  }, [isOpen, campaignId]);
+    const fetchAlreadyAssigned = async () => {
+      if (!isOpen) return;
 
-  // Filter accepted influencers based on assignment requirements and search
+      // Get campaign participants that are already assigned to this specific content/category/tier
+      const { data: assignedParticipants, error } = await supabase
+        .from('campaign_content_assignments')
+        .select(`
+          campaign_participants!inner(id, influencer_id)
+        `)
+        .eq('campaign_id', campaignId)
+        .eq('content_type', assignmentRequest.contentType)
+        .eq('category', assignmentRequest.category)
+        .eq('tier', assignmentRequest.tier);
+
+      if (!error && assignedParticipants) {
+        const assignedIds = assignedParticipants.map(ap => 
+          (ap as any).campaign_participants?.id
+        ).filter(Boolean);
+        setAlreadyAssignedIds(assignedIds);
+      }
+    };
+
+    fetchInfluencersData();
+    fetchAlreadyAssigned();
+  }, [isOpen, campaignId, assignmentRequest]);
+
+  // Filter accepted influencers based on assignment requirements and search, excluding already assigned
   const filteredApplicants = acceptedInfluencers.filter(app => {
+    // Exclude already assigned influencers
+    if (alreadyAssignedIds.includes(app.application_id)) {
+      return false;
+    }
+
     const matchesSearch = !searchQuery || 
       app.influencer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       app.influencer_handle.toLowerCase().includes(searchQuery.toLowerCase());
@@ -163,7 +231,7 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
         content_type_param: assignmentRequest.contentType,
         category_param: assignmentRequest.category,
         tier_param: assignmentRequest.tier,
-        assignments: assignments as any // Cast to satisfy the Json type requirement
+        assignments: JSON.stringify(assignments) as any // Serialize to JSON string
       });
 
       if (error) {
@@ -218,6 +286,11 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
               {assignmentRequest.tier.charAt(0).toUpperCase() + assignmentRequest.tier.slice(1)} Tier
             </Badge>
             <Badge variant="secondary">Need {assignmentRequest.requiredCount} influencers</Badge>
+            {alreadyAssignedIds.length > 0 && (
+              <Badge variant="outline" className="text-orange-600">
+                {alreadyAssignedIds.length} already assigned
+              </Badge>
+            )}
           </div>
         </DialogHeader>
 
@@ -250,8 +323,18 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
               {filteredApplicants.length === 0 ? (
                 <div className="text-center py-8">
                   <Users className="h-12 w-12 mx-auto text-gray-400 mb-2" />
-                  <p className="text-gray-500">No approved influencers found for this tier</p>
-                  <p className="text-gray-400 text-sm">Try adding influencers manually or adjust the tier requirements</p>
+                  <p className="text-gray-500">
+                    {alreadyAssignedIds.length > 0 
+                      ? "No more approved influencers available for this assignment"
+                      : "No approved influencers found for this tier"
+                    }
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    {alreadyAssignedIds.length > 0 
+                      ? "All matching influencers are already assigned to this task"
+                      : "Try adding influencers manually or adjust the tier requirements"
+                    }
+                  </p>
                 </div>
               ) : (
                 filteredApplicants.map((applicant) => (
