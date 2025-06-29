@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -24,10 +25,13 @@ interface Application {
   engagement_rate: number;
 }
 
+type ApplicationStatus = 'pending' | 'accepted' | 'rejected';
+
 const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps> = ({
   campaignId
 }) => {
   const [processingApplication, setProcessingApplication] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<ApplicationStatus>('pending');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -96,9 +100,8 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
         return;
       }
 
-      // If approved, we might want to create initial tasks for the influencer
+      // If approved, create initial tasks for the influencer
       if (action === 'approved') {
-        // Get the application details to create tasks
         const { data: appData } = await supabase
           .from('campaign_participants')
           .select('influencer_id, campaign_id')
@@ -106,7 +109,6 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
           .single();
 
         if (appData) {
-          // Create an initial content requirement task
           await supabase
             .from('campaign_tasks')
             .insert({
@@ -157,33 +159,31 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">Loading applications...</p>
-      </div>
-    );
-  }
+  const filterApplicationsByStatus = (status: ApplicationStatus) => {
+    switch (status) {
+      case 'pending':
+        return applications.filter(app => ['applied', 'pending', 'invited'].includes(app.status));
+      case 'accepted':
+        return applications.filter(app => ['approved', 'accepted'].includes(app.status));
+      case 'rejected':
+        return applications.filter(app => app.status === 'rejected');
+      default:
+        return applications;
+    }
+  };
 
-  if (applications.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">No applications received yet</p>
-        <p className="text-gray-400 text-sm mt-1">
-          Applications will appear here once influencers apply to your public campaign
-        </p>
-      </div>
-    );
-  }
+  const renderApplicationsList = (filteredApplications: Application[], showActions: boolean = false) => {
+    if (filteredApplications.length === 0) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-gray-500">No applications in this category</p>
+        </div>
+      );
+    }
 
-  return (
-    <div className="space-y-4">
-      <h4 className="text-lg font-semibold text-[#1a1f2e] mb-4">
-        Campaign Applications ({applications.length})
-      </h4>
-      
+    return (
       <div className="space-y-4">
-        {applications.map((application) => (
+        {filteredApplications.map((application) => (
           <div key={application.id} className="bg-white border border-gray-200 rounded-lg p-6">
             <div className="flex items-start justify-between">
               <div className="flex-1">
@@ -223,7 +223,7 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
                 </div>
               </div>
               
-              {application.status === 'applied' || application.status === 'pending' ? (
+              {showActions ? (
                 <div className="flex gap-2 ml-4">
                   <Button
                     size="sm"
@@ -255,6 +255,52 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
           </div>
         ))}
       </div>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-500">Loading applications...</p>
+      </div>
+    );
+  }
+
+  const pendingApplications = filterApplicationsByStatus('pending');
+  const acceptedApplications = filterApplicationsByStatus('accepted');
+  const rejectedApplications = filterApplicationsByStatus('rejected');
+
+  return (
+    <div className="space-y-4">
+      <h4 className="text-lg font-semibold text-[#1a1f2e] mb-4">
+        Campaign Applications ({applications.length})
+      </h4>
+      
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as ApplicationStatus)}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="pending">
+            Pending ({pendingApplications.length})
+          </TabsTrigger>
+          <TabsTrigger value="accepted">
+            Accepted ({acceptedApplications.length})
+          </TabsTrigger>
+          <TabsTrigger value="rejected">
+            Rejected ({rejectedApplications.length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="pending" className="mt-6">
+          {renderApplicationsList(pendingApplications, true)}
+        </TabsContent>
+
+        <TabsContent value="accepted" className="mt-6">
+          {renderApplicationsList(acceptedApplications, false)}
+        </TabsContent>
+
+        <TabsContent value="rejected" className="mt-6">
+          {renderApplicationsList(rejectedApplications, false)}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

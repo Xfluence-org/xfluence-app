@@ -201,7 +201,6 @@ export type Database = {
           gig_extracted: Json | null
           id: string
           is_public: boolean | null
-          llm_campaign: Json | null
           requirements: Json | null
           status: string | null
           target_engagement_rate: number | null
@@ -224,7 +223,6 @@ export type Database = {
           gig_extracted?: Json | null
           id?: string
           is_public?: boolean | null
-          llm_campaign?: Json | null
           requirements?: Json | null
           status?: string | null
           target_engagement_rate?: number | null
@@ -247,7 +245,6 @@ export type Database = {
           gig_extracted?: Json | null
           id?: string
           is_public?: boolean | null
-          llm_campaign?: Json | null
           requirements?: Json | null
           status?: string | null
           target_engagement_rate?: number | null
