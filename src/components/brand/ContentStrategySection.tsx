@@ -5,6 +5,7 @@ interface ContentStrategyData {
   content_distribution?: {
     post?: { purpose: string; percentage: number };
     reel?: { purpose: string; percentage: number };
+    story?: { purpose: string; percentage: number };
     rationale?: string;
   };
   platform_specific_strategies?: {
@@ -13,6 +14,10 @@ interface ContentStrategyData {
       creative_approach: string;
     };
     reel?: {
+      best_practices: string[];
+      creative_approach: string;
+    };
+    story?: {
       best_practices: string[];
       creative_approach: string;
     };
@@ -89,6 +94,24 @@ const ContentStrategySection: React.FC<ContentStrategySectionProps> = ({ llmInte
     );
   }
 
+  const getContentTypeDisplay = (type: string) => {
+    switch (type) {
+      case 'post': return 'Posts';
+      case 'reel': return 'Reels';
+      case 'story': return 'Stories';
+      default: return type.charAt(0).toUpperCase() + type.slice(1);
+    }
+  };
+
+  const getContentTypeIcon = (type: string) => {
+    switch (type) {
+      case 'post': return '📝';
+      case 'reel': return '🎬';
+      case 'story': return '📱';
+      default: return '📄';
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Content Distribution */}
@@ -96,34 +119,25 @@ const ContentStrategySection: React.FC<ContentStrategySectionProps> = ({ llmInte
         <div className="bg-gray-50 rounded-lg p-6">
           <h4 className="text-lg font-semibold text-[#1a1f2e] mb-4">Content Distribution</h4>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            {contentStrategy.content_distribution.post && (
-              <div className="bg-white rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h5 className="font-medium text-gray-700">Posts</h5>
-                  <span className="bg-[#1DDCD3] text-white px-2 py-1 rounded text-sm">
-                    {contentStrategy.content_distribution.post.percentage}%
-                  </span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+            {Object.entries(contentStrategy.content_distribution)
+              .filter(([key]) => key !== 'rationale')
+              .map(([contentType, data]) => (
+                <div key={contentType} className="bg-white rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{getContentTypeIcon(contentType)}</span>
+                      <h5 className="font-medium text-gray-700">{getContentTypeDisplay(contentType)}</h5>
+                    </div>
+                    <span className="bg-[#1DDCD3] text-white px-2 py-1 rounded text-sm">
+                      {data.percentage}%
+                    </span>
+                  </div>
+                  <p className="text-gray-600 text-sm">
+                    {data.purpose}
+                  </p>
                 </div>
-                <p className="text-gray-600 text-sm">
-                  {contentStrategy.content_distribution.post.purpose}
-                </p>
-              </div>
-            )}
-            
-            {contentStrategy.content_distribution.reel && (
-              <div className="bg-white rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h5 className="font-medium text-gray-700">Reels</h5>
-                  <span className="bg-[#1DDCD3] text-white px-2 py-1 rounded text-sm">
-                    {contentStrategy.content_distribution.reel.percentage}%
-                  </span>
-                </div>
-                <p className="text-gray-600 text-sm">
-                  {contentStrategy.content_distribution.reel.purpose}
-                </p>
-              </div>
-            )}
+              ))}
           </div>
           
           {contentStrategy.content_distribution.rationale && (
@@ -141,49 +155,30 @@ const ContentStrategySection: React.FC<ContentStrategySectionProps> = ({ llmInte
           <h4 className="text-lg font-semibold text-[#1a1f2e] mb-4">Platform Specific Strategies</h4>
           
           <div className="space-y-4">
-            {contentStrategy.platform_specific_strategies.post && (
-              <div className="bg-white rounded-lg p-4">
-                <h5 className="font-medium text-gray-700 mb-3">Post Strategy</h5>
+            {Object.entries(contentStrategy.platform_specific_strategies).map(([contentType, strategy]) => (
+              <div key={contentType} className="bg-white rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-lg">{getContentTypeIcon(contentType)}</span>
+                  <h5 className="font-medium text-gray-700">{getContentTypeDisplay(contentType)} Strategy</h5>
+                </div>
                 <div className="space-y-3">
                   <div>
                     <h6 className="text-sm font-medium text-gray-600 mb-1">Creative Approach</h6>
                     <p className="text-sm text-gray-700">
-                      {contentStrategy.platform_specific_strategies.post.creative_approach}
+                      {strategy.creative_approach}
                     </p>
                   </div>
                   <div>
                     <h6 className="text-sm font-medium text-gray-600 mb-1">Best Practices</h6>
                     <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-                      {contentStrategy.platform_specific_strategies.post.best_practices.map((practice, index) => (
+                      {strategy.best_practices.map((practice, index) => (
                         <li key={index}>{practice}</li>
                       ))}
                     </ul>
                   </div>
                 </div>
               </div>
-            )}
-            
-            {contentStrategy.platform_specific_strategies.reel && (
-              <div className="bg-white rounded-lg p-4">
-                <h5 className="font-medium text-gray-700 mb-3">Reel Strategy</h5>
-                <div className="space-y-3">
-                  <div>
-                    <h6 className="text-sm font-medium text-gray-600 mb-1">Creative Approach</h6>
-                    <p className="text-sm text-gray-700">
-                      {contentStrategy.platform_specific_strategies.reel.creative_approach}
-                    </p>
-                  </div>
-                  <div>
-                    <h6 className="text-sm font-medium text-gray-600 mb-1">Best Practices</h6>
-                    <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-                      {contentStrategy.platform_specific_strategies.reel.best_practices.map((practice, index) => (
-                        <li key={index}>{practice}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            )}
+            ))}
           </div>
         </div>
       )}

@@ -13,6 +13,7 @@ import { useCampaignDetail } from '@/hooks/useCampaignDetail';
 import InfluencerPerformanceSection from '@/components/brand/InfluencerPerformanceSection';
 import ContentStrategySection from '@/components/brand/ContentStrategySection';
 import InfluencerAllocationSection from '@/components/brand/InfluencerAllocationSection';
+import InfluencerAssignmentSection from '@/components/brand/InfluencerAssignmentSection';
 import ContentRequirementsSection from '@/components/brand/ContentRequirementsSection';
 import { Save, Edit, X } from 'lucide-react';
 import PublicCampaignToggle from '@/components/brand/PublicCampaignToggle';
@@ -459,7 +460,10 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
             </TabsContent>
 
             <TabsContent value="influencers" className="space-y-6 mt-6">
-              <InfluencerPerformanceSection campaignId={campaignId} />
+              <InfluencerAssignmentSection 
+                campaignId={campaignId}
+                llmInteractions={createMockLLMInteractions()}
+              />
             </TabsContent>
 
             <TabsContent value="applications" className="space-y-6 mt-6">
