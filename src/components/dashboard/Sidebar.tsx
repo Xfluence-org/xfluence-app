@@ -1,65 +1,79 @@
 import React from 'react';
-import { Home, Target, Users, BarChart, FileText } from 'lucide-react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface SidebarProps {
-  userName: string;
+  userName?: string;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ userName }) => {
+const Sidebar: React.FC<SidebarProps> = ({ userName = 'Name' }) => {
+  const navigate = useNavigate();
   const location = useLocation();
-  const { profile } = useAuth();
+  const { signOut } = useAuth();
+
+  const getActiveItem = () => {
+    if (location.pathname === '/dashboard') return 'dashboard';
+    if (location.pathname === '/opportunities') return 'opportunities';
+    if (location.pathname === '/campaigns') return 'campaigns';
+    if (location.pathname === '/settings') return 'settings';
+    return 'dashboard';
+  };
+
+  const activeItem = getActiveItem();
 
   const menuItems = [
-    { name: 'Dashboard', icon: Home, path: '/brand-dashboard' },
-    { name: 'Campaigns', icon: Target, path: '/brand-campaigns' },
-    { name: 'Task Management', icon: FileText, path: '/task-management' },
-    { name: 'Applications', icon: Users, path: '/brand-applications' },
-    { name: 'Analytics', icon: BarChart, path: '/analytics' },
+    { id: 'dashboard', label: 'Dashboard', icon: '📊', path: '/dashboard' },
+    { id: 'opportunities', label: 'Opportunities', icon: '💡', path: '/opportunities' },
+    { id: 'campaigns', label: 'Campaigns', icon: '📱', path: '/campaigns' },
+    { id: 'settings', label: 'Settings', icon: '⚙️', path: '/settings' },
   ];
 
+  const handleMenuClick = (item: typeof menuItems[0]) => {
+    navigate(item.path);
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/');
+  };
+
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 h-full">
-      <div className="p-4 flex items-center justify-center border-b border-gray-200">
-        <Avatar className="h-10 w-10">
-          <AvatarFallback className="bg-[#1DDCD3] text-white">
-            {userName.charAt(0)}
-          </AvatarFallback>
-        </Avatar>
-        <div className="ml-3">
-          <h2 className="font-semibold text-lg text-gray-800">{userName}</h2>
-          <p className="text-sm text-gray-500">{profile?.user_type}</p>
-        </div>
+    <div className="w-64 bg-gradient-to-b from-[#1a1f2e] to-[#252b3b] flex flex-col h-screen">
+      {/* Logo/Brand */}
+      <div className="p-6 border-b border-gray-700">
+        <h1 className="text-2xl font-bold text-white">Xfluence</h1>
       </div>
 
-      <nav className="py-4">
-        <ul>
-          {menuItems.map((item) => (
-            <li key={item.name}>
-              <NavLink
-                to={item.path}
-                className={({ isActive }) =>
-                  `flex items-center p-3 space-x-3 rounded-md hover:bg-gray-100 transition-colors ${
-                    isActive ? 'bg-gray-100 font-semibold text-[#1DDCD3]' : 'text-gray-700'
-                  }`
-                }
-              >
-                <item.icon className="h-5 w-5" />
-                <span>{item.name}</span>
-              </NavLink>
-            </li>
-          ))}
-        </ul>
+      {/* Navigation */}
+      <nav className="flex-1 p-4 space-y-2">
+        {menuItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => handleMenuClick(item)}
+            className={cn(
+              "w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center gap-3",
+              activeItem === item.id
+                ? "bg-[#1DDCD3] text-white shadow-lg"
+                : "text-gray-300 hover:bg-gray-700 hover:text-white"
+            )}
+          >
+            <span className="text-lg">{item.icon}</span>
+            <span className="font-medium">{item.label}</span>
+          </button>
+        ))}
       </nav>
 
-      <div className="p-4 mt-auto">
-        <p className="text-xs text-gray-500">
-          Version 0.1.0
-        </p>
+      {/* User Section */}
+      <div className="p-4 border-t border-gray-700">
+        <button 
+          onClick={handleLogout}
+          className="w-full text-left px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-all duration-200"
+        >
+          {userName} [log out →]
+        </button>
       </div>
-    </aside>
+    </div>
   );
 };
 

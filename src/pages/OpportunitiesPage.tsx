@@ -61,11 +61,13 @@ const OpportunitiesPage = () => {
   });
 
   const handleApplyClick = (opportunity: Opportunity) => {
+    // Use the full opportunity object since it already matches the interface
     setSelectedOpportunity(opportunity);
     setIsApplicationModalOpen(true);
   };
 
   const handleApplicationSubmitted = () => {
+    // Refresh opportunities to update application status
     queryClient.invalidateQueries({ queryKey: ['opportunities'] });
   };
 
@@ -74,7 +76,7 @@ const OpportunitiesPage = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex">
-        <Sidebar userName="Influencer" />
+        <Sidebar />
         <main className="flex-1 ml-64 p-8">
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">Loading opportunities...</p>
@@ -87,7 +89,7 @@ const OpportunitiesPage = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex">
-        <Sidebar userName="Influencer" />
+        <Sidebar />
         <main className="flex-1 ml-64 p-8">
           <div className="text-center py-12">
             <p className="text-red-500 text-lg">Error loading opportunities: {error.message}</p>
@@ -99,7 +101,7 @@ const OpportunitiesPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar userName="Influencer" />
+      <Sidebar />
       
       <main className="flex-1 ml-64 p-8">
         <div className="max-w-6xl mx-auto">

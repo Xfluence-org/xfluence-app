@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,7 +8,6 @@ import { taskWorkflowService, WorkflowState } from '@/services/taskWorkflowServi
 import ContentDraftEditor from './ContentDraftEditor';
 import ContentReviewPanel from './ContentReviewPanel';
 import PublishAnalyticsView from './PublishAnalyticsView';
-import { Button } from '@/components/ui/button';
 
 interface TaskWorkflowManagerProps {
   taskId: string;
@@ -81,20 +81,7 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({ taskId, taskT
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Task Workflow: {taskTitle}</CardTitle>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleRefresh}
-              className="flex items-center gap-2"
-            >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Refresh
-            </Button>
-          </div>
+          <CardTitle>Task Workflow: {taskTitle}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4 mb-6">
