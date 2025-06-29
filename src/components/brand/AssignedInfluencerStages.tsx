@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +13,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { taskWorkflowService, WorkflowState } from '@/services/taskWorkflowService';
-import { useNavigate } from 'react-router-dom';
+import TaskWorkflowModal from './TaskWorkflowModal';
 
 interface ManualInfluencerData {
   name: string;
@@ -62,7 +61,11 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
 }) => {
   const [assignedInfluencers, setAssignedInfluencers] = useState<AssignedInfluencer[]>([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [selectedTask, setSelectedTask] = useState<{
+    taskId: string;
+    taskTitle: string;
+    workflowStates: WorkflowState[];
+  } | null>(null);
 
   const fetchAssignedInfluencers = async () => {
     try {
@@ -186,8 +189,21 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
     }
   };
 
-  const handleManageTask = (taskId: string) => {
-    navigate(`/brand/task-workflow/${taskId}`);
+  const handleManageTask = (taskId: string, taskTitle: string, workflowStates: WorkflowState[]) => {
+    setSelectedTask({
+      taskId,
+      taskTitle,
+      workflowStates
+    });
+  };
+
+  const handleCloseModal = () => {
+    setSelectedTask(null);
+  };
+
+  const handleRefreshData = () => {
+    fetchAssignedInfluencers();
+    onRefresh?.();
   };
 
   const phases = [
@@ -239,113 +255,127 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
   }
 
   return (
-    <div className="space-y-4">
-      {assignedInfluencers.map((influencer) => {
-        const overallProgress = influencer.workflowStates.length > 0 ? 
-          influencer.workflowStates.reduce((acc, state) => acc + getPhaseProgress(state.status), 0) / influencer.workflowStates.length : 0;
+    <>
+      <div className="space-y-4">
+        {assignedInfluencers.map((influencer) => {
+          const overallProgress = influencer.workflowStates.length > 0 ? 
+            influencer.workflowStates.reduce((acc, state) => acc + getPhaseProgress(state.status), 0) / influencer.workflowStates.length : 0;
 
-        return (
-          <Card key={influencer.id}>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarFallback className="bg-[#1DDCD3] text-white">
-                      {influencer.influencer_name?.charAt(0) || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <CardTitle className="text-base">{influencer.influencer_name}</CardTitle>
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <Instagram className="h-3 w-3" />
-                      @{influencer.influencer_handle}
-                      <Badge variant="outline" className="text-xs">
-                        {influencer.assignment_type === 'manual' ? 'Manual' : 'Applied'}
-                      </Badge>
+          return (
+            <Card key={influencer.id}>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback className="bg-[#1DDCD3] text-white">
+                        {influencer.influencer_name?.charAt(0) || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <CardTitle className="text-base">{influencer.influencer_name}</CardTitle>
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <Instagram className="h-3 w-3" />
+                        @{influencer.influencer_handle}
+                        <Badge variant="outline" className="text-xs">
+                          {influencer.assignment_type === 'manual' ? 'Manual' : 'Applied'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="text-right">
+                    <div className="text-sm font-medium text-gray-700">Overall Progress</div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Progress value={overallProgress} className="w-24" />
+                      <span className="text-sm text-gray-600">{Math.round(overallProgress)}%</span>
                     </div>
                   </div>
                 </div>
-                
-                <div className="text-right">
-                  <div className="text-sm font-medium text-gray-700">Overall Progress</div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Progress value={overallProgress} className="w-24" />
-                    <span className="text-sm text-gray-600">{Math.round(overallProgress)}%</span>
+              </CardHeader>
+              
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium text-gray-700">Workflow Stages</h4>
+                    {influencer.tasks.length > 0 && (
+                      <Button
+                        onClick={() => handleManageTask(
+                          influencer.tasks[0].id,
+                          `${influencer.influencer_name} - ${contentType}`,
+                          influencer.workflowStates
+                        )}
+                        size="sm"
+                        className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
+                      >
+                        Manage Workflow
+                      </Button>
+                    )}
                   </div>
-                </div>
-              </div>
-            </CardHeader>
-            
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium text-gray-700">Workflow Stages</h4>
-                  {influencer.tasks.length > 0 && (
-                    <Button
-                      onClick={() => handleManageTask(influencer.tasks[0].id)}
-                      size="sm"
-                      className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
-                    >
-                      Manage Workflow
-                    </Button>
+                  
+                  {influencer.tasks.length === 0 ? (
+                    <div className="text-center py-4 text-gray-500">
+                      <p>No tasks created yet</p>
+                      <p className="text-sm">Tasks will appear once the assignment is processed</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {phases.map((phase) => {
+                        const status = getPhaseStatus(influencer.workflowStates, phase.id);
+                        const progress = getPhaseProgress(status);
+                        const Icon = phase.icon;
+                        
+                        return (
+                          <div 
+                            key={phase.id} 
+                            className="bg-gray-50 rounded-lg p-4 border transition-colors hover:bg-gray-100"
+                          >
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <Icon className="h-4 w-4 text-gray-600" />
+                                <span className="font-medium text-sm">{phase.title}</span>
+                              </div>
+                              {getStatusBadge(status)}
+                            </div>
+                            
+                            <p className="text-xs text-gray-600 mb-3">
+                              {phase.description}
+                            </p>
+                            
+                            <Progress value={progress} className="w-full" />
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
-                
-                {influencer.tasks.length === 0 ? (
-                  <div className="text-center py-4 text-gray-500">
-                    <p>No tasks created yet</p>
-                    <p className="text-sm">Tasks will appear once the assignment is processed</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {phases.map((phase) => {
-                      const status = getPhaseStatus(influencer.workflowStates, phase.id);
-                      const progress = getPhaseProgress(status);
-                      const Icon = phase.icon;
-                      
-                      return (
-                        <div 
-                          key={phase.id} 
-                          className="bg-gray-50 rounded-lg p-4 border transition-colors hover:bg-gray-100"
-                        >
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              <Icon className="h-4 w-4 text-gray-600" />
-                              <span className="font-medium text-sm">{phase.title}</span>
-                            </div>
-                            {getStatusBadge(status)}
-                          </div>
-                          
-                          <p className="text-xs text-gray-600 mb-3">
-                            {phase.description}
-                          </p>
-                          
-                          <Progress value={progress} className="w-full" />
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
-      
-      {assignedInfluencers.length > 0 && (
-        <div className="flex justify-center">
-          <Button 
-            variant="outline" 
-            onClick={() => {
-              fetchAssignedInfluencers();
-              onRefresh?.();
-            }}
-          >
-            Refresh Status
-          </Button>
-        </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+        
+        {assignedInfluencers.length > 0 && (
+          <div className="flex justify-center">
+            <Button 
+              variant="outline" 
+              onClick={handleRefreshData}
+            >
+              Refresh Status
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {selectedTask && (
+        <TaskWorkflowModal
+          isOpen={!!selectedTask}
+          onClose={handleCloseModal}
+          taskId={selectedTask.taskId}
+          taskTitle={selectedTask.taskTitle}
+          workflowStates={selectedTask.workflowStates}
+          onRefresh={handleRefreshData}
+        />
       )}
-    </div>
+    </>
   );
 };
 
