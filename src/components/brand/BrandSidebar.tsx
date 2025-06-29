@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -15,7 +16,6 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName = 'Brand Name' }) 
   const getActiveItem = () => {
     if (location.pathname.includes('/brand-dashboard')) return 'dashboard';
     if (location.pathname.includes('/brand/campaigns')) return 'campaigns';
-    if (location.pathname.includes('/brand/applications')) return 'applications';
     if (location.pathname.includes('/brand/ai-assistant')) return 'ai-assistant';
     if (location.pathname.includes('/brand/settings')) return 'settings';
     return 'dashboard';
@@ -35,12 +35,6 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName = 'Brand Name' }) 
       label: 'Campaigns', 
       icon: '📱',
       onClick: () => navigate('/brand/campaigns')
-    },
-    { 
-      id: 'applications', 
-      label: 'Applications', 
-      icon: '📝',
-      onClick: () => navigate('/brand/applications')
     },
     { 
       id: 'ai-assistant', 

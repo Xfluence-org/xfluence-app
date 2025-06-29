@@ -13,7 +13,6 @@ import OpportunitiesPage from "./pages/OpportunitiesPage";
 import CampaignsPage from "./pages/CampaignsPage";
 import BrandDashboard from "./pages/BrandDashboard";
 import BrandCampaignsPage from "./pages/BrandCampaignsPage";
-import BrandApplicationsPage from "./pages/BrandApplicationsPage";
 import CampaignReviewPage from "./pages/CampaignReviewPage";
 import SettingsPage from "./pages/SettingsPage";
 import BrandSettingsPage from "./pages/BrandSettingsPage";
@@ -60,14 +59,6 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <BrandCampaignsPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/brand/applications" 
-              element={
-                <ProtectedRoute>
-                  <BrandApplicationsPage />
                 </ProtectedRoute>
               } 
             />
