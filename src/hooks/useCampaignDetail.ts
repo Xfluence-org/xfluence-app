@@ -10,26 +10,9 @@ export const useCampaignDetail = (campaignId: string | null) => {
       
       console.log('Fetching campaign detail for:', campaignId);
       
-      // Fetch campaign data
+      // Use the new database function to get campaign with LLM data
       const { data: campaignData, error: campaignError } = await supabase
-        .from('campaigns')
-        .select(`
-          id,
-          title,
-          description,
-          category,
-          status,
-          budget,
-          amount,
-          due_date,
-          created_at,
-          is_public,
-          brands (
-            name,
-            logo_url
-          )
-        `)
-        .eq('id', campaignId)
+        .rpc('get_campaign_with_llm_data', { campaign_id_param: campaignId })
         .single();
 
       if (campaignError) {
@@ -37,7 +20,7 @@ export const useCampaignDetail = (campaignId: string | null) => {
         throw campaignError;
       }
 
-      // Fetch LLM interactions for this campaign
+      // Also fetch raw LLM interactions for components that need the full interaction format
       const { data: llmInteractions, error: llmError } = await supabase
         .from('llm_interactions')
         .select('*')
@@ -54,9 +37,13 @@ export const useCampaignDetail = (campaignId: string | null) => {
       return {
         ...campaignData,
         budget: campaignData.budget || campaignData.amount || 0,
-        category: campaignData.category,
-        is_public: campaignData.is_public || false,
-        llmInteractions: llmInteractions || []
+        brands: {
+          name: campaignData.brand_name,
+          logo_url: campaignData.brand_logo_url
+        },
+        llmInteractions: llmInteractions || [],
+        // Add the parsed LLM data for easier access
+        llm_data: campaignData.llm_data || {}
       };
     },
     enabled: !!campaignId

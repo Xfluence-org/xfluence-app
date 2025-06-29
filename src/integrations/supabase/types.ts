@@ -476,6 +476,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      extract_llm_section: {
+        Args: { campaign_id_param: string; section_name: string }
+        Returns: Json
+      }
       get_brand_applications: {
         Args: { limit_count?: number }
         Returns: {
@@ -528,6 +532,28 @@ export type Database = {
           platforms: string[]
           category: string
           progress: number
+        }[]
+      }
+      get_campaign_llm_data: {
+        Args: { campaign_id_param: string }
+        Returns: Json
+      }
+      get_campaign_with_llm_data: {
+        Args: { campaign_id_param: string }
+        Returns: {
+          id: string
+          title: string
+          description: string
+          category: string[]
+          status: string
+          budget: number
+          amount: number
+          due_date: string
+          created_at: string
+          is_public: boolean
+          brand_name: string
+          brand_logo_url: string
+          llm_data: Json
         }[]
       }
       get_influencer_campaigns: {

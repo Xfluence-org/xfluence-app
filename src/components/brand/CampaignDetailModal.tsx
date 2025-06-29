@@ -127,58 +127,14 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
     return category || 'General';
   };
 
-  // Helper function to safely get LLM campaign data from llmInteractions
+  // Simplified function to get LLM campaign data using the database function result
   const getLLMCampaignData = (): LLMCampaignData | null => {
-    if (!campaign?.llmInteractions || campaign.llmInteractions.length === 0) {
+    if (!campaign?.llm_data || Object.keys(campaign.llm_data).length === 0) {
       return null;
     }
     
-    console.log('Raw llmInteractions data:', campaign.llmInteractions);
-    
-    // Find the most recent LLM interaction
-    const latestInteraction = campaign.llmInteractions[0]; // Already sorted by created_at DESC
-    
-    if (!latestInteraction?.raw_output) {
-      return null;
-    }
-    
-    let parsedData = null;
-    
-    // Check if it's already an object
-    if (typeof latestInteraction.raw_output === 'object' && latestInteraction.raw_output !== null && !Array.isArray(latestInteraction.raw_output)) {
-      parsedData = latestInteraction.raw_output;
-    }
-    
-    // If it's a string, try to parse it as JSON
-    if (typeof latestInteraction.raw_output === 'string') {
-      try {
-        parsedData = JSON.parse(latestInteraction.raw_output);
-      } catch (e) {
-        console.error('Error parsing llm interaction JSON:', e);
-        return null;
-      }
-    }
-    
-    if (!parsedData) return null;
-    
-    // Handle different data structures - check for nested plan or direct access
-    let campaignData = null;
-    
-    // If there's a 'plan' key, use that
-    if (parsedData.plan) {
-      campaignData = parsedData.plan;
-    }
-    // If there's success and plan keys, use plan
-    else if (parsedData.success && parsedData.plan) {
-      campaignData = parsedData.plan;
-    }
-    // Otherwise use the data directly
-    else if (parsedData.justification || parsedData.content_strategy || parsedData.influencer_allocation) {
-      campaignData = parsedData;
-    }
-    
-    console.log('Processed campaign data:', campaignData);
-    return campaignData as LLMCampaignData;
+    console.log('LLM data from database function:', campaign.llm_data);
+    return campaign.llm_data as LLMCampaignData;
   };
 
   // Create mock LLM interactions for components that expect that format
@@ -288,7 +244,6 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                 onToggle={handlePublicToggle}
               />
 
-              
               <div className="bg-gray-50 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-[#1a1f2e] mb-4">Campaign Information</h3>
                 
