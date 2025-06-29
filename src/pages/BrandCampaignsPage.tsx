@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import BrandSidebar from '@/components/brand/BrandSidebar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,7 @@ import CreateCampaignModal from '@/components/brand/CreateCampaignModal';
 type CampaignView = 'active' | 'published' | 'completed' | 'archived';
 
 const BrandCampaignsPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<CampaignView>('active');
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -22,6 +24,22 @@ const BrandCampaignsPage: React.FC = () => {
     archiveCampaign,
     updateCampaign 
   } = useBrandCampaignsData(activeTab);
+
+  // Handle URL parameters for tab and campaign view
+  useEffect(() => {
+    const tabParam = searchParams.get('tab') as CampaignView;
+    const viewParam = searchParams.get('view');
+    
+    if (tabParam && ['active', 'published', 'completed', 'archived'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+    
+    if (viewParam) {
+      setSelectedCampaignId(viewParam);
+      // Clear the URL parameters after opening the modal
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams]);
 
   const handleViewCampaign = (campaignId: string) => {
     setSelectedCampaignId(campaignId);

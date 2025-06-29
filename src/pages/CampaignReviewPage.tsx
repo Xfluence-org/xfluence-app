@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -83,7 +82,7 @@ const CampaignReviewPage = () => {
           amount: budgetInCents,
           due_date: campaignData.due_date,
           status: 'published',
-          is_public: true,
+          is_public: false, // Set is_public to false by default
           compensation_min: Math.round((campaignData.budget_min || 0) * 100),
           compensation_max: budgetInCents,
           application_deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 days from now
@@ -138,8 +137,9 @@ const CampaignReviewPage = () => {
         description: "Campaign saved successfully!",
       });
       
-      // Navigate to campaigns page
-      navigate('/brand/campaigns');
+      // Navigate to campaigns page with the published tab active and open the campaign details
+      // We'll use URL parameters to trigger the campaign detail modal
+      navigate(`/brand/campaigns?tab=published&view=${campaign.id}`);
       
     } catch (error) {
       console.error('Error saving campaign:', error);
