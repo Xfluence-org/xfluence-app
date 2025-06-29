@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Users, Plus, UserCheck, UserPlus } from 'lucide-react';
 import InfluencerAssignmentModal from './InfluencerAssignmentModal';
+import AssignedInfluencerStages from './AssignedInfluencerStages';
 
 interface InfluencerAssignmentSectionProps {
   campaignId: string;
@@ -36,6 +37,7 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
   const [activeContentType, setActiveContentType] = useState<string>('');
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [currentAssignmentRequest, setCurrentAssignmentRequest] = useState<AssignmentRequest | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Extract campaign strategy data
   const getCampaignStrategyData = () => {
@@ -113,9 +115,10 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
 
   const handleAssignmentComplete = (assignments: any[]) => {
     console.log('Assignment completed:', assignments);
-    // TODO: Implement actual assignment logic
     setShowAssignmentModal(false);
     setCurrentAssignmentRequest(null);
+    // Trigger refresh of the assigned influencers display
+    setRefreshKey(prev => prev + 1);
   };
 
   const getContentTypeIcon = (type: string) => {
@@ -243,7 +246,7 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
 
               {contentTypes.map((content) => (
                 <TabsContent key={content.type} value={content.type} className="mt-6">
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {/* Content Type Info */}
                     <div className="bg-blue-50 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
@@ -280,7 +283,7 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
                                     size="sm"
                                     className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90 text-white"
                                     onClick={() => handleAssignInfluencers(
-                                      content.type,
+                                      getContentTypeDisplay(content.type),
                                       category,
                                       tier,
                                       Number(count)
@@ -294,6 +297,28 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
                             ))}
                           </div>
                         </div>
+                      ))}
+                    </div>
+
+                    {/* Assigned Influencers for this Content Type */}
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-gray-700">Assigned Influencers</h4>
+                      {Object.entries(influencerAllocation?.allocation_by_category || {}).map(([category]) => (
+                        Object.entries(influencerAllocation?.allocation_by_tier?.[category] || {}).map(([tier]) => (
+                          <div key={`${category}-${tier}`}>
+                            <h5 className="text-sm font-medium text-gray-600 mb-2">
+                              {category} - {tier.charAt(0).toUpperCase() + tier.slice(1)} Tier
+                            </h5>
+                            <AssignedInfluencerStages
+                              key={`${refreshKey}-${category}-${tier}`}
+                              campaignId={campaignId}
+                              contentType={getContentTypeDisplay(content.type)}
+                              category={category}
+                              tier={tier}
+                              onRefresh={() => setRefreshKey(prev => prev + 1)}
+                            />
+                          </div>
+                        ))
                       ))}
                     </div>
                   </div>

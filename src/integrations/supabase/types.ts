@@ -62,6 +62,60 @@ export type Database = {
         }
         Relationships: []
       }
+      campaign_content_assignments: {
+        Row: {
+          assignment_type: string
+          campaign_id: string
+          category: string
+          content_type: string
+          created_at: string
+          id: string
+          influencer_id: string | null
+          manual_data: Json | null
+          tier: string
+          updated_at: string
+        }
+        Insert: {
+          assignment_type?: string
+          campaign_id: string
+          category: string
+          content_type: string
+          created_at?: string
+          id?: string
+          influencer_id?: string | null
+          manual_data?: Json | null
+          tier: string
+          updated_at?: string
+        }
+        Update: {
+          assignment_type?: string
+          campaign_id?: string
+          category?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          influencer_id?: string | null
+          manual_data?: Json | null
+          tier?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_content_assignments_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_content_assignments_influencer_id_fkey"
+            columns: ["influencer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_participants: {
         Row: {
           accepted_at: string | null
@@ -126,6 +180,7 @@ export type Database = {
         Row: {
           ai_score: number | null
           campaign_id: string | null
+          content_assignment_id: string | null
           created_at: string | null
           deliverable_count: number | null
           description: string | null
@@ -141,6 +196,7 @@ export type Database = {
         Insert: {
           ai_score?: number | null
           campaign_id?: string | null
+          content_assignment_id?: string | null
           created_at?: string | null
           deliverable_count?: number | null
           description?: string | null
@@ -156,6 +212,7 @@ export type Database = {
         Update: {
           ai_score?: number | null
           campaign_id?: string | null
+          content_assignment_id?: string | null
           created_at?: string | null
           deliverable_count?: number | null
           description?: string | null
@@ -174,6 +231,13 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_tasks_content_assignment_id_fkey"
+            columns: ["content_assignment_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_content_assignments"
             referencedColumns: ["id"]
           },
           {
@@ -476,6 +540,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_influencers_to_campaign: {
+        Args: {
+          campaign_id_param: string
+          content_type_param: string
+          category_param: string
+          tier_param: string
+          assignments: Json
+        }
+        Returns: string[]
+      }
+      create_assignment_tasks: {
+        Args: { assignment_id_param: string }
+        Returns: undefined
+      }
       extract_llm_section: {
         Args: { campaign_id_param: string; section_name: string }
         Returns: Json

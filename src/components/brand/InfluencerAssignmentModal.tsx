@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -9,7 +8,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Search, UserPlus, Users, Instagram, Star, MessageSquare } from 'lucide-react';
-import { useBrandApplications } from '@/hooks/useBrandApplications';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface AssignmentRequest {
   contentType: string;
@@ -36,6 +36,16 @@ interface ManualInfluencer {
   category: string;
 }
 
+interface AcceptedInfluencer {
+  application_id: string;
+  influencer_name: string;
+  influencer_handle: string;
+  followers_count: number;
+  engagement_rate: number;
+  ai_score: number;
+  application_message: string;
+}
+
 const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
   isOpen,
   onClose,
@@ -47,17 +57,42 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
   const [selectedInfluencers, setSelectedInfluencers] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [manualInfluencers, setManualInfluencers] = useState<ManualInfluencer[]>([]);
+  const [acceptedInfluencers, setAcceptedInfluencers] = useState<AcceptedInfluencer[]>([]);
+  const [loading, setLoading] = useState(false);
   const [newInfluencer, setNewInfluencer] = useState({
     name: '',
     handle: '',
     followers: '',
     engagementRate: ''
   });
+  const { toast } = useToast();
 
-  const { data: applications = [], isLoading } = useBrandApplications();
+  // Fetch accepted influencers for this campaign
+  React.useEffect(() => {
+    const fetchAcceptedInfluencers = async () => {
+      if (!isOpen) return;
+      
+      const { data, error } = await supabase.rpc('get_brand_applications_all');
+      
+      if (error) {
+        console.error('Error fetching applications:', error);
+        return;
+      }
 
-  // Filter applications based on assignment requirements and search
-  const filteredApplicants = applications.filter(app => {
+      // Filter for accepted/approved influencers for this campaign
+      const accepted = data?.filter(app => 
+        app.campaign_id === campaignId && 
+        ['accepted', 'approved', 'active'].includes(app.application_status)
+      ) || [];
+      
+      setAcceptedInfluencers(accepted);
+    };
+
+    fetchAcceptedInfluencers();
+  }, [isOpen, campaignId]);
+
+  // Filter accepted influencers based on assignment requirements and search
+  const filteredApplicants = acceptedInfluencers.filter(app => {
     const matchesSearch = !searchQuery || 
       app.influencer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       app.influencer_handle.toLowerCase().includes(searchQuery.toLowerCase());
@@ -75,7 +110,7 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
       }
     })();
 
-    return matchesSearch && matchesTier && app.application_status === 'applied';
+    return matchesSearch && matchesTier;
   });
 
   const handleInfluencerSelect = (influencerId: string) => {
@@ -103,13 +138,50 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
     }
   };
 
-  const handleAssignmentSubmit = () => {
-    const assignments = [
-      ...selectedInfluencers.map(id => ({ type: 'applicant', id })),
-      ...manualInfluencers.map(inf => ({ type: 'manual', data: inf }))
-    ];
-    
-    onAssignmentComplete(assignments);
+  const handleAssignmentSubmit = async () => {
+    setLoading(true);
+    try {
+      // Prepare assignments data
+      const assignments = [
+        ...selectedInfluencers.map(id => ({ type: 'applicant', id })),
+        ...manualInfluencers.map(inf => ({ type: 'manual', data: inf }))
+      ];
+
+      // Call the database function to assign influencers
+      const { data: assignmentIds, error } = await supabase.rpc('assign_influencers_to_campaign', {
+        campaign_id_param: campaignId,
+        content_type_param: assignmentRequest.contentType,
+        category_param: assignmentRequest.category,
+        tier_param: assignmentRequest.tier,
+        assignments: assignments
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: `Successfully assigned ${assignments.length} influencer(s) to ${assignmentRequest.contentType}`,
+      });
+
+      onAssignmentComplete(assignments);
+      
+      // Reset form
+      setSelectedInfluencers([]);
+      setManualInfluencers([]);
+      onClose();
+      
+    } catch (error) {
+      console.error('Error assigning influencers:', error);
+      toast({
+        title: "Error",
+        description: "Failed to assign influencers. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getTierColor = (tier: string) => {
@@ -143,7 +215,7 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="applicants" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
-              From Applications ({filteredApplicants.length})
+              From Approved ({filteredApplicants.length})
             </TabsTrigger>
             <TabsTrigger value="manual" className="flex items-center gap-2">
               <UserPlus className="h-4 w-4" />
@@ -156,24 +228,20 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search applicants by name or handle..."
+                placeholder="Search approved influencers by name or handle..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
             </div>
 
-            {/* Applicants List */}
+            {/* Approved Influencers List */}
             <div className="space-y-3 max-h-96 overflow-y-auto">
-              {isLoading ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">Loading applicants...</p>
-                </div>
-              ) : filteredApplicants.length === 0 ? (
+              {filteredApplicants.length === 0 ? (
                 <div className="text-center py-8">
                   <Users className="h-12 w-12 mx-auto text-gray-400 mb-2" />
-                  <p className="text-gray-500">No matching applicants found</p>
-                  <p className="text-gray-400 text-sm">Try adjusting your search or add influencers manually</p>
+                  <p className="text-gray-500">No approved influencers found for this tier</p>
+                  <p className="text-gray-400 text-sm">Try adding influencers manually or adjust the tier requirements</p>
                 </div>
               ) : (
                 filteredApplicants.map((applicant) => (
@@ -336,9 +404,9 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
             <Button 
               onClick={handleAssignmentSubmit}
               className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
-              disabled={selectedInfluencers.length + manualInfluencers.length === 0}
+              disabled={selectedInfluencers.length + manualInfluencers.length === 0 || loading}
             >
-              Assign {selectedInfluencers.length + manualInfluencers.length} Influencers
+              {loading ? 'Assigning...' : `Assign ${selectedInfluencers.length + manualInfluencers.length} Influencers`}
             </Button>
           </div>
         </div>
