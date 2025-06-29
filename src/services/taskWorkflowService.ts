@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface WorkflowState {
@@ -31,6 +30,16 @@ export interface ContentReview {
   feedback: string;
   reviewed_by: string;
   reviewed_at: string;
+  created_at: string;
+}
+
+export interface TaskFeedback {
+  id: string;
+  task_id: string;
+  sender_id: string;
+  sender_type: 'brand' | 'influencer';
+  message: string;
+  phase: 'content_requirement' | 'content_review' | 'publish_analytics';
   created_at: string;
 }
 
@@ -76,13 +85,13 @@ export const taskWorkflowService = {
       throw error;
     }
 
-    // Update task phase visibility
+    // Update task phase visibility - initially only brand can see content_requirement
     const { error: updateError } = await supabase
       .from('campaign_tasks')
       .update({
         current_phase: 'content_requirement',
         phase_visibility: {
-          content_requirement: false,
+          content_requirement: false, // Not visible to influencer initially
           content_review: false,
           publish_analytics: false
         }
@@ -112,7 +121,7 @@ export const taskWorkflowService = {
 
     if (error) throw error;
 
-    // If completing, advance to next phase
+    // Handle phase transitions and visibility
     if (action === 'complete') {
       const nextPhaseMap = {
         'content_requirement': 'content_review',
@@ -122,16 +131,35 @@ export const taskWorkflowService = {
 
       const nextPhase = nextPhaseMap[fromPhase];
       if (nextPhase) {
+        // Start next phase
         await supabase
           .from('task_workflow_states')
           .update({ status: 'in_progress' })
           .eq('task_id', taskId)
           .eq('phase', nextPhase);
 
-        // Update task current phase
+        // Update task current phase and visibility
+        let phaseVisibility = {};
+        if (nextPhase === 'content_review') {
+          phaseVisibility = {
+            content_requirement: true, // Now visible to influencer
+            content_review: true, // Both can see this phase
+            publish_analytics: false
+          };
+        } else if (nextPhase === 'publish_analytics') {
+          phaseVisibility = {
+            content_requirement: true,
+            content_review: true,
+            publish_analytics: true // Both can see all phases
+          };
+        }
+
         await supabase
           .from('campaign_tasks')
-          .update({ current_phase: nextPhase })
+          .update({ 
+            current_phase: nextPhase,
+            phase_visibility: phaseVisibility
+          })
           .eq('id', taskId);
       }
     }
@@ -175,19 +203,8 @@ export const taskWorkflowService = {
 
     if (shareError) throw shareError;
 
-    // Update phase visibility to show content_requirement to influencer
-    const { error: visibilityError } = await supabase
-      .from('campaign_tasks')
-      .update({
-        phase_visibility: {
-          content_requirement: true,
-          content_review: false,
-          publish_analytics: false
-        }
-      })
-      .eq('id', taskId);
-
-    if (visibilityError) throw visibilityError;
+    // Complete content requirement phase and move to content review
+    await this.transitionPhase(taskId, 'content_requirement', 'complete');
   },
 
   async getContentReviews(taskId: string): Promise<ContentReview[]> {
@@ -226,21 +243,16 @@ export const taskWorkflowService = {
 
     if (error) throw error;
 
-    // If approved, move to next phase
+    // Handle phase transitions based on review status
     if (status === 'approved') {
       await this.transitionPhase(taskId, 'content_review', 'complete');
-      
-      // Update phase visibility
+    } else if (status === 'rejected') {
+      // Keep in content_review phase for re-upload
       await supabase
-        .from('campaign_tasks')
-        .update({
-          phase_visibility: {
-            content_requirement: true,
-            content_review: true,
-            publish_analytics: true
-          }
-        })
-        .eq('id', taskId);
+        .from('task_workflow_states')
+        .update({ status: 'in_progress' })
+        .eq('task_id', taskId)
+        .eq('phase', 'content_review');
     }
   },
 
@@ -259,6 +271,51 @@ export const taskWorkflowService = {
     await this.transitionPhase(taskId, 'publish_analytics', 'complete');
   },
 
+  async getTaskFeedback(taskId: string, phase?: string): Promise<TaskFeedback[]> {
+    let query = supabase
+      .from('task_feedback')
+      .select(`
+        id,
+        task_id,
+        sender_id,
+        sender_type,
+        message,
+        phase,
+        created_at
+      `)
+      .eq('task_id', taskId)
+      .order('created_at', { ascending: true });
+
+    if (phase) {
+      query = query.eq('phase', phase);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    return data || [];
+  },
+
+  async sendTaskFeedback(
+    taskId: string,
+    senderId: string,
+    senderType: 'brand' | 'influencer',
+    message: string,
+    phase: 'content_requirement' | 'content_review' | 'publish_analytics'
+  ): Promise<void> {
+    const { error } = await supabase
+      .from('task_feedback')
+      .insert({
+        task_id: taskId,
+        sender_id: senderId,
+        sender_type: senderType,
+        message,
+        phase
+      });
+
+    if (error) throw error;
+  },
+
   async checkPhaseVisibility(taskId: string, userType: 'brand' | 'influencer'): Promise<Record<string, boolean>> {
     const { data: task, error } = await supabase
       .from('campaign_tasks')
@@ -271,13 +328,20 @@ export const taskWorkflowService = {
       return {};
     }
 
-    // Brand users can see all phases
+    // Brand users can see all phases they have access to based on current workflow state
     if (userType === 'brand') {
-      return {
-        content_requirement: true,
-        content_review: true,
-        publish_analytics: true
-      };
+      const { data: workflowStates } = await supabase
+        .from('task_workflow_states')
+        .select('phase, status')
+        .eq('task_id', taskId);
+
+      const brandVisibility: Record<string, boolean> = {};
+      workflowStates?.forEach(state => {
+        // Brand can see phases that are in_progress or completed
+        brandVisibility[state.phase] = ['in_progress', 'completed'].includes(state.status);
+      });
+
+      return brandVisibility;
     }
 
     // Influencers see phases based on visibility settings

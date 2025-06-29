@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ContentDraftEditor from './ContentDraftEditor';
 import ContentReviewPanel from './ContentReviewPanel';
 import PublishAnalyticsView from './PublishAnalyticsView';
+import TaskFeedbackSection from './TaskFeedbackSection';
 
 interface TaskWorkflowManagerProps {
   taskId: string;
@@ -72,12 +73,11 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({
       setPhaseVisibility(visibility);
     } catch (error) {
       console.error('Error checking phase visibility:', error);
-      // Default visibility for brand users
       if (userType === 'brand') {
         setPhaseVisibility({
           content_requirement: true,
-          content_review: true,
-          publish_analytics: true
+          content_review: false,
+          publish_analytics: false
         });
       }
     }
@@ -95,9 +95,9 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({
       case 'in_progress':
         return <Badge className="bg-blue-100 text-blue-800">In Progress</Badge>;
       case 'rejected':
-        return <Badge className="bg-red-100 text-red-800">Rejected</Badge>;
+        return <Badge className="bg-red-100 text-red-800">Needs Revision</Badge>;
       case 'not_started':
-        return <Badge variant="outline">Not Started</Badge>;
+        return <Badge variant="outline">Pending</Badge>;
       default:
         return <Badge variant="outline">Unknown</Badge>;
     }
@@ -107,31 +107,22 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({
     await initializeAndFetchData();
   };
 
-  const handleForceInitialize = async () => {
-    try {
-      setIsInitializing(true);
-      console.log('Force initializing workflow...');
-      await taskWorkflowService.initializeWorkflow(taskId);
-      await handleRefresh();
-    } catch (error) {
-      console.error('Error force initializing:', error);
-    } finally {
-      setIsInitializing(false);
-    }
-  };
-
   const phases = [
     {
       id: 'content_requirement',
       title: 'Content Requirements',
       icon: FileText,
-      description: 'Create and share content drafts with influencer'
+      description: userType === 'brand' 
+        ? 'Create and share content requirements with influencer'
+        : 'Review content guidelines'
     },
     {
       id: 'content_review',
       title: 'Content Review',
       icon: Eye,
-      description: 'Review and approve influencer content'
+      description: userType === 'brand'
+        ? 'Review and approve influencer content'
+        : 'Upload content for approval'
     },
     {
       id: 'publish_analytics',
@@ -141,11 +132,8 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({
     }
   ];
 
-  // Filter phases based on user type and visibility
-  const availablePhases = phases.filter(phase => {
-    if (userType === 'brand') return true;
-    return phaseVisibility[phase.id] || getPhaseStatus(phase.id) === 'in_progress';
-  });
+  // Filter phases based on visibility
+  const availablePhases = phases.filter(phase => phaseVisibility[phase.id]);
 
   if (loading) {
     return (
@@ -164,72 +152,62 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Task Workflow: {taskTitle}</CardTitle>
-            <div className="flex gap-2">
-              <Button
-                onClick={handleRefresh}
-                variant="outline"
-                size="sm"
-                disabled={loading}
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
-              {workflowStates.length === 0 && (
-                <Button
-                  onClick={handleForceInitialize}
-                  variant="outline"
-                  size="sm"
-                  disabled={isInitializing}
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${isInitializing ? 'animate-spin' : ''}`} />
-                  Initialize Workflow
-                </Button>
-              )}
-            </div>
+            <Button
+              onClick={handleRefresh}
+              variant="outline"
+              size="sm"
+              disabled={loading}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
           {workflowStates.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-500 mb-4">No workflow states found for this task.</p>
-              <Button
-                onClick={handleForceInitialize}
-                disabled={isInitializing}
-                className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
-              >
-                {isInitializing ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Initializing...
-                  </>
-                ) : (
-                  'Initialize Workflow'
-                )}
-              </Button>
             </div>
           ) : (
             <>
-              <div className="flex flex-wrap gap-4 mb-6">
-                {phases.map((phase) => {
-                  const status = getPhaseStatus(phase.id);
-                  const Icon = phase.icon;
-                  const isAvailable = userType === 'brand' || phaseVisibility[phase.id] || status === 'in_progress';
-                  
-                  return (
-                    <div 
-                      key={phase.id} 
-                      className={`flex items-center gap-3 p-3 border rounded-lg min-w-0 ${
-                        isAvailable ? '' : 'opacity-50'
-                      }`}
-                    >
-                      <Icon className="h-5 w-5 text-gray-600 flex-shrink-0" />
-                      <div className="min-w-0">
-                        <div className="font-medium text-sm">{phase.title}</div>
-                        <div className="mt-1">{getStatusBadge(status)}</div>
+              {/* Progress Overview */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-4">Task Progress</h3>
+                <div className="space-y-3">
+                  {phases.map((phase, index) => {
+                    const status = getPhaseStatus(phase.id);
+                    const Icon = phase.icon;
+                    const isVisible = phaseVisibility[phase.id];
+                    
+                    return (
+                      <div 
+                        key={phase.id} 
+                        className={`flex items-center gap-4 p-3 border rounded-lg ${
+                          !isVisible ? 'opacity-50 bg-gray-50' : 
+                          status === 'in_progress' ? 'bg-blue-50 border-blue-200' : ''
+                        }`}
+                      >
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-200">
+                          {status === 'completed' ? (
+                            <div className="w-4 h-4 bg-green-500 rounded-full" />
+                          ) : status === 'in_progress' ? (
+                            <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse" />
+                          ) : (
+                            <span className="text-sm font-medium text-gray-600">{index + 1}</span>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Icon className="h-4 w-4 text-gray-600" />
+                            <span className="font-medium">{phase.title}</span>
+                            {getStatusBadge(status)}
+                          </div>
+                          <p className="text-sm text-gray-600">{phase.description}</p>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
 
               {availablePhases.length > 0 ? (
@@ -242,22 +220,37 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({
                     ))}
                   </TabsList>
 
-                  <TabsContent value="content_requirement" className="mt-6">
+                  <TabsContent value="content_requirement" className="mt-6 space-y-6">
                     <ContentDraftEditor
                       taskId={taskId}
                       onDraftShared={handleRefresh}
                     />
+                    <TaskFeedbackSection
+                      taskId={taskId}
+                      phase="content_requirement"
+                      userType={userType}
+                    />
                   </TabsContent>
 
-                  <TabsContent value="content_review" className="mt-6">
+                  <TabsContent value="content_review" className="mt-6 space-y-6">
                     <ContentReviewPanel
                       taskId={taskId}
                       onReviewComplete={handleRefresh}
                     />
+                    <TaskFeedbackSection
+                      taskId={taskId}
+                      phase="content_review"
+                      userType={userType}
+                    />
                   </TabsContent>
 
-                  <TabsContent value="publish_analytics" className="mt-6">
+                  <TabsContent value="publish_analytics" className="mt-6 space-y-6">
                     <PublishAnalyticsView taskId={taskId} />
+                    <TaskFeedbackSection
+                      taskId={taskId}
+                      phase="publish_analytics"
+                      userType={userType}
+                    />
                   </TabsContent>
                 </Tabs>
               ) : (
@@ -266,7 +259,7 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({
                     <p className="text-gray-500">
                       {userType === 'influencer' 
                         ? 'Waiting for brand to share workflow phases with you.'
-                        : 'No workflow phases available.'}
+                        : 'Start by creating content requirements to share with the influencer.'}
                     </p>
                   </CardContent>
                 </Card>

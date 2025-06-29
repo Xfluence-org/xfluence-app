@@ -1,40 +1,48 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Upload, FileText, Image, Video, X } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Upload, File, X, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
 
 interface ContentUploadPanelProps {
   taskId: string;
-  onContentUploaded: () => void;
+  onUploadComplete: () => void;
 }
 
-interface UploadedFile {
+interface TaskUpload {
   id: string;
   filename: string;
   file_url: string;
-  mime_type: string;
-  file_size: number;
+  created_at: string;
+  mime_type?: string;
+}
+
+interface ContentReview {
+  id: string;
+  upload_id: string;
+  status: 'pending' | 'approved' | 'rejected';
+  feedback?: string;
   created_at: string;
 }
 
-const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({ 
-  taskId, 
-  onContentUploaded 
+const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({
+  taskId,
+  onUploadComplete
 }) => {
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-  const [description, setDescription] = useState('');
+  const [uploads, setUploads] = useState<TaskUpload[]>([]);
+  const [reviews, setReviews] = useState<ContentReview[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const { user } = useAuth();
   const { toast } = useToast();
 
-  // Fetch existing uploads
-  React.useEffect(() => {
+  useEffect(() => {
     fetchUploads();
+    fetchReviews();
   }, [taskId]);
 
   const fetchUploads = async () => {
@@ -46,194 +54,169 @@ const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setUploadedFiles(data || []);
+      setUploads(data || []);
     } catch (error) {
       console.error('Error fetching uploads:', error);
     }
   };
 
+  const fetchReviews = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('task_content_reviews')
+        .select('*')
+        .eq('task_id', taskId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setReviews(data || []);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+    }
+  };
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0 || !user?.id) return;
 
-    setIsUploading(true);
-
+    setUploading(true);
     try {
-      for (const file of files) {
-        // Simulate file upload (in a real app, you'd upload to Supabase Storage)
-        const mockFileUrl = `https://example.com/uploads/${file.name}`;
-        
-        const { data, error } = await supabase
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const { error } = await supabase
           .from('task_uploads')
           .insert({
             task_id: taskId,
+            uploader_id: user.id,
             filename: file.name,
-            file_url: mockFileUrl,
+            file_url: `placeholder-url-${file.name}`, // In real app, upload to storage first
             file_size: file.size,
-            mime_type: file.type,
-            uploader_id: (await supabase.auth.getUser()).data.user?.id
-          })
-          .select()
-          .single();
+            mime_type: file.type
+          });
 
         if (error) throw error;
-        
-        setUploadedFiles(prev => [data, ...prev]);
-      }
-
-      toast({
-        title: "Files uploaded successfully",
-        description: `${files.length} file(s) uploaded for review`,
       });
 
-      onContentUploaded();
+      await Promise.all(uploadPromises);
+      await fetchUploads();
+      onUploadComplete();
+
+      toast({
+        title: "Content Uploaded",
+        description: "Your content has been uploaded for review!"
+      });
     } catch (error) {
       console.error('Error uploading files:', error);
       toast({
-        title: "Upload failed",
-        description: "There was an error uploading your files. Please try again.",
-        variant: "destructive",
+        title: "Upload Error",
+        description: "Failed to upload content",
+        variant: "destructive"
       });
     } finally {
-      setIsUploading(false);
+      setUploading(false);
+      // Reset file input
+      event.target.value = '';
     }
   };
 
-  const handleRemoveFile = async (fileId: string) => {
-    try {
-      const { error } = await supabase
-        .from('task_uploads')
-        .delete()
-        .eq('id', fileId);
+  const getReviewForUpload = (uploadId: string) => {
+    return reviews.find(review => review.upload_id === uploadId);
+  };
 
-      if (error) throw error;
-
-      setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
-      
-      toast({
-        title: "File removed",
-        description: "File has been removed from your uploads",
-      });
-    } catch (error) {
-      console.error('Error removing file:', error);
-      toast({
-        title: "Remove failed",
-        description: "There was an error removing the file. Please try again.",
-        variant: "destructive",
-      });
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return <Badge className="bg-green-100 text-green-800">Approved</Badge>;
+      case 'rejected':
+        return <Badge className="bg-red-100 text-red-800">Needs Revision</Badge>;
+      case 'pending':
+        return <Badge className="bg-yellow-100 text-yellow-800">Under Review</Badge>;
+      default:
+        return <Badge variant="outline">Pending Review</Badge>;
     }
-  };
-
-  const getFileIcon = (mimeType: string) => {
-    if (mimeType.startsWith('image/')) return <Image className="h-4 w-4" />;
-    if (mimeType.startsWith('video/')) return <Video className="h-4 w-4" />;
-    return <FileText className="h-4 w-4" />;
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Upload className="h-5 w-5 text-[#1DDCD3]" />
-          Upload Content
+          <Upload className="h-5 w-5" />
+          Upload Content for Review
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Upload Section */}
         <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-          <Upload className="h-8 w-8 text-gray-400 mx-auto mb-4" />
+          <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-600 mb-4">
-            Drag and drop your content files here, or click to browse
+            Upload your content files for brand review
           </p>
           <Input
             type="file"
             multiple
             accept="image/*,video/*"
             onChange={handleFileUpload}
-            className="hidden"
-            id="file-upload"
-            disabled={isUploading}
+            disabled={uploading}
+            className="max-w-xs mx-auto"
           />
-          <Button
-            onClick={() => document.getElementById('file-upload')?.click()}
-            disabled={isUploading}
-            className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
-          >
-            {isUploading ? 'Uploading...' : 'Choose Files'}
-          </Button>
-        </div>
-
-        {/* Description */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Content Description (Optional)
-          </label>
-          <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Add any notes or descriptions about your content..."
-            rows={3}
-          />
+          {uploading && <p className="text-sm text-blue-600 mt-2">Uploading...</p>}
         </div>
 
         {/* Uploaded Files */}
-        {uploadedFiles.length > 0 && (
-          <div>
-            <h4 className="font-medium text-gray-700 mb-3">Uploaded Files</h4>
-            <div className="space-y-2">
-              {uploadedFiles.map((file) => (
-                <div
-                  key={file.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                >
-                  <div className="flex items-center gap-3">
-                    {getFileIcon(file.mime_type)}
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        {file.filename}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {formatFileSize(file.file_size)} • {new Date(file.created_at).toLocaleDateString()}
-                      </p>
+        {uploads.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="font-medium text-gray-900">Uploaded Content</h3>
+            {uploads.map((upload) => {
+              const review = getReviewForUpload(upload.id);
+              
+              return (
+                <Card key={upload.id} className="border-l-4 border-l-blue-500">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <File className="h-5 w-5 text-gray-500" />
+                        <div>
+                          <h4 className="font-medium text-gray-900">{upload.filename}</h4>
+                          <p className="text-sm text-gray-500">
+                            Uploaded {new Date(upload.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      {getStatusBadge(review?.status || 'pending')}
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs">
-                      Uploaded
-                    </Badge>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveFile(file.id)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+
+                    {review && review.feedback && (
+                      <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                        <p className="text-sm font-medium text-gray-700 mb-1">Brand Feedback:</p>
+                        <p className="text-sm text-gray-900">{review.feedback}</p>
+                      </div>
+                    )}
+
+                    {review?.status === 'approved' && (
+                      <div className="mt-3 flex items-center gap-2 text-green-600">
+                        <Check className="h-4 w-4" />
+                        <span className="text-sm font-medium">Content approved! You can now proceed to publish.</span>
+                      </div>
+                    )}
+
+                    {review?.status === 'rejected' && (
+                      <div className="mt-3 flex items-center gap-2 text-red-600">
+                        <X className="h-4 w-4" />
+                        <span className="text-sm font-medium">Please address the feedback and upload revised content.</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
 
-        {/* Instructions */}
-        <div className="bg-blue-50 rounded-lg p-4">
-          <h4 className="font-medium text-blue-800 mb-2">Upload Guidelines</h4>
-          <ul className="text-sm text-blue-700 space-y-1">
-            <li>• Upload high-quality images (JPG, PNG) or videos (MP4, MOV)</li>
-            <li>• Include multiple angles or variations if applicable</li>
-            <li>• Add descriptions to provide context for your content</li>
-            <li>• Wait for brand approval before publishing</li>
-          </ul>
-        </div>
+        {uploads.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <p>No content uploaded yet</p>
+            <p className="text-sm mt-1">Upload your content files to get started with the review process</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
