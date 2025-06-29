@@ -17,6 +17,7 @@ import CampaignReviewPage from "./pages/CampaignReviewPage";
 import SettingsPage from "./pages/SettingsPage";
 import BrandSettingsPage from "./pages/BrandSettingsPage";
 import BrandAIAssistantPage from "./pages/BrandAIAssistantPage";
+import TaskWorkflowPage from "./pages/TaskWorkflowPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredUserType="Influencer">
                   <SettingsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/task-workflow/:taskId" 
+              element={
+                <ProtectedRoute>
+                  <TaskWorkflowPage />
                 </ProtectedRoute>
               } 
             />

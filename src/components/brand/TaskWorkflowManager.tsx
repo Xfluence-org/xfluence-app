@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Eye, BarChart3 } from 'lucide-react';
 import { taskWorkflowService, WorkflowState } from '@/services/taskWorkflowService';
+import { useAuth } from '@/contexts/AuthContext';
 import ContentDraftEditor from './ContentDraftEditor';
 import ContentReviewPanel from './ContentReviewPanel';
 import PublishAnalyticsView from './PublishAnalyticsView';
@@ -12,15 +13,23 @@ import PublishAnalyticsView from './PublishAnalyticsView';
 interface TaskWorkflowManagerProps {
   taskId: string;
   taskTitle: string;
+  userType?: 'brand' | 'influencer';
 }
 
-const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({ taskId, taskTitle }) => {
+const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({ 
+  taskId, 
+  taskTitle, 
+  userType = 'brand' 
+}) => {
   const [workflowStates, setWorkflowStates] = useState<WorkflowState[]>([]);
   const [activeTab, setActiveTab] = useState('content_requirement');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [phaseVisibility, setPhaseVisibility] = useState<Record<string, boolean>>({});
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchWorkflowStates();
+    checkPhaseVisibility();
   }, [taskId, refreshKey]);
 
   const fetchWorkflowStates = async () => {
@@ -29,6 +38,26 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({ taskId, taskT
       setWorkflowStates(states);
     } catch (error) {
       console.error('Error fetching workflow states:', error);
+    }
+  };
+
+  const checkPhaseVisibility = async () => {
+    try {
+      const visibility = await taskWorkflowService.checkPhaseVisibility(taskId, userType);
+      setPhaseVisibility(visibility);
+      
+      // Set active tab to first available phase for influencers
+      if (userType === 'influencer') {
+        const visiblePhases = Object.entries(visibility)
+          .filter(([_, isVisible]) => isVisible)
+          .map(([phase]) => phase);
+        
+        if (visiblePhases.length > 0) {
+          setActiveTab(visiblePhases[0]);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking phase visibility:', error);
     }
   };
 
@@ -77,6 +106,12 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({ taskId, taskT
     }
   ];
 
+  // Filter phases based on user type and visibility
+  const availablePhases = phases.filter(phase => {
+    if (userType === 'brand') return true;
+    return phaseVisibility[phase.id] || getPhaseStatus(phase.id) === 'in_progress';
+  });
+
   return (
     <div className="space-y-6">
       <Card>
@@ -88,9 +123,15 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({ taskId, taskT
             {phases.map((phase) => {
               const status = getPhaseStatus(phase.id);
               const Icon = phase.icon;
+              const isAvailable = userType === 'brand' || phaseVisibility[phase.id] || status === 'in_progress';
               
               return (
-                <div key={phase.id} className="flex items-center gap-3 p-3 border rounded-lg min-w-0">
+                <div 
+                  key={phase.id} 
+                  className={`flex items-center gap-3 p-3 border rounded-lg min-w-0 ${
+                    isAvailable ? '' : 'opacity-50'
+                  }`}
+                >
                   <Icon className="h-5 w-5 text-gray-600 flex-shrink-0" />
                   <div className="min-w-0">
                     <div className="font-medium text-sm">{phase.title}</div>
@@ -101,31 +142,45 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({ taskId, taskT
             })}
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="content_requirement">Requirements</TabsTrigger>
-              <TabsTrigger value="content_review">Review</TabsTrigger>
-              <TabsTrigger value="publish_analytics">Analytics</TabsTrigger>
-            </TabsList>
+          {availablePhases.length > 0 ? (
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${availablePhases.length}, 1fr)` }}>
+                {availablePhases.map((phase) => (
+                  <TabsTrigger key={phase.id} value={phase.id}>
+                    {phase.title}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
 
-            <TabsContent value="content_requirement" className="mt-6">
-              <ContentDraftEditor
-                taskId={taskId}
-                onDraftShared={handleRefresh}
-              />
-            </TabsContent>
+              <TabsContent value="content_requirement" className="mt-6">
+                <ContentDraftEditor
+                  taskId={taskId}
+                  onDraftShared={handleRefresh}
+                />
+              </TabsContent>
 
-            <TabsContent value="content_review" className="mt-6">
-              <ContentReviewPanel
-                taskId={taskId}
-                onReviewComplete={handleRefresh}
-              />
-            </TabsContent>
+              <TabsContent value="content_review" className="mt-6">
+                <ContentReviewPanel
+                  taskId={taskId}
+                  onReviewComplete={handleRefresh}
+                />
+              </TabsContent>
 
-            <TabsContent value="publish_analytics" className="mt-6">
-              <PublishAnalyticsView taskId={taskId} />
-            </TabsContent>
-          </Tabs>
+              <TabsContent value="publish_analytics" className="mt-6">
+                <PublishAnalyticsView taskId={taskId} />
+              </TabsContent>
+            </Tabs>
+          ) : (
+            <Card>
+              <CardContent className="p-6 text-center">
+                <p className="text-gray-500">
+                  {userType === 'influencer' 
+                    ? 'Waiting for brand to share workflow phases with you.'
+                    : 'No workflow phases available.'}
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </CardContent>
       </Card>
     </div>

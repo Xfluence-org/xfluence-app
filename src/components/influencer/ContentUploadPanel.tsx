@@ -1,32 +1,40 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Upload, File, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Upload, FileText, Image, Video, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { taskWorkflowService, ContentReview } from '@/services/taskWorkflowService';
 
 interface ContentUploadPanelProps {
   taskId: string;
+  onContentUploaded: () => void;
 }
 
-interface TaskUpload {
+interface UploadedFile {
   id: string;
   filename: string;
   file_url: string;
+  mime_type: string;
+  file_size: number;
   created_at: string;
 }
 
-const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({ taskId }) => {
-  const [uploads, setUploads] = useState<TaskUpload[]>([]);
-  const [reviews, setReviews] = useState<ContentReview[]>([]);
-  const [uploading, setUploading] = useState(false);
+const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({ 
+  taskId, 
+  onContentUploaded 
+}) => {
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [description, setDescription] = useState('');
   const { toast } = useToast();
 
-  useEffect(() => {
+  // Fetch existing uploads
+  React.useEffect(() => {
     fetchUploads();
-    fetchReviews();
   }, [taskId]);
 
   const fetchUploads = async () => {
@@ -38,18 +46,9 @@ const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({ taskId }) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setUploads(data || []);
+      setUploadedFiles(data || []);
     } catch (error) {
       console.error('Error fetching uploads:', error);
-    }
-  };
-
-  const fetchReviews = async () => {
-    try {
-      const fetchedReviews = await taskWorkflowService.getContentReviews(taskId);
-      setReviews(fetchedReviews);
-    } catch (error) {
-      console.error('Error fetching reviews:', error);
     }
   };
 
@@ -57,164 +56,186 @@ const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({ taskId }) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    setUploading(true);
+    setIsUploading(true);
+
     try {
-      // In a real implementation, you would upload to Supabase Storage first
-      // For now, we'll create database records with placeholder URLs
-      const uploadPromises = Array.from(files).map(file => 
-        supabase
+      for (const file of files) {
+        // Simulate file upload (in a real app, you'd upload to Supabase Storage)
+        const mockFileUrl = `https://example.com/uploads/${file.name}`;
+        
+        const { data, error } = await supabase
           .from('task_uploads')
           .insert({
             task_id: taskId,
-            uploader_id: 'current_user_id',
             filename: file.name,
-            file_url: `placeholder-url-${file.name}`,
+            file_url: mockFileUrl,
             file_size: file.size,
-            mime_type: file.type
+            mime_type: file.type,
+            uploader_id: (await supabase.auth.getUser()).data.user?.id
           })
-      );
-      
-      await Promise.all(uploadPromises);
-      await fetchUploads();
-      
+          .select()
+          .single();
+
+        if (error) throw error;
+        
+        setUploadedFiles(prev => [data, ...prev]);
+      }
+
       toast({
-        title: "Files Uploaded",
-        description: "Your content has been uploaded for review."
+        title: "Files uploaded successfully",
+        description: `${files.length} file(s) uploaded for review`,
       });
+
+      onContentUploaded();
     } catch (error) {
+      console.error('Error uploading files:', error);
       toast({
-        title: "Upload Failed",
-        description: "Failed to upload files. Please try again.",
-        variant: "destructive"
+        title: "Upload failed",
+        description: "There was an error uploading your files. Please try again.",
+        variant: "destructive",
       });
     } finally {
-      setUploading(false);
+      setIsUploading(false);
     }
   };
 
-  const getUploadReview = (uploadId: string) => {
-    return reviews.find(review => review.upload_id === uploadId);
-  };
+  const handleRemoveFile = async (fileId: string) => {
+    try {
+      const { error } = await supabase
+        .from('task_uploads')
+        .delete()
+        .eq('id', fileId);
 
-  const getStatusIcon = (status?: string) => {
-    switch (status) {
-      case 'approved':
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'rejected':
-        return <XCircle className="h-4 w-4 text-red-600" />;
-      default:
-        return <Clock className="h-4 w-4 text-yellow-600" />;
+      if (error) throw error;
+
+      setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
+      
+      toast({
+        title: "File removed",
+        description: "File has been removed from your uploads",
+      });
+    } catch (error) {
+      console.error('Error removing file:', error);
+      toast({
+        title: "Remove failed",
+        description: "There was an error removing the file. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
-  const getStatusBadge = (status?: string) => {
-    switch (status) {
-      case 'approved':
-        return <Badge className="bg-green-100 text-green-800">Approved</Badge>;
-      case 'rejected':
-        return <Badge className="bg-red-100 text-red-800">Rejected</Badge>;
-      default:
-        return <Badge className="bg-yellow-100 text-yellow-800">Pending Review</Badge>;
-    }
+  const getFileIcon = (mimeType: string) => {
+    if (mimeType.startsWith('image/')) return <Image className="h-4 w-4" />;
+    if (mimeType.startsWith('video/')) return <Video className="h-4 w-4" />;
+    return <FileText className="h-4 w-4" />;
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Upload className="h-5 w-5" />
-            Upload Content for Review
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-            <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-gray-600 mb-2">Upload your content files</p>
-            <input
-              type="file"
-              multiple
-              accept="image/*,video/*"
-              onChange={handleFileUpload}
-              className="hidden"
-              id="file-upload"
-              disabled={uploading}
-            />
-            <label htmlFor="file-upload">
-              <Button
-                disabled={uploading}
-                className="cursor-pointer"
-              >
-                {uploading ? 'Uploading...' : 'Select Files'}
-              </Button>
-            </label>
-          </div>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Upload className="h-5 w-5 text-[#1DDCD3]" />
+          Upload Content
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Upload Section */}
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+          <Upload className="h-8 w-8 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600 mb-4">
+            Drag and drop your content files here, or click to browse
+          </p>
+          <Input
+            type="file"
+            multiple
+            accept="image/*,video/*"
+            onChange={handleFileUpload}
+            className="hidden"
+            id="file-upload"
+            disabled={isUploading}
+          />
+          <Button
+            onClick={() => document.getElementById('file-upload')?.click()}
+            disabled={isUploading}
+            className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
+          >
+            {isUploading ? 'Uploading...' : 'Choose Files'}
+          </Button>
+        </div>
 
-          {uploads.length > 0 && (
-            <div className="space-y-3">
-              <h4 className="font-medium">Uploaded Files</h4>
-              {uploads.map((upload) => {
-                const review = getUploadReview(upload.id);
-                
-                return (
-                  <div key={upload.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <File className="h-4 w-4 text-gray-500" />
-                      <div>
-                        <div className="font-medium text-sm">{upload.filename}</div>
-                        <div className="text-xs text-gray-500">
-                          {new Date(upload.created_at).toLocaleString()}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(review?.status)}
-                      {getStatusBadge(review?.status)}
+        {/* Description */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Content Description (Optional)
+          </label>
+          <Textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Add any notes or descriptions about your content..."
+            rows={3}
+          />
+        </div>
+
+        {/* Uploaded Files */}
+        {uploadedFiles.length > 0 && (
+          <div>
+            <h4 className="font-medium text-gray-700 mb-3">Uploaded Files</h4>
+            <div className="space-y-2">
+              {uploadedFiles.map((file) => (
+                <div
+                  key={file.id}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    {getFileIcon(file.mime_type)}
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {file.filename}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {formatFileSize(file.file_size)} • {new Date(file.created_at).toLocaleDateString()}
+                      </p>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {reviews.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Review Feedback</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {reviews.map((review) => (
-              <div key={review.id} className="border rounded-lg p-4 space-y-2">
-                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    {getStatusIcon(review.status)}
-                    {getStatusBadge(review.status)}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {new Date(review.reviewed_at).toLocaleString()}
+                    <Badge variant="outline" className="text-xs">
+                      Uploaded
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveFile(file.id)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-                
-                {review.ai_commentary && (
-                  <div className="bg-blue-50 rounded p-3 text-sm">
-                    <strong>AI Analysis:</strong> {review.ai_commentary}
-                  </div>
-                )}
-                
-                {review.feedback && (
-                  <div className="bg-gray-50 rounded p-3 text-sm">
-                    <strong>Brand Feedback:</strong> {review.feedback}
-                  </div>
-                )}
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-    </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Instructions */}
+        <div className="bg-blue-50 rounded-lg p-4">
+          <h4 className="font-medium text-blue-800 mb-2">Upload Guidelines</h4>
+          <ul className="text-sm text-blue-700 space-y-1">
+            <li>• Upload high-quality images (JPG, PNG) or videos (MP4, MOV)</li>
+            <li>• Include multiple angles or variations if applicable</li>
+            <li>• Add descriptions to provide context for your content</li>
+            <li>• Wait for brand approval before publishing</li>
+          </ul>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

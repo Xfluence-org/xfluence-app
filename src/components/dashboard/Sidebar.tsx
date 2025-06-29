@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -16,6 +17,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userName = 'Name' }) => {
     if (location.pathname === '/dashboard') return 'dashboard';
     if (location.pathname === '/opportunities') return 'opportunities';
     if (location.pathname === '/campaigns') return 'campaigns';
+    if (location.pathname.startsWith('/task-workflow/')) return 'campaigns';
     if (location.pathname === '/settings') return 'settings';
     return 'dashboard';
   };
