@@ -1,9 +1,10 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Users, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Users, Plus, UserCheck, UserPlus } from 'lucide-react';
+import InfluencerAssignmentModal from './InfluencerAssignmentModal';
 
 interface InfluencerAssignmentSectionProps {
   campaignId: string;
@@ -21,11 +22,20 @@ interface ContentType {
   purpose: string;
 }
 
+interface AssignmentRequest {
+  contentType: string;
+  category: string;
+  tier: string;
+  requiredCount: number;
+}
+
 const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = ({ 
   campaignId, 
   llmInteractions 
 }) => {
   const [activeContentType, setActiveContentType] = useState<string>('');
+  const [showAssignmentModal, setShowAssignmentModal] = useState(false);
+  const [currentAssignmentRequest, setCurrentAssignmentRequest] = useState<AssignmentRequest | null>(null);
 
   // Extract campaign strategy data
   const getCampaignStrategyData = () => {
@@ -90,6 +100,23 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
       setActiveContentType(contentTypes[0].type);
     }
   }, [contentTypes, activeContentType]);
+
+  const handleAssignInfluencers = (contentType: string, category: string, tier: string, requiredCount: number) => {
+    setCurrentAssignmentRequest({
+      contentType,
+      category,
+      tier,
+      requiredCount
+    });
+    setShowAssignmentModal(true);
+  };
+
+  const handleAssignmentComplete = (assignments: any[]) => {
+    console.log('Assignment completed:', assignments);
+    // TODO: Implement actual assignment logic
+    setShowAssignmentModal(false);
+    setCurrentAssignmentRequest(null);
+  };
 
   const getContentTypeIcon = (type: string) => {
     switch (type) {
@@ -197,7 +224,7 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
         </Card>
       )}
 
-      {/* Content Distribution Buckets */}
+      {/* Content Distribution & Assignment */}
       {contentTypes.length > 0 && (
         <Card>
           <CardHeader>
@@ -239,8 +266,8 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
                           {/* Tier breakdown for this category */}
                           <div className="space-y-2">
                             {Object.entries(influencerAllocation?.allocation_by_tier?.[category] || {}).map(([tier, count]) => (
-                              <div key={tier} className="flex items-center justify-between bg-white rounded p-2">
-                                <div className="flex items-center gap-2">
+                              <div key={tier} className="flex items-center justify-between bg-white rounded p-3">
+                                <div className="flex items-center gap-3">
                                   <span className="text-lg">{getTierIcon(tier)}</span>
                                   <div>
                                     <div className="text-sm font-medium capitalize">{tier}</div>
@@ -248,11 +275,20 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
                                   </div>
                                 </div>
                                 <div className="text-center">
-                                  <div className="text-sm font-bold">{safeRender(count)}</div>
-                                  <button className="text-xs text-[#1DDCD3] hover:underline flex items-center gap-1">
-                                    <Plus className="h-3 w-3" />
+                                  <div className="text-sm font-bold mb-1">{safeRender(count)}</div>
+                                  <Button
+                                    size="sm"
+                                    className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90 text-white"
+                                    onClick={() => handleAssignInfluencers(
+                                      content.type,
+                                      category,
+                                      tier,
+                                      Number(count)
+                                    )}
+                                  >
+                                    <Plus className="h-3 w-3 mr-1" />
                                     Assign
-                                  </button>
+                                  </Button>
                                 </div>
                               </div>
                             ))}
@@ -260,24 +296,23 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
                         </div>
                       ))}
                     </div>
-
-                    {/* Assigned Influencers Section (Placeholder) */}
-                    <div className="bg-gray-50 rounded-lg p-6">
-                      <h5 className="font-medium text-gray-700 mb-3">
-                        Assigned Influencers for {getContentTypeDisplay(content.type)}
-                      </h5>
-                      <div className="text-center py-8 text-gray-500">
-                        <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                        <p>No influencers assigned yet</p>
-                        <p className="text-sm mt-1">Approved influencers will appear here for assignment</p>
-                      </div>
-                    </div>
                   </div>
                 </TabsContent>
               ))}
             </Tabs>
           </CardContent>
         </Card>
+      )}
+
+      {/* Assignment Modal */}
+      {showAssignmentModal && currentAssignmentRequest && (
+        <InfluencerAssignmentModal
+          isOpen={showAssignmentModal}
+          onClose={() => setShowAssignmentModal(false)}
+          campaignId={campaignId}
+          assignmentRequest={currentAssignmentRequest}
+          onAssignmentComplete={handleAssignmentComplete}
+        />
       )}
     </div>
   );
