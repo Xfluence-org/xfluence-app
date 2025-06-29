@@ -1,24 +1,27 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Send, Sparkles } from 'lucide-react';
+import { FileText, Share, Plus, Edit3 } from 'lucide-react';
 import { taskWorkflowService, ContentDraft } from '@/services/taskWorkflowService';
-import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ContentDraftEditorProps {
   taskId: string;
-  onDraftShared: () => void;
+  onDraftShared?: () => void;
 }
 
-const ContentDraftEditor: React.FC<ContentDraftEditorProps> = ({ taskId, onDraftShared }) => {
+const ContentDraftEditor: React.FC<ContentDraftEditorProps> = ({
+  taskId,
+  onDraftShared
+}) => {
   const [drafts, setDrafts] = useState<ContentDraft[]>([]);
-  const [newContent, setNewContent] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [sharing, setSharing] = useState<string | null>(null);
-  const { toast } = useToast();
+  const [newDraftContent, setNewDraftContent] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  const [isSharing, setIsSharing] = useState<string | null>(null);
+  const [showEditor, setShowEditor] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchDrafts();
@@ -26,89 +29,39 @@ const ContentDraftEditor: React.FC<ContentDraftEditorProps> = ({ taskId, onDraft
 
   const fetchDrafts = async () => {
     try {
-      const fetchedDrafts = await taskWorkflowService.getContentDrafts(taskId);
-      setDrafts(fetchedDrafts);
+      const data = await taskWorkflowService.getContentDrafts(taskId);
+      setDrafts(data);
     } catch (error) {
       console.error('Error fetching drafts:', error);
     }
   };
 
-  const generateAIDraft = async () => {
-    setLoading(true);
+  const handleCreateDraft = async () => {
+    if (!newDraftContent.trim() || !user?.id) return;
+
     try {
-      // Mock AI content generation
-      const aiContent = `🎯 Exciting News! 
-
-Just tried the amazing new [Product Name] and I'm absolutely loving it! The quality is incredible and it's exactly what I've been looking for. 
-
-✨ What I love most:
-• Premium quality that exceeds expectations
-• Perfect for my daily routine
-• Sustainable and eco-friendly approach
-
-Swipe to see my honest review! What do you think? Let me know in the comments below 👇
-
-#BrandPartnership #ProductReview #Authentic #Quality #Lifestyle
-
-@brandname - Thank you for this amazing collaboration! 🙏`;
-
-      setNewContent(aiContent);
-      toast({
-        title: "AI Draft Generated",
-        description: "Review and edit the content before saving."
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to generate AI draft",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const saveDraft = async () => {
-    if (!newContent.trim()) return;
-
-    setLoading(true);
-    try {
-      await taskWorkflowService.createContentDraft(taskId, newContent, 'current_user_id');
-      setNewContent('');
+      setIsCreating(true);
+      await taskWorkflowService.createContentDraft(taskId, newDraftContent, user.id);
+      setNewDraftContent('');
+      setShowEditor(false);
       await fetchDrafts();
-      toast({
-        title: "Draft Saved",
-        description: "Content draft has been saved successfully."
-      });
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save draft",
-        variant: "destructive"
-      });
+      console.error('Error creating draft:', error);
     } finally {
-      setLoading(false);
+      setIsCreating(false);
     }
   };
 
-  const shareDraft = async (draftId: string) => {
-    setSharing(draftId);
+  const handleShareDraft = async (draftId: string) => {
     try {
+      setIsSharing(draftId);
       await taskWorkflowService.shareContentDraft(draftId, taskId);
       await fetchDrafts();
-      onDraftShared();
-      toast({
-        title: "Draft Shared",
-        description: "Content draft has been shared with the influencer."
-      });
+      onDraftShared?.();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to share draft",
-        variant: "destructive"
-      });
+      console.error('Error sharing draft:', error);
     } finally {
-      setSharing(null);
+      setIsSharing(null);
     }
   };
 
@@ -116,85 +69,124 @@ Swipe to see my honest review! What do you think? Let me know in the comments be
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Content Draft Editor
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Content Requirements & Drafts
+            </CardTitle>
             <Button
-              onClick={generateAIDraft}
-              disabled={loading}
-              variant="outline"
-              className="flex items-center gap-2"
+              onClick={() => setShowEditor(!showEditor)}
+              className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
             >
-              <Sparkles className="h-4 w-4" />
-              Generate AI Draft
+              <Plus className="h-4 w-4 mr-2" />
+              Create Draft
             </Button>
           </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {/* Draft Editor */}
+            {showEditor && (
+              <Card className="border-dashed">
+                <CardContent className="p-4">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Content Requirements
+                      </label>
+                      <Textarea
+                        value={newDraftContent}
+                        onChange={(e) => setNewDraftContent(e.target.value)}
+                        placeholder="Write detailed content requirements for the influencer. Include key messages, hashtags, mentions, do's and don'ts..."
+                        rows={6}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={handleCreateDraft}
+                        disabled={!newDraftContent.trim() || isCreating}
+                        className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
+                      >
+                        {isCreating ? 'Creating...' : 'Save Draft'}
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setShowEditor(false);
+                          setNewDraftContent('');
+                        }}
+                        variant="outline"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-          <Textarea
-            placeholder="Write content draft for the influencer..."
-            value={newContent}
-            onChange={(e) => setNewContent(e.target.value)}
-            rows={10}
-            className="resize-none"
-          />
-
-          <Button
-            onClick={saveDraft}
-            disabled={loading || !newContent.trim()}
-            className="w-full"
-          >
-            Save Draft
-          </Button>
+            {/* Existing Drafts */}
+            {drafts.length > 0 ? (
+              <div className="space-y-4">
+                {drafts.map((draft) => (
+                  <Card key={draft.id} className="border-l-4 border-l-[#1DDCD3]">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Edit3 className="h-4 w-4 text-gray-500" />
+                          <span className="text-sm text-gray-500">
+                            {draft.ai_generated ? 'AI Generated' : 'Brand Created'} •{' '}
+                            {new Date(draft.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {draft.shared_with_influencer ? (
+                            <Badge className="bg-green-100 text-green-800">
+                              Shared with Influencer
+                            </Badge>
+                          ) : (
+                            <Button
+                              onClick={() => handleShareDraft(draft.id)}
+                              disabled={isSharing === draft.id}
+                              size="sm"
+                              className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
+                            >
+                              <Share className="h-3 w-3 mr-1" />
+                              {isSharing === draft.id ? 'Sharing...' : 'Share'}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                      <div className="prose prose-sm max-w-none">
+                        <p className="text-gray-900 whitespace-pre-wrap">{draft.content}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="border-dashed">
+                <CardContent className="p-8 text-center">
+                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="font-medium text-gray-900 mb-2">
+                    No content requirements created yet
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    Create content requirements to guide the influencer on what type of content to create.
+                  </p>
+                  <Button
+                    onClick={() => setShowEditor(true)}
+                    className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create First Draft
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </CardContent>
       </Card>
-
-      {drafts.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Saved Drafts</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {drafts.map((draft) => (
-              <div key={draft.id} className="border rounded-lg p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex gap-2">
-                    {draft.ai_generated && (
-                      <Badge variant="secondary">AI Generated</Badge>
-                    )}
-                    {draft.brand_edited && (
-                      <Badge variant="outline">Brand Edited</Badge>
-                    )}
-                    {draft.shared_with_influencer && (
-                      <Badge className="bg-green-100 text-green-800">Shared</Badge>
-                    )}
-                  </div>
-                  {!draft.shared_with_influencer && (
-                    <Button
-                      size="sm"
-                      onClick={() => shareDraft(draft.id)}
-                      disabled={sharing === draft.id}
-                      className="flex items-center gap-2"
-                    >
-                      <Send className="h-3 w-3" />
-                      Share with Influencer
-                    </Button>
-                  )}
-                </div>
-                <div className="bg-gray-50 rounded p-3 text-sm whitespace-pre-wrap">
-                  {draft.content}
-                </div>
-                <div className="text-xs text-gray-500">
-                  Created: {new Date(draft.created_at).toLocaleString()}
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
