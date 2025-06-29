@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { TaskDetail } from '@/types/taskDetail';
+import { taskWorkflowService } from '@/services/taskWorkflowService';
 
 export const useTaskDetail = (taskId: string | null) => {
   const [loading, setLoading] = useState(false);
@@ -25,6 +25,8 @@ export const useTaskDetail = (taskId: string | null) => {
           status,
           ai_score,
           next_deadline,
+          current_phase,
+          phase_visibility,
           campaigns (
             title,
             due_date,
@@ -41,7 +43,17 @@ export const useTaskDetail = (taskId: string | null) => {
         throw taskError;
       }
 
-      // Fetch task feedback
+      // Initialize workflow if it doesn't exist
+      try {
+        const workflowStates = await taskWorkflowService.getWorkflowStates(taskId);
+        if (workflowStates.length === 0) {
+          await taskWorkflowService.initializeWorkflow(taskId);
+        }
+      } catch (error) {
+        console.error('Error initializing workflow:', error);
+      }
+
+      // ... keep existing code (fetch feedbacks, uploads, transform data)
       const { data: feedbacks, error: feedbackError } = await supabase
         .from('task_feedback')
         .select(`
@@ -60,7 +72,6 @@ export const useTaskDetail = (taskId: string | null) => {
         console.error('Error fetching feedback:', feedbackError);
       }
 
-      // Fetch task uploads
       const { data: uploads, error: uploadsError } = await supabase
         .from('task_uploads')
         .select('id, filename, created_at')
@@ -71,7 +82,6 @@ export const useTaskDetail = (taskId: string | null) => {
         console.error('Error fetching uploads:', uploadsError);
       }
 
-      // Transform data to match TaskDetail interface
       const formatDate = (dateStr: string) => {
         if (!dateStr) return 'TBD';
         const date = new Date(dateStr);
@@ -82,24 +92,23 @@ export const useTaskDetail = (taskId: string | null) => {
         });
       };
 
-      const getStatusSteps = (status: string) => {
-        const steps = {
-          contentRequirement: status !== 'content_requirement',
-          contentReview: ['content_review', 'post_content', 'content_analytics'].includes(status),
-          publishContent: ['post_content', 'content_analytics'].includes(status),
+      const getStatusSteps = (status: string, currentPhase: string) => {
+        return {
+          contentRequirement: currentPhase !== 'content_requirement' || status !== 'content_requirement',
+          contentReview: ['content_review', 'post_content', 'content_analytics'].includes(status) || currentPhase === 'content_review',
+          publishContent: ['post_content', 'content_analytics'].includes(status) || currentPhase === 'publish_analytics',
           contentAnalytics: status === 'content_analytics',
-          currentStep: status as 'contentRequirement' | 'contentReview' | 'publishContent' | 'contentAnalytics'
+          currentStep: currentPhase as 'contentRequirement' | 'contentReview' | 'publishContent' | 'contentAnalytics'
         };
-        return steps;
       };
 
       const taskDetailData: TaskDetail = {
         id: task.id,
         title: task.task_type || 'Task',
-        platform: 'Instagram', // Default platform
+        platform: 'Instagram',
         brand: task.campaigns?.brands?.name || 'Unknown Brand',
         dueDate: formatDate(task.next_deadline),
-        status: getStatusSteps(task.status || 'content_requirement'),
+        status: getStatusSteps(task.status || 'content_requirement', task.current_phase || 'content_requirement'),
         description: task.description || `Create engaging ${task.task_type?.toLowerCase()} content`,
         deliverables: [
           `1 ${task.task_type} post`,
@@ -126,6 +135,7 @@ export const useTaskDetail = (taskId: string | null) => {
     enabled: !!taskId
   });
 
+  // ... keep existing code (submitForReview, downloadBrief, sendMessage, uploadFiles, deleteFile functions)
   const submitForReview = async (taskId: string) => {
     try {
       console.log('Submitting task for review:', taskId);
@@ -141,7 +151,6 @@ export const useTaskDetail = (taskId: string | null) => {
         
       if (error) throw error;
       
-      // Refetch to update UI
       refetch();
       
       return { success: true, message: 'Task submitted for review successfully!' };
@@ -154,7 +163,6 @@ export const useTaskDetail = (taskId: string | null) => {
   const downloadBrief = async (taskId: string) => {
     try {
       console.log('Downloading brief for task:', taskId);
-      // In a real implementation, this would download a file
       return { success: true, message: 'Brief downloaded successfully!' };
     } catch (error) {
       console.error('Error downloading brief:', error);
@@ -170,14 +178,13 @@ export const useTaskDetail = (taskId: string | null) => {
         .from('task_feedback')
         .insert({
           task_id: taskId,
-          sender_id: '46ec4c99-d347-4c75-a0bb-5c409ed6c8ab', // Test user ID
+          sender_id: '46ec4c99-d347-4c75-a0bb-5c409ed6c8ab',
           sender_type: 'influencer',
           message
         });
         
       if (error) throw error;
       
-      // Refetch to update UI
       refetch();
       
       return { success: true, message: 'Message sent successfully!' };
@@ -191,16 +198,14 @@ export const useTaskDetail = (taskId: string | null) => {
     try {
       console.log('Uploading files:', { taskId, fileCount: files.length });
       
-      // In a real implementation, you would upload to Supabase Storage first
-      // For now, we'll just create database records
       const uploadPromises = Array.from(files).map(file => 
         supabase
           .from('task_uploads')
           .insert({
             task_id: taskId,
-            uploader_id: '46ec4c99-d347-4c75-a0bb-5c409ed6c8ab', // Test user ID
+            uploader_id: '46ec4c99-d347-4c75-a0bb-5c409ed6c8ab',
             filename: file.name,
-            file_url: `placeholder-url-${file.name}`, // In reality, this would be the Supabase Storage URL
+            file_url: `placeholder-url-${file.name}`,
             file_size: file.size,
             mime_type: file.type
           })
@@ -208,7 +213,6 @@ export const useTaskDetail = (taskId: string | null) => {
       
       await Promise.all(uploadPromises);
       
-      // Refetch to update UI
       refetch();
       
       return { success: true, message: 'Files uploaded successfully!' };
@@ -229,7 +233,6 @@ export const useTaskDetail = (taskId: string | null) => {
         
       if (error) throw error;
       
-      // Refetch to update UI
       refetch();
       
       return { success: true, message: 'File deleted successfully!' };

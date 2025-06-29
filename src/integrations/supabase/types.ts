@@ -182,11 +182,13 @@ export type Database = {
           campaign_id: string | null
           content_assignment_id: string | null
           created_at: string | null
+          current_phase: string | null
           deliverable_count: number | null
           description: string | null
           id: string
           influencer_id: string | null
           next_deadline: string | null
+          phase_visibility: Json | null
           progress: number | null
           status: string | null
           task_type: string
@@ -198,11 +200,13 @@ export type Database = {
           campaign_id?: string | null
           content_assignment_id?: string | null
           created_at?: string | null
+          current_phase?: string | null
           deliverable_count?: number | null
           description?: string | null
           id?: string
           influencer_id?: string | null
           next_deadline?: string | null
+          phase_visibility?: Json | null
           progress?: number | null
           status?: string | null
           task_type: string
@@ -214,11 +218,13 @@ export type Database = {
           campaign_id?: string | null
           content_assignment_id?: string | null
           created_at?: string | null
+          current_phase?: string | null
           deliverable_count?: number | null
           description?: string | null
           id?: string
           influencer_id?: string | null
           next_deadline?: string | null
+          phase_visibility?: Json | null
           progress?: number | null
           status?: string | null
           task_type?: string
@@ -445,11 +451,121 @@ export type Database = {
         }
         Relationships: []
       }
+      task_content_drafts: {
+        Row: {
+          ai_generated: boolean | null
+          brand_edited: boolean | null
+          content: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          shared_with_influencer: boolean | null
+          task_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ai_generated?: boolean | null
+          brand_edited?: boolean | null
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          shared_with_influencer?: boolean | null
+          task_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ai_generated?: boolean | null
+          brand_edited?: boolean | null
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          shared_with_influencer?: boolean | null
+          task_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_content_drafts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_content_drafts_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_content_reviews: {
+        Row: {
+          ai_commentary: string | null
+          created_at: string | null
+          feedback: string | null
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          task_id: string | null
+          upload_id: string | null
+        }
+        Insert: {
+          ai_commentary?: string | null
+          created_at?: string | null
+          feedback?: string | null
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status: string
+          task_id?: string | null
+          upload_id?: string | null
+        }
+        Update: {
+          ai_commentary?: string | null
+          created_at?: string | null
+          feedback?: string | null
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          task_id?: string | null
+          upload_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_content_reviews_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_content_reviews_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_content_reviews_upload_id_fkey"
+            columns: ["upload_id"]
+            isOneToOne: false
+            referencedRelation: "task_uploads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_feedback: {
         Row: {
           created_at: string | null
           id: string
           message: string
+          phase: string | null
           sender_id: string | null
           sender_type: string
           task_id: string | null
@@ -458,6 +574,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           message: string
+          phase?: string | null
           sender_id?: string | null
           sender_type: string
           task_id?: string | null
@@ -466,6 +583,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           message?: string
+          phase?: string | null
           sender_id?: string | null
           sender_type?: string
           task_id?: string | null
@@ -480,6 +598,44 @@ export type Database = {
           },
           {
             foreignKeyName: "task_feedback_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_published_content: {
+        Row: {
+          analytics_data: Json | null
+          created_at: string | null
+          id: string
+          platform: string | null
+          published_url: string
+          task_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          analytics_data?: Json | null
+          created_at?: string | null
+          id?: string
+          platform?: string | null
+          published_url: string
+          task_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          analytics_data?: Json | null
+          created_at?: string | null
+          id?: string
+          platform?: string | null
+          published_url?: string
+          task_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_published_content_task_id_fkey"
             columns: ["task_id"]
             isOneToOne: false
             referencedRelation: "campaign_tasks"
@@ -531,6 +687,41 @@ export type Database = {
             columns: ["uploader_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_workflow_states: {
+        Row: {
+          created_at: string | null
+          id: string
+          phase: string
+          status: string
+          task_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          phase: string
+          status: string
+          task_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          phase?: string
+          status?: string
+          task_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_workflow_states_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_tasks"
             referencedColumns: ["id"]
           },
         ]
