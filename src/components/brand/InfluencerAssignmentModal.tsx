@@ -141,10 +141,20 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
   const handleAssignmentSubmit = async () => {
     setLoading(true);
     try {
-      // Prepare assignments data
+      // Prepare assignments data with proper typing
       const assignments = [
         ...selectedInfluencers.map(id => ({ type: 'applicant', id })),
-        ...manualInfluencers.map(inf => ({ type: 'manual', data: inf }))
+        ...manualInfluencers.map(inf => ({ 
+          type: 'manual', 
+          data: {
+            name: inf.name,
+            handle: inf.handle,
+            platform: inf.platform,
+            followers: inf.followers,
+            engagementRate: inf.engagementRate,
+            category: inf.category
+          }
+        }))
       ];
 
       // Call the database function to assign influencers
@@ -153,7 +163,7 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
         content_type_param: assignmentRequest.contentType,
         category_param: assignmentRequest.category,
         tier_param: assignmentRequest.tier,
-        assignments: assignments
+        assignments: assignments as any // Cast to satisfy the Json type requirement
       });
 
       if (error) {

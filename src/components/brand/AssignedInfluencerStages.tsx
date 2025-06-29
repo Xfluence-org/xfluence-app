@@ -19,11 +19,20 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
+interface ManualInfluencerData {
+  name: string;
+  handle: string;
+  followers?: number;
+  engagementRate?: number;
+  platform?: string;
+  category?: string;
+}
+
 interface AssignedInfluencer {
   id: string;
   influencer_id: string | null;
   assignment_type: 'applicant' | 'manual';
-  manual_data: any;
+  manual_data: ManualInfluencerData | null;
   influencer_name?: string;
   influencer_handle?: string;
   tasks: Task[];
@@ -107,18 +116,19 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
       // Combine assignment data with influencer profiles
       const enrichedAssignments: AssignedInfluencer[] = assignments?.map(assignment => {
         const profile = influencerProfiles.find(p => p.id === assignment.influencer_id);
+        const manualData = assignment.manual_data as ManualInfluencerData | null;
         
         return {
           id: assignment.id,
           influencer_id: assignment.influencer_id,
-          assignment_type: assignment.assignment_type,
-          manual_data: assignment.manual_data,
+          assignment_type: assignment.assignment_type as 'applicant' | 'manual',
+          manual_data: manualData,
           influencer_name: assignment.assignment_type === 'applicant' 
             ? profile?.name || 'Unknown User'
-            : assignment.manual_data?.name,
+            : manualData?.name || 'Manual Entry',
           influencer_handle: assignment.assignment_type === 'applicant'
             ? `user_${assignment.influencer_id?.slice(0, 8)}`
-            : assignment.manual_data?.handle,
+            : manualData?.handle || 'unknown',
           tasks: assignment.campaign_tasks || []
         };
       }) || [];
