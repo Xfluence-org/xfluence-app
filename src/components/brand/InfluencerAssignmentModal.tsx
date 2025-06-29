@@ -231,7 +231,7 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
         content_type_param: assignmentRequest.contentType,
         category_param: assignmentRequest.category,
         tier_param: assignmentRequest.tier,
-        assignments: JSON.stringify(assignments) as any // Serialize to JSON string
+        assignments: assignments // Pass as JSONB directly, not stringified
       });
 
       if (error) {
