@@ -31,33 +31,18 @@ export const useTaskWorkflow = (taskId: string | null) => {
     }
   });
 
-  const transitionPhaseMutation = useMutation({
-    mutationFn: ({ taskId, fromPhase, action }: {
-      taskId: string;
-      fromPhase: 'content_requirement' | 'content_review' | 'publish_analytics';
-      action: 'complete' | 'reject';
-    }) => taskWorkflowService.transitionPhase(taskId, fromPhase, action),
+  const startContentRequirementMutation = useMutation({
+    mutationFn: (taskId: string) => taskWorkflowService.startContentRequirementPhase(taskId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['task-workflow'] });
     }
   });
 
-  const createContentDraftMutation = useMutation({
-    mutationFn: ({ taskId, content, createdBy }: {
+  const shareContentRequirementsMutation = useMutation({
+    mutationFn: ({ taskId, requirements }: {
       taskId: string;
-      content: string;
-      createdBy: string;
-    }) => taskWorkflowService.createContentDraft(taskId, content, createdBy),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['content-drafts'] });
-    }
-  });
-
-  const shareContentDraftMutation = useMutation({
-    mutationFn: ({ draftId, taskId }: {
-      draftId: string;
-      taskId: string;
-    }) => taskWorkflowService.shareContentDraft(draftId, taskId),
+      requirements: string;
+    }) => taskWorkflowService.shareContentRequirements(taskId, requirements),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['content-drafts'] });
       queryClient.invalidateQueries({ queryKey: ['task-workflow'] });
@@ -109,18 +94,16 @@ export const useTaskWorkflow = (taskId: string | null) => {
     
     // Mutations
     initializeWorkflow: initializeWorkflowMutation.mutate,
-    transitionPhase: transitionPhaseMutation.mutate,
-    createContentDraft: createContentDraftMutation.mutate,
-    shareContentDraft: shareContentDraftMutation.mutate,
+    startContentRequirement: startContentRequirementMutation.mutate,
+    shareContentRequirements: shareContentRequirementsMutation.mutate,
     createContentReview: createContentReviewMutation.mutate,
     submitPublishedContent: submitPublishedContentMutation.mutate,
     checkPhaseVisibility: checkPhaseVisibilityMutation.mutate,
     
     // Mutation states
     isInitializing: initializeWorkflowMutation.isPending,
-    isTransitioning: transitionPhaseMutation.isPending,
-    isCreatingDraft: createContentDraftMutation.isPending,
-    isSharingDraft: shareContentDraftMutation.isPending,
+    isStartingRequirement: startContentRequirementMutation.isPending,
+    isSharingRequirements: shareContentRequirementsMutation.isPending,
     isCreatingReview: createContentReviewMutation.isPending,
     isSubmittingPublished: submitPublishedContentMutation.isPending
   };
