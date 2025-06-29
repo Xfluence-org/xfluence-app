@@ -23,7 +23,6 @@ export const useCampaignDetail = (campaignId: string | null) => {
           amount,
           due_date,
           created_at,
-          llm_campaign,
           is_public,
           brands (
             name,
