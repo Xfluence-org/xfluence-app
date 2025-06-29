@@ -127,25 +127,34 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
     return category || 'General';
   };
 
-  // Helper function to safely get LLM campaign data
+  // Helper function to safely get LLM campaign data from llmInteractions
   const getLLMCampaignData = (): LLMCampaignData | null => {
-    if (!campaign?.llm_campaign) return null;
+    if (!campaign?.llmInteractions || campaign.llmInteractions.length === 0) {
+      return null;
+    }
     
-    console.log('Raw llm_campaign data:', campaign.llm_campaign);
+    console.log('Raw llmInteractions data:', campaign.llmInteractions);
+    
+    // Find the most recent LLM interaction
+    const latestInteraction = campaign.llmInteractions[0]; // Already sorted by created_at DESC
+    
+    if (!latestInteraction?.raw_output) {
+      return null;
+    }
     
     let parsedData = null;
     
     // Check if it's already an object
-    if (typeof campaign.llm_campaign === 'object' && campaign.llm_campaign !== null && !Array.isArray(campaign.llm_campaign)) {
-      parsedData = campaign.llm_campaign;
+    if (typeof latestInteraction.raw_output === 'object' && latestInteraction.raw_output !== null && !Array.isArray(latestInteraction.raw_output)) {
+      parsedData = latestInteraction.raw_output;
     }
     
     // If it's a string, try to parse it as JSON
-    if (typeof campaign.llm_campaign === 'string') {
+    if (typeof latestInteraction.raw_output === 'string') {
       try {
-        parsedData = JSON.parse(campaign.llm_campaign);
+        parsedData = JSON.parse(latestInteraction.raw_output);
       } catch (e) {
-        console.error('Error parsing llm_campaign JSON:', e);
+        console.error('Error parsing llm interaction JSON:', e);
         return null;
       }
     }
@@ -279,6 +288,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                 onToggle={handlePublicToggle}
               />
 
+              
               <div className="bg-gray-50 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-[#1a1f2e] mb-4">Campaign Information</h3>
                 
