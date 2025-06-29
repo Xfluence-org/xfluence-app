@@ -43,7 +43,13 @@ export const taskWorkflowService = {
       .order('created_at', { ascending: true });
 
     if (error) throw error;
-    return data || [];
+    
+    // Cast the data to properly typed WorkflowState array
+    return (data || []).map(item => ({
+      ...item,
+      phase: item.phase as 'content_requirement' | 'content_review' | 'publish_analytics',
+      status: item.status as 'not_started' | 'in_progress' | 'completed' | 'rejected'
+    }));
   },
 
   async initializeWorkflow(taskId: string): Promise<void> {
@@ -192,7 +198,12 @@ export const taskWorkflowService = {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    
+    // Cast the data to properly typed ContentReview array
+    return (data || []).map(item => ({
+      ...item,
+      status: item.status as 'pending' | 'approved' | 'rejected'
+    }));
   },
 
   async createContentReview(
@@ -270,7 +281,9 @@ export const taskWorkflowService = {
     }
 
     // Influencers see phases based on visibility settings
-    return task?.phase_visibility || {
+    // Cast phase_visibility to the correct type
+    const phaseVisibility = task?.phase_visibility as Record<string, boolean> | null;
+    return phaseVisibility || {
       content_requirement: false,
       content_review: false,
       publish_analytics: false
