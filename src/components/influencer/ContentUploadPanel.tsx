@@ -69,7 +69,14 @@ const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setReviews(data || []);
+      
+      // Cast the data to properly typed ContentReview array
+      const typedReviews = (data || []).map(item => ({
+        ...item,
+        status: item.status as 'pending' | 'approved' | 'rejected'
+      }));
+      
+      setReviews(typedReviews);
     } catch (error) {
       console.error('Error fetching reviews:', error);
     }

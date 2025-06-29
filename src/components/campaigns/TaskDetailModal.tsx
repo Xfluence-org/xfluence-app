@@ -44,7 +44,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     console.log('Refreshing task detail...');
   };
 
-  const handleContentUploaded = () => {
+  const handleUploadComplete = () => {
     // Handle content upload completion
     console.log('Content uploaded successfully');
     handleRefresh();
@@ -110,7 +110,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 <TabsContent value="upload" className="mt-6">
                   <ContentUploadPanel 
                     taskId={taskDetail.id} 
-                    onContentUploaded={handleContentUploaded}
+                    onUploadComplete={handleUploadComplete}
                   />
                 </TabsContent>
 

@@ -293,7 +293,12 @@ export const taskWorkflowService = {
     const { data, error } = await query;
     if (error) throw error;
 
-    return data || [];
+    // Cast the data to properly typed TaskFeedback array
+    return (data || []).map(item => ({
+      ...item,
+      sender_type: item.sender_type as 'brand' | 'influencer',
+      phase: item.phase as 'content_requirement' | 'content_review' | 'publish_analytics'
+    }));
   },
 
   async sendTaskFeedback(
