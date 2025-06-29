@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -116,7 +115,7 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
       // Combine assignment data with influencer profiles
       const enrichedAssignments: AssignedInfluencer[] = assignments?.map(assignment => {
         const profile = influencerProfiles.find(p => p.id === assignment.influencer_id);
-        const manualData = assignment.manual_data as ManualInfluencerData | null;
+        const manualData = assignment.manual_data as unknown as ManualInfluencerData | null;
         
         return {
           id: assignment.id,
