@@ -44,6 +44,12 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     console.log('Refreshing task detail...');
   };
 
+  const handleContentUploaded = () => {
+    // Handle content upload completion
+    console.log('Content uploaded successfully');
+    handleRefresh();
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -102,7 +108,10 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 </TabsContent>
 
                 <TabsContent value="upload" className="mt-6">
-                  <ContentUploadPanel taskId={taskDetail.id} />
+                  <ContentUploadPanel 
+                    taskId={taskDetail.id} 
+                    onContentUploaded={handleContentUploaded}
+                  />
                 </TabsContent>
 
                 <TabsContent value="publish" className="mt-6">
