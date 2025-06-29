@@ -7,7 +7,7 @@ import { taskWorkflowService, WorkflowState } from '@/services/taskWorkflowServi
 import ContentDraftEditor from './ContentDraftEditor';
 import ContentReviewPanel from './ContentReviewPanel';
 import PublishAnalyticsView from './PublishAnalyticsView';
-import Button from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 
 interface TaskWorkflowManagerProps {
   taskId: string;
