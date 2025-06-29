@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -27,8 +27,32 @@ const TaskWorkflowModal: React.FC<TaskWorkflowModalProps> = ({
   onRefresh
 }) => {
   const [requirements, setRequirements] = useState('');
+  const [existingDraft, setExistingDraft] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (isOpen && taskId) {
+      fetchExistingRequirements();
+    }
+  }, [isOpen, taskId]);
+
+  const fetchExistingRequirements = async () => {
+    try {
+      setIsLoading(true);
+      const drafts = await taskWorkflowService.getContentDrafts(taskId);
+      if (drafts.length > 0) {
+        const latestDraft = drafts[0];
+        setExistingDraft(latestDraft);
+        setRequirements(latestDraft.content);
+      }
+    } catch (error) {
+      console.error('Error fetching existing requirements:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const getPhaseStatus = (phase: string) => {
     const state = workflowStates.find(s => s.phase === phase);
@@ -70,7 +94,7 @@ const TaskWorkflowModal: React.FC<TaskWorkflowModalProps> = ({
       });
       
       onRefresh();
-      onClose();
+      await fetchExistingRequirements(); // Refresh the data
     } catch (error) {
       console.error('Error sharing requirements:', error);
       toast({
@@ -134,35 +158,49 @@ const TaskWorkflowModal: React.FC<TaskWorkflowModalProps> = ({
                 {getStatusBadge(getPhaseStatus('content_requirement'))}
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Content Requirements & Guidelines
-                </label>
-                <Textarea
-                  value={requirements}
-                  onChange={(e) => setRequirements(e.target.value)}
-                  placeholder="Enter detailed content requirements, guidelines, key messages, hashtags, mentions, etc."
-                  rows={10}
-                  className="w-full"
-                />
-              </div>
-              
-              <div className="flex justify-end">
-                <Button 
-                  onClick={handleShareRequirements}
-                  disabled={isSubmitting || !requirements.trim()}
-                  className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
-                >
-                  {isSubmitting ? 'Sharing...' : 'Share Requirements with Influencer'}
-                </Button>
-              </div>
+              {isLoading ? (
+                <div className="text-center py-4">Loading...</div>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Content Requirements & Guidelines
+                    </label>
+                    <Textarea
+                      value={requirements}
+                      onChange={(e) => setRequirements(e.target.value)}
+                      placeholder="Enter detailed content requirements, guidelines, key messages, hashtags, mentions, etc."
+                      rows={10}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <Button 
+                      onClick={handleShareRequirements}
+                      disabled={isSubmitting || !requirements.trim()}
+                      className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
+                    >
+                      {isSubmitting ? 'Sharing...' : 'Share Requirements with Influencer'}
+                    </Button>
+                  </div>
 
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  <strong>Note:</strong> Once you share these requirements, the influencer will be able to see them 
-                  and both of you will move to the Content Review phase where they can upload content for your approval.
-                </p>
-              </div>
+                  {existingDraft && existingDraft.shared_with_influencer && (
+                    <div className="mt-4 p-3 bg-green-50 rounded-lg">
+                      <p className="text-sm text-green-800">
+                        <strong>✓ Shared:</strong> These requirements have been shared with the influencer on {new Date(existingDraft.updated_at).toLocaleString()}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <strong>Note:</strong> Once you share these requirements, the influencer will be able to see them 
+                      and both of you will move to the Content Review phase where they can upload content for your approval.
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
           </TabsContent>
 
