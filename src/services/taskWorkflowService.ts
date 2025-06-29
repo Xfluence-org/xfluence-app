@@ -101,7 +101,13 @@ export class TaskWorkflowService {
       .order('created_at');
 
     if (error) throw error;
-    return data || [];
+    
+    // Cast the data to properly typed WorkflowState array
+    return (data || []).map(item => ({
+      ...item,
+      phase: item.phase as WorkflowPhase,
+      status: item.status as WorkflowStatus
+    }));
   }
 
   async createContentDraft(taskId: string, content: string, createdBy: string): Promise<string> {
@@ -198,7 +204,12 @@ export class TaskWorkflowService {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    
+    // Cast the data to properly typed ContentReview array
+    return (data || []).map(item => ({
+      ...item,
+      status: item.status as 'pending' | 'approved' | 'rejected'
+    }));
   }
 
   async submitPublishedContent(taskId: string, publishedUrl: string, platform: string): Promise<void> {
@@ -252,7 +263,8 @@ export class TaskWorkflowService {
       };
     }
 
-    return visibility;
+    // Cast the visibility data to the expected type
+    return visibility as Record<WorkflowPhase, boolean>;
   }
 }
 

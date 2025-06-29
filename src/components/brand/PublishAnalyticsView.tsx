@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -39,7 +38,16 @@ const PublishAnalyticsView: React.FC<PublishAnalyticsViewProps> = ({ taskId }) =
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPublishedContent(data || []);
+      
+      // Transform the data to match our expected type
+      const transformedData: PublishedContent[] = (data || []).map(item => ({
+        ...item,
+        analytics_data: typeof item.analytics_data === 'object' && item.analytics_data !== null 
+          ? item.analytics_data as { views?: number; likes?: number; comments?: number; shares?: number; }
+          : { views: 0, likes: 0, comments: 0, shares: 0 }
+      }));
+      
+      setPublishedContent(transformedData);
     } catch (error) {
       console.error('Error fetching published content:', error);
     } finally {

@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Upload, File, CheckCircle, XCircle, Clock } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { taskWorkflowService, ContentReview } from '@/services/taskWorkflowService';
 
@@ -143,7 +142,6 @@ const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({ taskId }) => {
             />
             <label htmlFor="file-upload">
               <Button
-                as="span"
                 disabled={uploading}
                 className="cursor-pointer"
               >
