@@ -157,8 +157,10 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
     }
   });
 
-  const getPhaseStatus = (task: TaskData, phase: string) => {
-    const workflowState = task.workflow_states?.find(ws => ws.phase === phase);
+  const getPhaseStatus = (task: any, phase: string) => {
+    // Check both possible property names for workflow states
+    const workflowStates = task.workflow_states || task.task_workflow_states;
+    const workflowState = workflowStates?.find((ws: any) => ws.phase === phase);
     return workflowState?.status || 'pending';
   };
 
@@ -302,11 +304,20 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
                     <div className="space-y-3">
                       {tasks.map((task: TaskData) => {
                         const isExpanded = expandedTaskId === task.id;
-                        const requirementsAccepted = task.workflow_states?.find(ws => ws.phase === 'content_requirement')?.status === 'completed';
+                        const workflowStates = task.workflow_states || task.task_workflow_states;
+                        const requirementsAccepted = workflowStates?.find((ws: any) => ws.phase === 'content_requirement')?.status === 'completed';
                         const contentReviewStatus = getPhaseStatus(task, 'content_review');
                         
-                        // Check if we're in the review phase - content_review must be in_progress and not completed
-                        const isInReviewPhase = contentReviewStatus === 'in_progress' && contentReviewStatus !== 'completed';
+                        // Debug logging
+                        console.log('Task workflow states:', {
+                          taskId: task.id,
+                          workflowStates: workflowStates,
+                          contentReviewStatus: contentReviewStatus,
+                          requirementsAccepted: requirementsAccepted
+                        });
+                        
+                        // Check if we're in the review phase - content_review must be in_progress or active
+                        const isInReviewPhase = contentReviewStatus === 'in_progress' || contentReviewStatus === 'active';
                         
                         return (
                           <Card key={task.id} className="overflow-hidden border-gray-200 rounded-xl hover:shadow-md transition-all">
