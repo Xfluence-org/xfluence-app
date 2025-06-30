@@ -215,46 +215,77 @@ const BrandAIAssistantPage = () => {
                         setIsTyping(false);
                         const aiResponse: Message = {
                           id: (Date.now() + 1).toString(),
-                          content: `To determine which influencer (@shreya24x7 or @preeinnyc) is a better fit for your Instagram campaign, we need to evaluate their profiles based on key criteria such as audience demographics, content relevance, engagement, and alignment with your campaign goals. Here's a breakdown:
+                          content: `Predicting the reach and results of your campaign requires assessing metrics from the video and influencer profile alongside broader campaign factors. Here's an analysis and prediction:
 
 ---
 
-### **@shreya24x7**
+### **Influencer Metrics (Based on Provided Data)**
 
-* **Niche:** Primarily Fashion and Lifestyle.
-* **Audience Demographics:** Predominantly young women (18–30), interested in beauty tips, DIY hacks, and skincare routines.
-* **Content Style:** Vibrant and trendy, featuring outfit ideas and skincare product reviews with a casual, relatable tone.
-* **Engagement Rate:** Moderate to high, with consistent likes, comments, and occasional shares.
-* **Strengths for Campaign:**
-
-  * Strong alignment with the **Fashion** niche.
-  * Frequently shares skincare-related content, making her audience primed for your product.
-  * Focuses on natural and organic products, which may resonate with your brand positioning.
+1. **Reach:** ~2,890 unique accounts per post.
+2. **Engagement Rate:** ~7.16%.
+3. **Impressions-to-Reach Ratio:** ~1.18 (indicates good visibility beyond the initial audience).
 
 ---
 
-### **@preeinnyc**
+### **Video-Specific Predictions**
 
-* **Niche:** Lifestyle and Urban Living.
-* **Audience Demographics:** Diverse following, with a mix of young professionals and skincare enthusiasts in metropolitan areas.
-* **Content Style:** Polished and sophisticated, featuring high-quality visuals and in-depth reviews.
-* **Engagement Rate:** Moderate, with higher traction on reels than posts.
-* **Strengths for Campaign:**
+1. **Predicted Reach (per reel/post):**
 
-  * Strong appeal to urban and premium audiences.
-  * Creates content that emphasizes product efficacy and results, which fits well with your reel strategy.
+   * Instagram reels typically outperform posts due to algorithm preferences.
+   * With a well-optimized reel:
+
+     * **Baseline Reach:** ~3,000–4,500 accounts.
+     * **Viral Potential:** ~6,000–8,000 accounts if boosted by engagement or trending sounds.
+
+2. **Engagement Predictions:**
+
+   * **Reel:** Higher engagement due to dynamic content, ~8–12% engagement rate.
+   * **Post:** Moderate engagement, ~6–9% engagement rate.
+   * **Engagement Volume:** ~250–500 likes/comments/shares combined.
+
+3. **Conversion Potential:**
+
+   * Average conversion rates for influencer campaigns in skincare: ~2–4%.
+   * Expected conversions: ~60–120 actions (clicks, purchases, etc.), depending on CTA clarity and audience relevance.
 
 ---
 
-### **Winner: @shreya24x7**
+### **Campaign-Level Predictions**
 
-**Why?**
+1. **Total Campaign Reach:**
 
-* **Better Niche Fit:** Her content and audience are more aligned with the **Fashion** focus of your campaign.
-* **Authenticity:** Relatable and casual style suits the nano/micro influencer strategy.
-* **Engaged Audience:** Her followers already expect skincare-related content, ensuring better receptivity.
+   * If 5 influencers post reels, with an average reach of ~4,000:
+     $5 \times 4,000 = 20,000$ unique accounts.
+   * Adjust for overlap (~10% audience overlap):
+     Final Reach: ~18,000 unique accounts.
 
-@preeinnyc is a strong contender for premium or urban-focused campaigns but may not align as seamlessly with your specific goals.`,
+2. **Total Engagement Volume:**
+
+   * ~10% engagement rate average across reels/posts.
+     $18,000 \times 10\% = 1,800$ likes/comments/shares.
+
+3. **Conversions:**
+
+   * ~3% average conversion rate:
+     $1,800 \times 3\% = 54$ purchases or clicks.
+
+---
+
+### **Factors Affecting Results**
+
+1. **Boosting Strategy:** Paid promotions can increase reach by 2–3x.
+2. **Relevance of Influencer Audience:** High audience-product fit may yield better engagement and conversions.
+3. **Seasonality:** Campaign timing (e.g., holidays) can boost engagement and purchasing intent.
+
+---
+
+### **Predicted Campaign Results**
+
+* **Reach:** ~18,000–24,000 unique accounts.
+* **Engagement:** ~1,800–2,400 likes/comments/shares.
+* **Conversions:** ~50–100 actions (clicks or purchases).
+
+Would you like suggestions for optimizing reach or engagement further?`,
                           sender: 'assistant',
                           timestamp: new Date()
                         };
