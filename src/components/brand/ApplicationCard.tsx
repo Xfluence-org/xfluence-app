@@ -38,18 +38,12 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
     <div className="bg-white rounded-2xl border border-gray-200 p-4 hover:shadow-lg transition-all duration-200">
       <div className="flex items-start gap-4">
         {/* Profile Image */}
-        <div className="w-12 h-12 bg-gray-200 rounded-full flex-shrink-0 flex items-center justify-center">
-          {application.influencer.profileImage ? (
-            <img 
-              src={application.influencer.profileImage} 
-              alt={application.influencer.name}
-              className="w-full h-full rounded-full object-cover"
-            />
-          ) : (
-            <span className="text-gray-500 font-semibold">
-              {application.influencer.name.charAt(0)}
-            </span>
-          )}
+        <div className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden">
+          <img 
+            src={application.influencer.profileImage || `https://i.pravatar.cc/150?u=${application.influencer.handle}`} 
+            alt={application.influencer.name}
+            className="w-full h-full object-cover"
+          />
         </div>
 
         <div className="flex-1 min-w-0">
@@ -59,7 +53,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               <h4 className="font-semibold text-[#1a1f2e] truncate">
                 {application.influencer.name}
               </h4>
-              <p className="text-sm text-gray-600">@{application.influencer.handle}</p>
+              <p className="text-sm text-gray-600">{application.influencer.handle.startsWith('@') ? application.influencer.handle : `@${application.influencer.handle}`}</p>
             </div>
             <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
               {formatTimeAgo(application.appliedAt)}
@@ -121,20 +115,14 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
           {/* Actions */}
           <div className="flex gap-2">
             <button
-              onClick={() => onViewProfile(application.id)}
-              className="flex-1 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 text-sm font-medium"
-            >
-              View Profile
-            </button>
-            <button
               onClick={() => onReject(application.id)}
-              className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 text-sm font-medium"
+              className="flex-1 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 text-sm font-medium"
             >
               Reject
             </button>
             <button
               onClick={() => onApprove(application.id)}
-              className="px-3 py-2 bg-[#1DDCD3] text-white rounded-lg hover:bg-[#00D4C7] transition-all duration-200 text-sm font-medium"
+              className="flex-1 px-3 py-2 bg-[#1DDCD3] text-white rounded-lg hover:bg-[#00D4C7] transition-all duration-200 text-sm font-medium"
             >
               Approve
             </button>

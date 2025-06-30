@@ -35,7 +35,7 @@ const DetailedCampaignCard: React.FC<DetailedCampaignCardProps> = ({
         <div className="flex items-start gap-4">
           {/* Brand Logo Placeholder */}
           <div className="w-12 h-12 bg-gradient-to-br from-[#1DDCD3] to-[#1DDCD3]/70 rounded-xl flex-shrink-0 flex items-center justify-center">
-            <span className="text-white font-bold text-lg">{campaign.brand.charAt(0)}</span>
+            <span className="text-white font-bold text-lg">{campaign.brand?.charAt(0) || '?'}</span>
           </div>
           
           <div>
@@ -46,7 +46,7 @@ const DetailedCampaignCard: React.FC<DetailedCampaignCardProps> = ({
               </span>
             </div>
             <p className="text-gray-600 mb-1">
-              {campaign.brand} • {campaign.taskCount} tasks • Due {campaign.dueDate}
+              {campaign.brand || 'Unknown Brand'} • {campaign.taskCount} tasks • Due {campaign.dueDate}
             </p>
             <div className="flex items-center gap-4 text-sm text-gray-600">
               <span>
@@ -58,7 +58,7 @@ const DetailedCampaignCard: React.FC<DetailedCampaignCardProps> = ({
 
         <div className="text-right">
           <p className="text-2xl font-bold text-[#1DDCD3]">
-            ${campaign.amount.toLocaleString()}
+            ${(campaign.amount || 0).toLocaleString()}
           </p>
         </div>
       </div>

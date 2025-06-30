@@ -58,9 +58,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onViewDetails }) => {
         <div className="flex justify-between items-center">
           <span className={cn(
             "px-3 py-1 rounded-full text-white text-xs font-medium",
-            getStatusColor(task.status)
+            getStatusColor(task.progress === 100 ? 'completed' : task.status)
           )}>
-            {formatStatus(task.status)}
+            {formatStatus(task.progress === 100 ? 'completed' : task.status)}
           </span>
           <span className="px-3 py-1 rounded-full bg-gray-100 text-[#1a1f2e] text-xs font-medium">
             {task.progress}%

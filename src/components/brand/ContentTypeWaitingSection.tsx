@@ -21,6 +21,7 @@ interface WaitingParticipant {
   influencer_handle: string;
   followers_count: number;
   engagement_rate: number;
+  influencer_profile_url?: string;
 }
 
 const ContentTypeWaitingSection: React.FC<ContentTypeWaitingSectionProps> = ({ 
@@ -37,37 +38,25 @@ const ContentTypeWaitingSection: React.FC<ContentTypeWaitingSectionProps> = ({
     staleTime: 0,
     refetchOnMount: 'always',
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('campaign_participants')
-        .select(`
-          id,
-          influencer_id,
-          accepted_at,
-          current_stage,
-          status,
-          profiles(
-            id,
-            name
-          )
-        `)
-        .eq('campaign_id', campaignId)
-        .eq('status', 'accepted')
-        .eq('current_stage', 'waiting_for_requirements');
+      const { data, error } = await supabase.rpc('get_campaign_waiting_influencers', {
+        campaign_id_param: campaignId
+      });
 
       if (error) {
         console.error('Error fetching waiting participants:', error);
         throw error;
       }
 
-      // Transform data
+      // Transform data - no need for fallbacks as the function handles it
       const transformed = data?.map((participant: any) => ({
         id: participant.id,
         influencer_id: participant.influencer_id,
         accepted_at: participant.accepted_at,
-        influencer_name: participant.profiles?.name || 'Unknown Influencer',
-        influencer_handle: `@${participant.profiles?.name?.toLowerCase().replace(/\s+/g, '') || 'user'}`,
-        followers_count: 15000 + Math.floor(Math.random() * 35000),
-        engagement_rate: 3.0 + Math.random() * 4
+        influencer_name: participant.influencer_name,
+        influencer_handle: participant.influencer_handle,
+        followers_count: participant.followers_count || 25000,
+        engagement_rate: participant.engagement_rate || 4.5,
+        influencer_profile_url: participant.influencer_profile_url
       })) || [];
       
       return transformed;
@@ -108,17 +97,19 @@ const ContentTypeWaitingSection: React.FC<ContentTypeWaitingSectionProps> = ({
             <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarFallback className="bg-[#1DDCD3] text-white text-sm">
-                      {participant.influencer_name.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="h-10 w-10 rounded-full overflow-hidden">
+                    <img 
+                      src={participant.influencer_profile_url || `https://i.pravatar.cc/150?u=${participant.influencer_handle}`} 
+                      alt={participant.influencer_name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                   
                   <div>
                     <div className="flex items-center gap-2">
                       <h4 className="font-medium text-sm">{participant.influencer_name}</h4>
                       <Badge variant="outline" className="text-xs">
-                        {participant.influencer_handle}
+                        {participant.influencer_handle.startsWith('@') ? participant.influencer_handle : `@${participant.influencer_handle}`}
                       </Badge>
                     </div>
                     

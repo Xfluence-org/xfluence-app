@@ -72,7 +72,7 @@ export const useDashboardData = () => {
       console.log('Fetching invitations for dashboard');
       
       const { data: campaignData, error } = await supabase.rpc('get_influencer_campaigns', {
-        tab_filter: 'requests'
+        status_filter: 'requests'
       });
 
       if (error) {
@@ -159,7 +159,7 @@ export const useDashboardData = () => {
       console.log('Fetching active campaigns for dashboard');
       
       const { data: campaignData, error } = await supabase.rpc('get_influencer_campaigns', {
-        tab_filter: 'active'
+        status_filter: 'active'
       });
 
       if (error) {
@@ -218,8 +218,8 @@ export const useDashboardData = () => {
           amount: row.amount ? Math.floor(row.amount / 100) : 0,
           due_date: row.due_date,
           overall_progress: isWaitingForRequirements ? 0 : (row.overall_progress || 0),
-          task_count: isWaitingForRequirements ? 0 : Number(row.task_count),
-          completed_tasks: isWaitingForRequirements ? 0 : Number(row.completed_tasks),
+          task_count: isWaitingForRequirements ? 0 : (Number(row.task_count) || 0),
+          completed_tasks: isWaitingForRequirements ? 0 : (Number(row.completed_tasks) || 0),
           tasks,
           isWaitingForRequirements
         };

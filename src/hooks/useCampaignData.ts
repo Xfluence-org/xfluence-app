@@ -14,7 +14,7 @@ export const useCampaignData = (tabFilter?: CampaignTab) => {
       
       // Call the database function to get filtered campaigns
       const { data: campaignData, error } = await supabase.rpc('get_influencer_campaigns', {
-        tab_filter: dbTabFilter
+        status_filter: dbTabFilter
       });
 
       if (error) {
@@ -95,12 +95,12 @@ export const useCampaignData = (tabFilter?: CampaignTab) => {
           title: row.campaign_title,
           brand: row.brand_name,
           status: getDisplayStatus(row.campaign_status),
-          taskCount: isWaitingForRequirements ? 0 : Number(row.task_count),
+          taskCount: isWaitingForRequirements ? 0 : (Number(row.task_count) || 0),
           dueDate: formatDate(row.due_date),
           platforms: row.platforms || ['Instagram', 'TikTok'],
           amount: row.amount ? Math.floor(row.amount / 100) : 0, // Convert from cents
           overallProgress: isWaitingForRequirements ? 0 : (row.overall_progress || 0),
-          completedTasks: isWaitingForRequirements ? 0 : Number(row.completed_tasks),
+          completedTasks: isWaitingForRequirements ? 0 : (Number(row.completed_tasks) || 0),
           tasks,
           originalStatus: row.campaign_status,
           isWaitingForRequirements

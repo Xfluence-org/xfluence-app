@@ -47,6 +47,7 @@ interface AcceptedInfluencer {
   engagement_rate: number;
   ai_score: number;
   application_message: string;
+  influencer_profile_url?: string;
 }
 
 const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
@@ -412,18 +413,20 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
                           onCheckedChange={() => handleInfluencerSelect(applicant.application_id)}
                         />
                         
-                        <Avatar className="h-12 w-12">
-                          <AvatarFallback className="bg-[#1DDCD3] text-white">
-                            {applicant.influencer_name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="h-12 w-12 rounded-full overflow-hidden">
+                          <img 
+                            src={applicant.influencer_profile_url || `https://i.pravatar.cc/150?u=${applicant.influencer_handle}`} 
+                            alt={applicant.influencer_name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
 
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <h4 className="font-medium">{applicant.influencer_name}</h4>
                             <Badge variant="outline" className="text-xs">
                               <Instagram className="h-3 w-3 mr-1" />
-                              @{applicant.influencer_handle}
+                              {applicant.influencer_handle.startsWith('@') ? applicant.influencer_handle : `@${applicant.influencer_handle}`}
                             </Badge>
                           </div>
                           

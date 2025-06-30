@@ -42,19 +42,10 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
     queryFn: async () => {
       console.log('Fetching applications for campaign:', campaignId);
       
-      const { data, error } = await supabase
-        .from('campaign_participants')
-        .select(`
-          id,
-          influencer_id,
-          status,
-          application_message,
-          ai_match_score,
-          created_at,
-          profiles(name)
-        `)
-        .eq('campaign_id', campaignId)
-        .in('status', ['applied', 'pending', 'approved', 'rejected', 'accepted', 'invited']);
+      const { data, error } = await supabase.rpc('get_campaign_applications', {
+        campaign_id_param: campaignId,
+        limit_count: 100
+      });
 
       if (error) {
         console.error('Error fetching applications:', error);
@@ -65,16 +56,17 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
 
       // Transform data to match component expectations
       return data.map((app: any) => ({
-        id: app.id,
+        id: app.application_id,
         influencer_id: app.influencer_id,
-        status: app.status,
-        application_message: app.application_message || 'No message provided',
-        ai_match_score: app.ai_match_score || 0,
-        created_at: app.created_at,
-        influencer_name: app.profiles?.name || 'Unknown Influencer',
-        influencer_handle: `@user_${app.influencer_id.substring(0, 8)}`,
-        followers_count: 15000 + Math.floor(Math.random() * 35000),
-        engagement_rate: 3.0 + Math.random() * 4
+        status: app.application_status,
+        application_message: app.application_message,
+        ai_match_score: app.ai_score,
+        created_at: app.applied_at,
+        influencer_name: app.influencer_name,
+        influencer_handle: app.influencer_handle,
+        followers_count: app.followers_count,
+        engagement_rate: app.engagement_rate,
+        influencer_profile_url: app.influencer_profile_url
       }));
     }
   });
@@ -180,12 +172,16 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                    <User className="h-5 w-5 text-gray-500" />
+                  <div className="w-10 h-10 rounded-full overflow-hidden">
+                    <img 
+                      src={application.influencer_profile_url || `https://i.pravatar.cc/150?u=${application.influencer_handle}`} 
+                      alt={application.influencer_name}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <div>
                     <h5 className="font-medium text-gray-900">{application.influencer_name}</h5>
-                    <p className="text-sm text-gray-600">{application.influencer_handle}</p>
+                    <p className="text-sm text-gray-600">{application.influencer_handle.startsWith('@') ? application.influencer_handle : `@${application.influencer_handle}`}</p>
                   </div>
                   {getStatusBadge(application.status)}
                 </div>

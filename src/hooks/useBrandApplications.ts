@@ -17,11 +17,14 @@ interface BrandApplication {
   niche: string[];
   ai_score: number;
   application_message: string;
+  influencer_profile_url: string;
 }
 
 export const useBrandApplications = (limit: number = 10) => {
   return useQuery({
     queryKey: ['brand-applications', limit],
+    staleTime: 0,
+    refetchOnMount: 'always',
     queryFn: async () => {
       console.log('Fetching brand applications');
       

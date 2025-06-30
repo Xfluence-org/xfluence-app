@@ -37,10 +37,12 @@ const BrandDashboard: React.FC = () => {
     campaignId: app.campaign_id,
     campaignTitle: app.campaign_title,
     influencer: {
+      id: app.influencer_id,
       name: app.influencer_name,
       handle: app.influencer_handle,
       followers: app.followers_count,
-      platform: app.platform
+      platform: app.platform,
+      profileImage: app.influencer_profile_url
     },
     appliedAt: app.applied_at,
     status: app.application_status as 'pending' | 'approved' | 'rejected',

@@ -3,6 +3,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { LogOut } from 'lucide-react';
 
 interface SidebarProps {
   userName?: string;
@@ -68,12 +69,15 @@ const Sidebar: React.FC<SidebarProps> = ({ userName = 'Name' }) => {
 
       {/* User Section */}
       <div className="p-4 border-t border-gray-700">
-        <button 
-          onClick={handleLogout}
-          className="w-full text-left px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-all duration-200"
-        >
-          {userName} [log out →]
-        </button>
+        <div className="flex items-center justify-center">
+          <button 
+            onClick={handleLogout}
+            className="p-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-all duration-200"
+            title="Log out"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     </div>
   );

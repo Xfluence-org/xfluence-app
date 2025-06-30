@@ -55,7 +55,7 @@ export const formatStatus = (status: string): string => {
     'content_requirement': 'Requirements Phase',
     'content_requirements': 'Requirements Phase',
     'content_review': 'Review Phase',
-    'publish_analytics': 'Publishing Phase',
+    'publish_analytics': 'Awaiting Publish',
     'invited': 'Invited'
   };
   

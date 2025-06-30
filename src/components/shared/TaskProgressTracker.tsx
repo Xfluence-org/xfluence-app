@@ -183,14 +183,14 @@ const TaskProgressTracker: React.FC<TaskProgressTrackerProps> = ({
       title: 'Content Creation & Review',
       description: 'Create and submit content for approval',
       icon: Upload,
-      color: 'text-blue-600'
+      color: 'text-orange-600'
     },
     {
       id: 'publish_analytics',
       title: 'Publish & Analytics',
       description: 'Publish content and track performance',
       icon: TrendingUp,
-      color: 'text-green-600'
+      color: 'text-[#1DDCD3]'
     }
   ];
 
@@ -212,14 +212,14 @@ const TaskProgressTracker: React.FC<TaskProgressTrackerProps> = ({
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
-        return <Badge className="bg-green-100 text-green-800">Completed</Badge>;
+        return <Badge className="bg-green-100 text-green-700">Completed</Badge>;
       case 'in_progress':
       case 'active':
-        return <Badge className="bg-blue-100 text-blue-800">In Progress</Badge>;
+        return <Badge className="bg-[#1DDCD3]/10 text-[#1DDCD3]">In Progress</Badge>;
       case 'rejected':
-        return <Badge className="bg-red-100 text-red-800">Needs Revision</Badge>;
+        return <Badge className="bg-red-100 text-red-700">Needs Revision</Badge>;
       default:
-        return <Badge variant="outline">Not Started</Badge>;
+        return <Badge variant="outline" className="text-gray-600">Not Started</Badge>;
     }
   };
 
@@ -260,10 +260,9 @@ const TaskProgressTracker: React.FC<TaskProgressTrackerProps> = ({
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6 mt-6">
@@ -273,7 +272,7 @@ const TaskProgressTracker: React.FC<TaskProgressTrackerProps> = ({
                 <span className="text-sm font-medium">Overall Progress</span>
                 <span className="text-sm text-muted-foreground">{Math.round(progress)}%</span>
               </div>
-              <Progress value={progress} className="h-2" />
+              <Progress value={progress} className="h-2 [&>div]:bg-[#1DDCD3]" />
             </div>
 
             {/* Phase Cards */}
@@ -285,12 +284,12 @@ const TaskProgressTracker: React.FC<TaskProgressTrackerProps> = ({
                 return (
                   <div
                     key={phase.id}
-                    className={`relative p-4 rounded-lg border-2 transition-all ${
+                    className={`relative p-4 rounded-xl border transition-all ${
                       isActive 
-                        ? 'border-primary bg-primary/5' 
+                        ? 'border-[#1DDCD3] bg-[#1DDCD3]/5' 
                         : details.status === 'completed'
                         ? 'border-green-200 bg-green-50'
-                        : 'border-gray-200'
+                        : 'border-gray-200 bg-white'
                     }`}
                   >
                     <div className="flex items-start gap-4">
@@ -348,7 +347,7 @@ const TaskProgressTracker: React.FC<TaskProgressTrackerProps> = ({
                         details.status === 'completed' 
                           ? 'border-green-500' 
                           : details.status === 'in_progress' || details.status === 'active'
-                          ? 'border-blue-500'
+                          ? 'border-[#1DDCD3]'
                           : 'border-gray-300'
                       }`}>
                         {getPhaseIcon(phase, details.status)}
@@ -380,38 +379,6 @@ const TaskProgressTracker: React.FC<TaskProgressTrackerProps> = ({
             </div>
           </TabsContent>
 
-          <TabsContent value="activity" className="mt-6">
-            <ScrollArea className="h-[400px] pr-4">
-              <div className="space-y-4">
-                {activities.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">
-                    No activity recorded yet
-                  </p>
-                ) : (
-                  activities.map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-3 pb-4 border-b">
-                      <div className="flex-shrink-0 mt-1">
-                        {getActivityIcon(activity.action)}
-                      </div>
-                      
-                      <div className="flex-1 space-y-1">
-                        <p className="text-sm">{activity.description}</p>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <User className="h-3 w-3" />
-                            {activity.actor_name}
-                          </span>
-                          <span>
-                            {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
-          </TabsContent>
         </Tabs>
       </CardContent>
     </Card>

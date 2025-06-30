@@ -273,7 +273,7 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
                       <CardTitle className="text-base">{influencer.influencer_name}</CardTitle>
                       <div className="flex items-center gap-2 text-sm text-gray-500">
                         <Instagram className="h-3 w-3" />
-                        @{influencer.influencer_handle}
+                        {influencer.influencer_handle?.startsWith('@') ? influencer.influencer_handle : `@${influencer.influencer_handle}`}
                         <Badge variant="outline" className="text-xs">
                           {influencer.assignment_type === 'manual' ? 'Manual' : 'Applied'}
                         </Badge>

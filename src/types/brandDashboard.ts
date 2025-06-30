@@ -23,6 +23,7 @@ export interface InfluencerApplication {
   campaignId: string;
   campaignTitle: string;
   influencer: {
+    id: string;
     name: string;
     handle: string;
     followers: number;

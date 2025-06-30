@@ -179,7 +179,7 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
     const statusConfig = {
       'content_requirement': { label: 'Requirements Phase', color: 'bg-blue-100 text-blue-700' },
       'content_review': { label: 'Content Review', color: 'bg-yellow-100 text-yellow-700' },
-      'publish_analytics': { label: 'Publishing', color: 'bg-green-100 text-green-700' },
+      'publish_analytics': { label: 'Awaiting Publish & Analytics', color: 'bg-purple-100 text-purple-700' },
       'completed': { label: 'Completed', color: 'bg-green-100 text-green-700' }
     };
 
@@ -222,6 +222,11 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
   }
 
   const { participant, tasks } = participantData || { participant: null, tasks: [] };
+  
+  // Calculate overall progress from tasks
+  const overallProgress = tasks.length > 0 
+    ? Math.round(tasks.reduce((sum: number, task: any) => sum + (task.progress || 0), 0) / tasks.length)
+    : 0;
 
   return (
     <>
@@ -229,28 +234,27 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
-              <span>{participant?.profiles?.name || 'Influencer'} - Task Progress</span>
-              <Badge variant="outline">
-                {participant?.current_stage?.replace('_', ' ') || 'Unknown Stage'}
+              <span className="text-[#1a1f2e]">{participant?.profiles?.name || 'Influencer'} - Task Progress</span>
+              <Badge className="bg-[#1DDCD3]/10 text-[#1DDCD3] border-[#1DDCD3]/20">
+                {participant?.current_stage?.replace(/_/g, ' ') || 'Unknown Stage'}
               </Badge>
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-gray-600">
               View and manage tasks for this influencer
             </DialogDescription>
           </DialogHeader>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="tasks">Tasks</TabsTrigger>
               <TabsTrigger value="progress">Progress</TabsTrigger>
-              <TabsTrigger value="activity">Activity</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4 mt-4">
-              <Card>
+              <Card className="border-gray-200 rounded-xl shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-lg">Participant Summary</CardTitle>
+                  <CardTitle className="text-lg text-[#1a1f2e]">Participant Summary</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-4">
@@ -273,17 +277,17 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
                     <div>
                       <p className="text-sm text-gray-600">Progress</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <Progress value={participant?.progress || 0} className="h-2 flex-1" />
-                        <span className="text-sm font-medium">{participant?.progress || 0}%</span>
+                        <Progress value={overallProgress} className="h-2 flex-1 [&>div]:bg-[#1DDCD3]" />
+                        <span className="text-sm font-medium">{overallProgress}%</span>
                       </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-gray-200 rounded-xl shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-lg">Task Overview</CardTitle>
+                  <CardTitle className="text-lg text-[#1a1f2e]">Task Overview</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-gray-600 mb-4">
@@ -299,18 +303,21 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
                       {tasks.map((task: TaskData) => {
                         const isExpanded = expandedTaskId === task.id;
                         const requirementsAccepted = task.workflow_states?.find(ws => ws.phase === 'content_requirement')?.status === 'completed';
-                        const isInReviewPhase = task.status === 'content_review' || getPhaseStatus(task, 'content_review') === 'active';
+                        const contentReviewStatus = getPhaseStatus(task, 'content_review');
+                        
+                        // Check if we're in the review phase - content_review must be in_progress and not completed
+                        const isInReviewPhase = contentReviewStatus === 'in_progress' && contentReviewStatus !== 'completed';
                         
                         return (
-                          <Card key={task.id} className="overflow-hidden">
+                          <Card key={task.id} className="overflow-hidden border-gray-200 rounded-xl hover:shadow-md transition-all">
                             <div 
-                              className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                              className="p-4 cursor-pointer hover:bg-gray-50/50 transition-colors"
                               onClick={() => setExpandedTaskId(isExpanded ? null : task.id)}
                             >
                               <div className="flex items-center justify-between mb-2">
                                 <h4 className="font-medium">{task.title}</h4>
                                 <div className="flex items-center gap-2">
-                                  {getStatusBadge(task.status)}
+                                  {getStatusBadge(task.progress === 100 ? 'completed' : (task.current_phase || task.status))}
                                   <ChevronRight className={`h-4 w-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
                                 </div>
                               </div>
@@ -322,8 +329,8 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
                                 </div>
                               )}
                               <div className="flex items-center gap-2 mt-3">
-                                <Progress value={task.progress} className="h-2 flex-1" />
-                                <span className="text-sm text-gray-600">{task.progress}%</span>
+                                <Progress value={task.progress} className="h-2 flex-1 [&>div]:bg-[#1DDCD3]" />
+                                <span className="text-sm text-gray-600 font-medium">{task.progress}%</span>
                               </div>
                               <div className="mt-2 flex items-center gap-4">
                                 {task.task_feedback && task.task_feedback.length > 0 && (
@@ -433,7 +440,7 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
 
             <TabsContent value="tasks" className="space-y-4 mt-4">
               {tasks.length === 0 ? (
-                <Card>
+                <Card className="border-gray-200 rounded-xl">
                   <CardContent className="py-8">
                     <div className="text-center">
                       <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -444,11 +451,11 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
                 </Card>
               ) : (
                 tasks.map((task: TaskData) => (
-                  <Card key={task.id}>
+                  <Card key={task.id} className="border-gray-200 rounded-xl shadow-sm">
                     <CardHeader>
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">{task.title}</CardTitle>
-                        {getStatusBadge(task.status)}
+                        <CardTitle className="text-lg text-[#1a1f2e]">{task.title}</CardTitle>
+                        {getStatusBadge(task.progress === 100 ? 'completed' : (task.current_phase || task.status))}
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -473,7 +480,7 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
                               <div key={phase} className="flex items-center gap-3">
                                 {getPhaseIcon(status)}
                                 <span className={`text-sm ${
-                                  status === 'active' ? 'font-medium text-blue-700' : 
+                                  status === 'active' || status === 'in_progress' ? 'font-medium text-[#1DDCD3]' : 
                                   status === 'completed' ? 'text-green-700' : 'text-gray-500'
                                 }`}>
                                   {phaseNames[phase]}
@@ -488,8 +495,8 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
                       {task.content_drafts?.length > 0 && (
                         <div>
                           <p className="text-sm font-medium mb-2">Content Requirements</p>
-                          <div className="bg-blue-50 rounded-lg p-3">
-                            <p className="text-sm text-blue-800">
+                          <div className="bg-[#1DDCD3]/10 rounded-lg p-3">
+                            <p className="text-sm text-[#1DDCD3] font-medium">
                               {task.content_drafts.filter(d => d.shared_with_influencer).length} requirement(s) shared
                             </p>
                           </div>
@@ -526,22 +533,14 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
               )}
             </TabsContent>
 
-            <TabsContent value="activity" className="space-y-4 mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Recent Activity</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-center py-8 text-gray-500">
-                    Activity timeline coming soon
-                  </p>
-                </CardContent>
-              </Card>
-            </TabsContent>
           </Tabs>
 
           <div className="flex justify-end gap-2 mt-6">
-            <Button variant="outline" onClick={onClose}>
+            <Button 
+              variant="outline" 
+              onClick={onClose}
+              className="border-gray-200 hover:bg-gray-50 text-gray-700"
+            >
               Close
             </Button>
           </div>

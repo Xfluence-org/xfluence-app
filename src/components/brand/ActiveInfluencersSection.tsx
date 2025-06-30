@@ -27,6 +27,7 @@ interface ActiveParticipant {
   task_progress: number;
   tasks_completed: number;
   total_tasks: number;
+  influencer_profile_url?: string;
 }
 
 const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({ campaignId, onViewTasks }) => {
@@ -36,22 +37,9 @@ const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({ cam
     staleTime: 0,
     refetchOnMount: 'always',
     queryFn: async () => {
-      const { data: participants, error: participantsError } = await supabase
-        .from('campaign_participants')
-        .select(`
-          id,
-          influencer_id,
-          accepted_at,
-          current_stage,
-          status,
-          profiles(
-            id,
-            name
-          )
-        `)
-        .eq('campaign_id', campaignId)
-        .eq('status', 'accepted')
-        .in('current_stage', ['content_creation', 'content_review', 'publish_analytics']);
+      const { data: participants, error: participantsError } = await supabase.rpc('get_campaign_active_influencers', {
+        campaign_id_param: campaignId
+      });
 
       if (participantsError) {
         // console.error('Error fetching active participants:', participantsError);
@@ -86,13 +74,14 @@ const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({ cam
           influencer_id: participant.influencer_id,
           current_stage: participant.current_stage,
           accepted_at: participant.accepted_at,
-          influencer_name: participant.profiles?.name || 'Unknown Influencer',
-          influencer_handle: `@${participant.profiles?.name?.toLowerCase().replace(/\s+/g, '') || 'user'}`,
-          followers_count: 15000 + Math.floor(Math.random() * 35000),
-          engagement_rate: 3.0 + Math.random() * 4,
+          influencer_name: participant.influencer_name,
+          influencer_handle: participant.influencer_handle,
+          followers_count: participant.followers_count,
+          engagement_rate: participant.engagement_rate,
           task_progress: avgProgress,
           tasks_completed: completedTasks,
-          total_tasks: tasks.length
+          total_tasks: tasks.length,
+          influencer_profile_url: participant.influencer_profile_url
         };
       }) || [];
       
@@ -150,17 +139,19 @@ const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({ cam
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4 flex-1">
-                      <Avatar className="h-12 w-12">
-                        <AvatarFallback className="bg-[#1DDCD3] text-white">
-                          {participant.influencer_name.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
+                      <div className="h-12 w-12 rounded-full overflow-hidden">
+                        <img 
+                          src={participant.influencer_profile_url || `https://i.pravatar.cc/150?u=${participant.influencer_handle}`} 
+                          alt={participant.influencer_name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
                       
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <h4 className="font-medium">{participant.influencer_name}</h4>
                           <Badge variant="outline" className="text-xs">
-                            {participant.influencer_handle}
+                            {participant.influencer_handle.startsWith('@') ? participant.influencer_handle : `@${participant.influencer_handle}`}
                           </Badge>
                           <Badge className={`text-xs ${stageInfo.color}`}>
                             {stageInfo.label}
