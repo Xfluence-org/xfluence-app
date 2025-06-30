@@ -79,50 +79,108 @@ const CampaignAnalyticsDashboard: React.FC<CampaignAnalyticsDashboardProps> = ({
   // Fetch campaign analytics data
   const { data: analyticsData, isLoading, refetch } = useQuery({
     queryKey: ['campaign-analytics', campaignId],
+    enabled: !!campaignId,
     queryFn: async () => {
-      // Get all published content with analytics for this campaign
+      console.log('Fetching analytics for campaign:', campaignId);
+      
+      // First get tasks for this campaign
+      const { data: campaignTasks, error: tasksError } = await supabase
+        .from('campaign_tasks')
+        .select('id')
+        .eq('campaign_id', campaignId);
+        
+      if (tasksError) {
+        console.error('Error fetching campaign tasks:', tasksError);
+        throw tasksError;
+      }
+      
+      const taskIds = campaignTasks?.map(t => t.id) || [];
+      
+      console.log('Found task IDs for campaign:', taskIds);
+      
+      // If no tasks found, return empty data
+      if (taskIds.length === 0) {
+        console.log('No tasks found for campaign:', campaignId);
+        return {
+          publishedContent: [],
+          summary: {
+            totalPosts: 0,
+            totalImpressions: 0,
+            totalEngagements: 0,
+            avgEngagementRate: 0,
+            totalClicks: 0,
+            totalReach: 0
+          },
+          platformStats: []
+        };
+      }
+      
+      // Get all published content with analytics for these tasks
       const { data: publishedContent, error } = await supabase
         .from('task_published_content')
         .select(`
           *,
-          task_analytics(*),
-          campaign_tasks!inner(
-            id,
-            title,
-            campaign_id,
-            influencer:profiles!campaign_tasks_influencer_id_fkey(
-              id,
-              name
-            )
-          )
+          task_analytics(*)
         `)
-        .eq('campaign_tasks.campaign_id', campaignId)
-        .order('published_at', { ascending: false });
+        .in('task_id', taskIds)
+        .order('created_at', { ascending: false });
+        
+      // Get influencer info separately
+      const tasksWithInfluencers = await Promise.all(
+        (publishedContent || []).map(async (content) => {
+          const { data: task } = await supabase
+            .from('campaign_tasks')
+            .select(`
+              id,
+              title,
+              influencer:profiles!campaign_tasks_influencer_id_fkey(
+                id,
+                name
+              )
+            `)
+            .eq('id', content.task_id)
+            .single();
+            
+          return {
+            ...content,
+            campaign_tasks: task
+          };
+        })
+      );
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching published content:', error);
+        throw error;
+      }
+      
+      console.log('Campaign tasks:', campaignTasks);
+      console.log('Published content:', publishedContent);
+
+      // Use the processed data with influencer info
+      const publishedContentData = tasksWithInfluencers;
 
       // Process the data
-      const totalImpressions = publishedContent?.reduce((sum, item) => 
+      const totalImpressions = publishedContentData?.reduce((sum, item) => 
         sum + (item.task_analytics?.[0]?.impressions || 0), 0
       ) || 0;
 
-      const totalEngagements = publishedContent?.reduce((sum, item) => {
+      const totalEngagements = publishedContentData?.reduce((sum, item) => {
         const analytics = item.task_analytics?.[0];
         if (!analytics) return sum;
         return sum + analytics.likes + analytics.comments + analytics.shares;
       }, 0) || 0;
 
-      const avgEngagementRate = publishedContent?.reduce((sum, item) => 
+      const avgEngagementRate = publishedContentData?.reduce((sum, item) => 
         sum + (item.task_analytics?.[0]?.engagement_rate || 0), 0
-      ) / (publishedContent?.length || 1) || 0;
+      ) / (publishedContentData?.length || 1) || 0;
 
-      const totalClicks = publishedContent?.reduce((sum, item) => 
+      const totalClicks = publishedContentData?.reduce((sum, item) => 
         sum + (item.task_analytics?.[0]?.clicks || 0), 0
       ) || 0;
 
       // Platform breakdown
       const platformStats: Record<string, PlatformStats> = {};
-      publishedContent?.forEach(item => {
+      publishedContentData?.forEach(item => {
         const platform = item.platform;
         const analytics = item.task_analytics?.[0];
         
@@ -151,14 +209,14 @@ const CampaignAnalyticsDashboard: React.FC<CampaignAnalyticsDashboardProps> = ({
       });
 
       return {
-        publishedContent: publishedContent || [],
+        publishedContent: publishedContentData || [],
         summary: {
-          totalPosts: publishedContent?.length || 0,
+          totalPosts: publishedContentData?.length || 0,
           totalImpressions,
           totalEngagements,
           avgEngagementRate,
           totalClicks,
-          totalReach: publishedContent?.reduce((sum, item) => 
+          totalReach: publishedContentData?.reduce((sum, item) => 
             sum + (item.task_analytics?.[0]?.reach || 0), 0
           ) || 0
         },
@@ -417,7 +475,7 @@ const CampaignAnalyticsDashboard: React.FC<CampaignAnalyticsDashboardProps> = ({
                                 {item.platform}
                               </Badge>
                               <span>•</span>
-                              <span>{format(new Date(item.published_at), 'MMM d, yyyy')}</span>
+                              <span>{format(new Date(item.created_at), 'MMM d, yyyy')}</span>
                             </div>
                           </div>
                         </div>

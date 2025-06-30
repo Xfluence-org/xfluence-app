@@ -160,6 +160,29 @@ const PublishAnalyticsPanel: React.FC<PublishAnalyticsPanelProps> = ({
 
       if (publishError) throw publishError;
 
+      // Create initial analytics record with zeros
+      if (publishData) {
+        const { error: analyticsError } = await supabase
+          .from('task_analytics')
+          .insert({
+            published_content_id: publishData.id,
+            impressions: 0,
+            likes: 0,
+            comments: 0,
+            shares: 0,
+            reach: 0,
+            clicks: 0,
+            saves: 0,
+            engagement_rate: 0,
+            last_updated: new Date().toISOString()
+          });
+          
+        if (analyticsError) {
+          console.error('Error creating initial analytics:', analyticsError);
+          // Don't throw - analytics creation failure shouldn't block publishing
+        }
+      }
+
       // Update task workflow state
       await supabase
         .from('task_workflow_states')
@@ -249,16 +272,21 @@ const PublishAnalyticsPanel: React.FC<PublishAnalyticsPanelProps> = ({
 
       // Check if analytics record exists
       if (latestPublished.task_analytics?.length > 0) {
-        // Update existing
-        await supabase
+        // Update existing - remove published_content_id from update
+        const { published_content_id, ...updateData } = analyticsData;
+        const { error: updateError } = await supabase
           .from('task_analytics')
-          .update(analyticsData)
+          .update(updateData)
           .eq('id', latestPublished.task_analytics[0].id);
+          
+        if (updateError) throw updateError;
       } else {
         // Create new
-        await supabase
+        const { error: insertError } = await supabase
           .from('task_analytics')
           .insert(analyticsData);
+          
+        if (insertError) throw insertError;
       }
 
       toast({

@@ -73,15 +73,24 @@ export const usePublishedCampaigns = (limit?: number) => {
             .eq('campaign_id', campaign.id)
             .eq('status', 'accepted');
 
-          // Get tasks statistics
+          // Get tasks statistics with workflow states
           const { data: tasks } = await supabase
             .from('campaign_tasks')
-            .select('progress, status')
+            .select(`
+              id,
+              progress,
+              status,
+              task_workflow_states(
+                phase,
+                status
+              )
+            `)
             .eq('campaign_id', campaign.id);
 
-          const completedTasks = tasks?.filter(t => t.status === 'completed').length || 0;
+          // Calculate completion rate based on average progress (matching influencer view)
+          const totalProgress = tasks?.reduce((sum, task) => sum + (task.progress || 0), 0) || 0;
           const totalTasks = tasks?.length || 0;
-          const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+          const completionRate = totalTasks > 0 ? Math.round(totalProgress / totalTasks) : 0;
 
           // Mock some additional metrics (in a real app, these would come from analytics)
           const totalReach = (participantCount || 0) * (50000 + Math.floor(Math.random() * 100000));
