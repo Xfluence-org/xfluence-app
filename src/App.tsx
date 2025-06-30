@@ -18,7 +18,6 @@ import SettingsPage from "./pages/SettingsPage";
 import BrandSettingsPage from "./pages/BrandSettingsPage";
 import BrandAIAssistantPage from "./pages/BrandAIAssistantPage";
 import TaskWorkflowPage from "./pages/TaskWorkflowPage";
-import BrandProgressDashboard from "./pages/BrandProgressDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -85,14 +84,6 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <BrandAIAssistantPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/brand/progress" 
-              element={
-                <ProtectedRoute>
-                  <BrandProgressDashboard />
                 </ProtectedRoute>
               } 
             />
