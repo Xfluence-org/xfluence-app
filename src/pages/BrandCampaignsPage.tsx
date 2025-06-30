@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import BrandSidebar from '@/components/brand/BrandSidebar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -9,11 +9,12 @@ import BrandCampaignCard from '@/components/brand/BrandCampaignCard';
 import CampaignDetailModal from '@/components/brand/CampaignDetailModal';
 import CreateCampaignModal from '@/components/brand/CreateCampaignModal';
 
-type CampaignView = 'active' | 'published' | 'completed' | 'archived';
+type CampaignView = 'published' | 'completed' | 'archived';
 
 const BrandCampaignsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<CampaignView>('active');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<CampaignView>('published');
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   
@@ -30,7 +31,7 @@ const BrandCampaignsPage: React.FC = () => {
     const tabParam = searchParams.get('tab') as CampaignView;
     const viewParam = searchParams.get('view');
     
-    if (tabParam && ['active', 'published', 'completed', 'archived'].includes(tabParam)) {
+    if (tabParam && ['published', 'completed', 'archived'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
     
@@ -39,7 +40,14 @@ const BrandCampaignsPage: React.FC = () => {
       // Clear the URL parameters after opening the modal
       setSearchParams({});
     }
-  }, [searchParams, setSearchParams]);
+    
+    // Handle navigation from dashboard
+    if (location.state?.openCampaignId) {
+      setSelectedCampaignId(location.state.openCampaignId);
+      // Clear the state
+      window.history.replaceState({}, document.title);
+    }
+  }, [searchParams, setSearchParams, location.state]);
 
   const handleViewCampaign = (campaignId: string) => {
     setSelectedCampaignId(campaignId);
@@ -106,7 +114,7 @@ const BrandCampaignsPage: React.FC = () => {
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-3xl font-bold text-[#1a1f2e] mb-2">Campaign Management</h1>
-                <p className="text-gray-600">Manage your active, published, completed, and archived campaigns</p>
+                <p className="text-gray-600">Manage your published, completed, and archived campaigns</p>
               </div>
               <Button onClick={handleCreateCampaign} className="bg-[#1a1f2e] hover:bg-[#2a2f3e] text-white">
                 <Plus className="mr-2" />
@@ -117,35 +125,12 @@ const BrandCampaignsPage: React.FC = () => {
 
           <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as CampaignView)}>
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="active">Active Campaigns</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="published">Published Campaigns</TabsTrigger>
                 <TabsTrigger value="completed">Completed Campaigns</TabsTrigger>
                 <TabsTrigger value="archived">Archived Campaigns</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="active" className="mt-6">
-                <div className="space-y-6">
-                  {campaigns.length > 0 ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {campaigns.map((campaign) => (
-                        <BrandCampaignCard
-                          key={campaign.campaign_id}
-                          campaign={campaign}
-                          onView={handleViewCampaign}
-                          onArchive={handleArchiveCampaign}
-                          showArchiveButton={true}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <p className="text-gray-500 text-lg">No active campaigns found</p>
-                      <p className="text-gray-400 mt-2">Active campaigns will appear here</p>
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
 
               <TabsContent value="published" className="mt-6">
                 <div className="space-y-6">

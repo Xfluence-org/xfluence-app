@@ -4,6 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,10 @@ import ContentStrategySection from '@/components/brand/ContentStrategySection';
 import InfluencerAllocationSection from '@/components/brand/InfluencerAllocationSection';
 import InfluencerAssignmentSection from '@/components/brand/InfluencerAssignmentSection';
 import ContentRequirementsSection from '@/components/brand/ContentRequirementsSection';
+import WaitingParticipantsSection from '@/components/brand/WaitingParticipantsSection';
+import ActiveInfluencersSection from '@/components/brand/ActiveInfluencersSection';
+import BrandTaskViewModal from '@/components/brand/BrandTaskViewModal';
+import CampaignAnalyticsDashboard from '@/components/brand/CampaignAnalyticsDashboard';
 import { Save, Edit, X } from 'lucide-react';
 import PublicCampaignToggle from '@/components/brand/PublicCampaignToggle';
 import ApplicationsManagementSection from '@/components/brand/ApplicationsManagementSection';
@@ -67,6 +72,11 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditing, setIsEditing] = useState(false);
   const [campaignPublicStatus, setCampaignPublicStatus] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [selectedParticipant, setSelectedParticipant] = useState<{
+    participantId: string;
+    influencerId: string;
+  } | null>(null);
   const [editForm, setEditForm] = useState({
     title: '',
     description: '',
@@ -133,7 +143,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
       return null;
     }
     
-    console.log('LLM data from database function:', campaign.llm_data);
+    // console.log('LLM data from database function:', campaign.llm_data);
     return campaign.llm_data as LLMCampaignData;
   };
 
@@ -153,6 +163,11 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
 
   const handleRequirementsUpdated = () => {
     refetch();
+    setRefreshKey(prev => prev + 1);
+  };
+
+  const handleViewTasks = (participantId: string, influencerId: string) => {
+    setSelectedParticipant({ participantId, influencerId });
   };
 
   // Helper functions for influencer allocation display
@@ -180,9 +195,27 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
 
   const llmCampaignData = getLLMCampaignData();
 
+  // Extract content types from LLM data
+  const getContentTypes = (): string[] => {
+    if (!llmCampaignData?.content_strategy?.content_distribution) return [];
+    
+    return Object.entries(llmCampaignData.content_strategy.content_distribution)
+      .filter(([key, value]) => key !== 'rationale' && value && typeof value === 'object' && 'percentage' in value)
+      .map(([contentType]) => {
+        // Capitalize first letter and properly pluralize
+        const capitalized = contentType.charAt(0).toUpperCase() + contentType.slice(1);
+        // Special case for "story" -> "Stories"
+        if (contentType.toLowerCase() === 'story') {
+          return 'Stories';
+        }
+        return capitalized + 's';
+      });
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-2xl font-bold text-[#1a1f2e]">
@@ -216,6 +249,9 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
               </div>
             ) : null}
           </div>
+          <DialogDescription>
+            View and manage campaign settings, strategy, and influencer assignments
+          </DialogDescription>
         </DialogHeader>
 
         {isLoading ? (
@@ -228,12 +264,13 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
           </div>
         ) : campaign ? (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="overview">Campaign Overview</TabsTrigger>
-              <TabsTrigger value="strategy">Campaign Strategy</TabsTrigger>
-              <TabsTrigger value="content">Content Requirements</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-6">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="strategy">Strategy</TabsTrigger>
+              <TabsTrigger value="content">Requirements</TabsTrigger>
               <TabsTrigger value="influencers">Influencers</TabsTrigger>
               <TabsTrigger value="applications">Applications</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6 mt-6">
@@ -425,19 +462,55 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
             </TabsContent>
 
             <TabsContent value="influencers" className="space-y-6 mt-6">
+              {/* Active Influencers Working on Content */}
+              <ActiveInfluencersSection 
+                campaignId={campaignId} 
+                key={`active-${refreshKey}`}
+                onViewTasks={handleViewTasks}
+              />
+              
+              {/* Participants Waiting for Requirements */}
+              <WaitingParticipantsSection 
+                campaignId={campaignId} 
+                key={`waiting-${refreshKey}`}
+                contentTypes={getContentTypes()}
+              />
+              
+              {/* Influencer Assignment */}
               <InfluencerAssignmentSection 
                 campaignId={campaignId}
                 llmInteractions={createMockLLMInteractions()}
+                key={`assignment-${refreshKey}`}
+                onViewTasks={handleViewTasks}
               />
             </TabsContent>
 
             <TabsContent value="applications" className="space-y-6 mt-6">
-              <ApplicationsManagementSection campaignId={campaignId} />
+              <ApplicationsManagementSection 
+                campaignId={campaignId} 
+                onUpdate={() => setRefreshKey(prev => prev + 1)}
+              />
+            </TabsContent>
+
+            <TabsContent value="analytics" className="space-y-6 mt-6">
+              <CampaignAnalyticsDashboard campaignId={campaignId} />
             </TabsContent>
           </Tabs>
         ) : null}
       </DialogContent>
     </Dialog>
+    
+    {/* Brand Task View Modal */}
+    {selectedParticipant && (
+      <BrandTaskViewModal
+        isOpen={!!selectedParticipant}
+        onClose={() => setSelectedParticipant(null)}
+        participantId={selectedParticipant.participantId}
+        influencerId={selectedParticipant.influencerId}
+        campaignId={campaignId}
+      />
+    )}
+    </>
   );
 };
 

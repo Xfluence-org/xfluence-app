@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import Sidebar from '@/components/dashboard/Sidebar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
 import OpportunityApplicationModal from '@/components/influencer/OpportunityApplicationModal';
 import {
   Select,
@@ -31,20 +32,31 @@ interface Opportunity {
 }
 
 const OpportunitiesPage = () => {
+  const { profile } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: opportunities = [], isLoading, error } = useQuery({
-    queryKey: ['opportunities', searchQuery, categoryFilter],
+  // Debounce search query to prevent excessive API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const { data: allOpportunities = [], isLoading, error } = useQuery({
+    queryKey: ['opportunities'],
     queryFn: async () => {
-      console.log('Fetching opportunities with filters:', { searchQuery, categoryFilter });
+      console.log('Fetching all opportunities');
       
       const { data, error } = await supabase.rpc('get_opportunities', {
-        search_query: searchQuery || '',
-        category_filter: categoryFilter === 'all' ? '' : categoryFilter,
+        search_query: '',
+        category_filter: '',
         min_compensation: 0,
         max_compensation: 999999999,
         platform_filter: ''
@@ -57,8 +69,31 @@ const OpportunitiesPage = () => {
 
       console.log('Opportunities fetched:', data);
       return data || [];
-    }
+    },
+    staleTime: 60000, // Cache data for 1 minute
   });
+
+  // Filter opportunities client-side for smoother UX
+  const opportunities = useMemo(() => {
+    let filtered = allOpportunities;
+
+    // Filter by search query
+    if (debouncedSearchQuery.trim()) {
+      const query = debouncedSearchQuery.toLowerCase();
+      filtered = filtered.filter(opp => 
+        opp.title.toLowerCase().includes(query) ||
+        opp.brand_name.toLowerCase().includes(query) ||
+        opp.description.toLowerCase().includes(query)
+      );
+    }
+
+    // Filter by category
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(opp => opp.category === categoryFilter);
+    }
+
+    return filtered;
+  }, [allOpportunities, debouncedSearchQuery, categoryFilter]);
 
   const handleApplyClick = (opportunity: Opportunity) => {
     // Use the full opportunity object since it already matches the interface
@@ -75,35 +110,40 @@ const OpportunitiesPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
-        <Sidebar />
-        <main className="flex-1 ml-64 p-8">
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">Loading opportunities...</p>
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar userName={profile?.name} />
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-8">
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">Loading opportunities...</p>
+            </div>
           </div>
-        </main>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
-        <Sidebar />
-        <main className="flex-1 ml-64 p-8">
-          <div className="text-center py-12">
-            <p className="text-red-500 text-lg">Error loading opportunities: {error.message}</p>
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar userName={profile?.name} />
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-8">
+            <div className="text-center py-12">
+              <p className="text-red-500 text-lg">Error loading opportunities: {error.message}</p>
+            </div>
           </div>
-        </main>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar />
+    <div className="flex h-screen bg-gray-50">
+      <Sidebar userName={profile?.name} />
       
-      <main className="flex-1 ml-64 p-8">
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8">
@@ -197,7 +237,7 @@ const OpportunitiesPage = () => {
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <DollarSign className="h-4 w-4" />
                       <span>
-                        ${opportunity.compensation_min?.toLocaleString()} - ${opportunity.compensation_max?.toLocaleString()}
+                        ${(opportunity.compensation_min / 100)?.toLocaleString()} - ${(opportunity.compensation_max / 100)?.toLocaleString()}
                       </span>
                     </div>
                     
@@ -228,7 +268,8 @@ const OpportunitiesPage = () => {
             </div>
           )}
         </div>
-      </main>
+        </div>
+      </div>
 
       <OpportunityApplicationModal
         isOpen={isApplicationModalOpen}

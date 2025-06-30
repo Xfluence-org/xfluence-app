@@ -29,6 +29,22 @@ export const useCampaignData = (tabFilter?: CampaignTab) => {
         return [];
       }
 
+      // Get current user to check participant stage
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      // Check participant stages for each campaign
+      const campaignIds = campaignData.map((c: any) => c.campaign_id);
+      const { data: participants } = await supabase
+        .from('campaign_participants')
+        .select('campaign_id, current_stage')
+        .eq('influencer_id', user.id)
+        .in('campaign_id', campaignIds);
+
+      const participantStageMap = new Map(
+        participants?.map(p => [p.campaign_id, p.current_stage]) || []
+      );
+
       // Transform data to match DetailedCampaign interface
       const campaigns: DetailedCampaign[] = campaignData.map((row: any) => {
         // Format due date
@@ -58,30 +74,36 @@ export const useCampaignData = (tabFilter?: CampaignTab) => {
           }
         };
 
-        // Parse tasks from JSONB
-        const tasks = Array.isArray(row.tasks) ? row.tasks.map((task: any) => ({
-          id: task.id,
-          type: task.type as 'Posts' | 'Stories' | 'Reels',
-          deliverable: task.deliverable,
-          status: task.status as 'content review' | 'post content' | 'content draft' | 'completed' | 'pending',
-          progress: task.progress || 0,
-          nextDeadline: task.nextDeadline ? formatDate(task.nextDeadline) : 'TBD',
-          feedback: task.feedback || undefined
-        })) : [];
+        // Check if participant is waiting for requirements
+        const currentStage = participantStageMap.get(row.campaign_id);
+        const isWaitingForRequirements = currentStage === 'waiting_for_requirements';
+
+        // Parse tasks from JSONB - but empty array if waiting for requirements
+        const tasks = isWaitingForRequirements ? [] : 
+          (Array.isArray(row.tasks) ? row.tasks.map((task: any) => ({
+            id: task.id,
+            type: task.type as 'Posts' | 'Stories' | 'Reels',
+            deliverable: task.deliverable,
+            status: task.status as 'content review' | 'post content' | 'content draft' | 'completed' | 'pending',
+            progress: task.progress || 0,
+            nextDeadline: task.nextDeadline ? formatDate(task.nextDeadline) : 'TBD',
+            feedback: task.feedback || undefined
+          })) : []);
 
         return {
           id: row.campaign_id,
           title: row.campaign_title,
           brand: row.brand_name,
           status: getDisplayStatus(row.campaign_status),
-          taskCount: Number(row.task_count),
+          taskCount: isWaitingForRequirements ? 0 : Number(row.task_count),
           dueDate: formatDate(row.due_date),
           platforms: row.platforms || ['Instagram', 'TikTok'],
           amount: row.amount ? Math.floor(row.amount / 100) : 0, // Convert from cents
-          overallProgress: row.overall_progress || 0,
-          completedTasks: Number(row.completed_tasks),
+          overallProgress: isWaitingForRequirements ? 0 : (row.overall_progress || 0),
+          completedTasks: isWaitingForRequirements ? 0 : Number(row.completed_tasks),
           tasks,
-          originalStatus: row.campaign_status
+          originalStatus: row.campaign_status,
+          isWaitingForRequirements
         };
       });
 

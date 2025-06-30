@@ -10,6 +10,7 @@ import { Check, X, User, Eye } from 'lucide-react';
 
 interface ApplicationsManagementSectionProps {
   campaignId: string;
+  onUpdate?: () => void;
 }
 
 interface Application {
@@ -28,7 +29,8 @@ interface Application {
 type ApplicationStatus = 'pending' | 'accepted' | 'rejected';
 
 const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps> = ({
-  campaignId
+  campaignId,
+  onUpdate
 }) => {
   const [processingApplication, setProcessingApplication] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ApplicationStatus>('pending');
@@ -100,27 +102,14 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
         return;
       }
 
-      // If approved, create initial tasks for the influencer
+      // If approved, set the participant to waiting for content requirements
       if (action === 'approved') {
-        const { data: appData } = await supabase
+        await supabase
           .from('campaign_participants')
-          .select('influencer_id, campaign_id')
-          .eq('id', applicationId)
-          .single();
-
-        if (appData) {
-          await supabase
-            .from('campaign_tasks')
-            .insert({
-              campaign_id: appData.campaign_id,
-              influencer_id: appData.influencer_id,
-              title: 'Content Creation',
-              task_type: 'content_creation',
-              description: 'Create content according to campaign requirements',
-              status: 'content_requirement',
-              progress: 0
-            });
-        }
+          .update({ 
+            current_stage: 'waiting_for_requirements'
+          })
+          .eq('id', applicationId);
       }
 
       toast({
@@ -130,6 +119,9 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
 
       // Refresh applications list
       queryClient.invalidateQueries({ queryKey: ['campaign-applications', campaignId] });
+      
+      // Notify parent component to refresh
+      onUpdate?.();
     } catch (error) {
       console.error('Unexpected error:', error);
       toast({

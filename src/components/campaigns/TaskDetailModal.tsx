@@ -1,16 +1,21 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Upload, ExternalLink } from 'lucide-react';
+import { FileText, Upload, ExternalLink, Lock } from 'lucide-react';
 import { TaskDetail } from '@/types/taskDetail';
 import { useAuth } from '@/contexts/AuthContext';
 import TaskPhaseIndicator from '@/components/influencer/TaskPhaseIndicator';
 import ContentRequirementView from '@/components/influencer/ContentRequirementView';
 import ContentUploadPanel from '@/components/influencer/ContentUploadPanel';
+import EnhancedContentUploadPanel from '@/components/influencer/EnhancedContentUploadPanel';
 import PublishContentForm from '@/components/influencer/PublishContentForm';
+import PublishAnalyticsPanel from '@/components/influencer/PublishAnalyticsPanel';
 import TaskWorkflowManager from '@/components/brand/TaskWorkflowManager';
+import TaskProgressTracker from '@/components/shared/TaskProgressTracker';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
 
 interface TaskDetailModalProps {
   isOpen: boolean;
@@ -34,10 +39,49 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   onDeleteFile
 }) => {
   const { profile } = useAuth();
-  const isBrand = profile?.user_type === 'Brand';
+  const { toast } = useToast();
+  const [requirementsAccepted, setRequirementsAccepted] = useState(false);
+  const [contentApproved, setContentApproved] = useState(false);
+  const [checkingStatus, setCheckingStatus] = useState(true);
+  const [activeTab, setActiveTab] = useState('progress');
+  
+  // console.log('TaskDetailModal - Current profile:', profile);
+  // console.log('TaskDetailModal - User type:', profile?.user_type);
+  
+  // Check for Brand or Agency user types
+  const isBrand = profile?.user_type === 'Brand' || profile?.user_type === 'Agency';
   const isInfluencer = profile?.user_type === 'Influencer';
+  
+  // console.log('TaskDetailModal - isBrand:', isBrand, 'isInfluencer:', isInfluencer);
 
-  if (!taskDetail) return null;
+  // Check workflow states for influencers
+  const checkWorkflowStatus = async () => {
+    if (!isInfluencer || !taskDetail?.id) return;
+    
+    try {
+      // Check all workflow states
+      const { data: workflowStates } = await supabase
+        .from('task_workflow_states')
+        .select('phase, status')
+        .eq('task_id', taskDetail.id);
+      
+      const requirementState = workflowStates?.find(s => s.phase === 'content_requirement');
+      const reviewState = workflowStates?.find(s => s.phase === 'content_review');
+      
+      setRequirementsAccepted(requirementState?.status === 'completed');
+      setContentApproved(reviewState?.status === 'completed');
+    } catch (error) {
+      console.error('Error checking workflow status:', error);
+    } finally {
+      setCheckingStatus(false);
+    }
+  };
+
+  useEffect(() => {
+    checkWorkflowStatus();
+  }, [isInfluencer, taskDetail?.id]);
+
+  if (!taskDetail && !checkingStatus) return null;
 
   const handleRefresh = () => {
     // Trigger a refresh of the task detail
@@ -49,6 +93,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     console.log('Content uploaded successfully');
     handleRefresh();
   };
+
+  // Early return if no taskDetail
+  if (!taskDetail) {
+    return null;
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -87,38 +136,97 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             <div className="space-y-6">
               <TaskPhaseIndicator taskId={taskDetail.id} />
               
-              <Tabs defaultValue="requirements" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="progress">Progress</TabsTrigger>
                   <TabsTrigger value="requirements" className="flex items-center gap-2">
                     <FileText className="h-4 w-4" />
                     Requirements
                   </TabsTrigger>
-                  <TabsTrigger value="upload" className="flex items-center gap-2">
-                    <Upload className="h-4 w-4" />
+                  <TabsTrigger 
+                    value="upload" 
+                    className="flex items-center gap-2"
+                    disabled={!requirementsAccepted}
+                  >
+                    {!requirementsAccepted && <Lock className="h-4 w-4" />}
+                    {requirementsAccepted && <Upload className="h-4 w-4" />}
                     Upload
                   </TabsTrigger>
-                  <TabsTrigger value="publish" className="flex items-center gap-2">
-                    <ExternalLink className="h-4 w-4" />
+                  <TabsTrigger 
+                    value="publish" 
+                    className="flex items-center gap-2"
+                    disabled={!contentApproved}
+                  >
+                    {!contentApproved && <Lock className="h-4 w-4" />}
+                    {contentApproved && <ExternalLink className="h-4 w-4" />}
                     Publish
                   </TabsTrigger>
                 </TabsList>
 
+                <TabsContent value="progress" className="mt-6">
+                  <TaskProgressTracker 
+                    taskId={taskDetail.id} 
+                    campaignId={taskDetail.campaign?.id || ''} 
+                    influencerId={taskDetail.influencer_id}
+                  />
+                </TabsContent>
+
                 <TabsContent value="requirements" className="mt-6">
-                  <ContentRequirementView taskId={taskDetail.id} />
+                  <ContentRequirementView 
+                    taskId={taskDetail.id} 
+                    onRequirementsAccepted={async () => {
+                      // Small delay to ensure state updates are complete
+                      setTimeout(async () => {
+                        // Refresh workflow status
+                        await checkWorkflowStatus();
+                        // Switch to upload tab
+                        setActiveTab('upload');
+                        toast({
+                          title: "Requirements Accepted",
+                          description: "You can now upload your content in the Upload tab",
+                          className: "bg-green-50 border-green-200"
+                        });
+                      }, 100);
+                    }}
+                  />
                 </TabsContent>
 
                 <TabsContent value="upload" className="mt-6">
-                  <ContentUploadPanel 
-                    taskId={taskDetail.id} 
-                    onUploadComplete={handleUploadComplete}
-                  />
+                  {!requirementsAccepted ? (
+                    <div className="text-center py-12">
+                      <Lock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">Upload Locked</h3>
+                      <p className="text-gray-600 max-w-md mx-auto">
+                        You need to accept the content requirements before you can upload content. 
+                        Please review and accept the requirements in the Requirements tab.
+                      </p>
+                    </div>
+                  ) : (
+                    <EnhancedContentUploadPanel 
+                      taskId={taskDetail.id} 
+                      onUploadComplete={handleUploadComplete}
+                    />
+                  )}
                 </TabsContent>
 
                 <TabsContent value="publish" className="mt-6">
-                  <PublishContentForm
-                    taskId={taskDetail.id}
-                    onPublishComplete={handleRefresh}
-                  />
+                  {!contentApproved ? (
+                    <div className="text-center py-12">
+                      <Lock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">Publish Locked</h3>
+                      <p className="text-gray-600 max-w-md mx-auto">
+                        {!requirementsAccepted 
+                          ? "You need to accept the content requirements first."
+                          : "Your content needs to be approved by the brand before you can publish. Please upload your content and wait for approval."
+                        }
+                      </p>
+                    </div>
+                  ) : (
+                    <PublishAnalyticsPanel
+                      taskId={taskDetail.id}
+                      onPublishComplete={handleRefresh}
+                    />
+                  )}
                 </TabsContent>
               </Tabs>
             </div>

@@ -110,7 +110,7 @@ const OpportunityApplicationModal: React.FC<OpportunityApplicationModalProps> = 
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-700">Compensation:</span>
               <span className="font-bold text-[#1DDCD3]">
-                ${campaign.compensation_min?.toLocaleString()} - ${campaign.compensation_max?.toLocaleString()}
+                ${(campaign.compensation_min / 100)?.toLocaleString()} - ${(campaign.compensation_max / 100)?.toLocaleString()}
               </span>
             </div>
           </div>

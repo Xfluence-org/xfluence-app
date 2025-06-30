@@ -33,6 +33,7 @@ interface AssignedInfluencer {
   influencer_handle?: string;
   tasks: Task[];
   workflowStates: WorkflowState[];
+  isWaitingForRequirements?: boolean;
 }
 
 interface Task {
@@ -71,84 +72,81 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
     try {
       setLoading(true);
       
-      // Fetch assignments for this specific content type, category, and tier
-      const { data: assignments, error: assignmentError } = await supabase
-        .from('campaign_content_assignments')
+      // First fetch all participants for this campaign
+      const { data: participants, error: participantError } = await supabase
+        .from('campaign_participants')
         .select(`
           id,
           influencer_id,
-          assignment_type,
-          manual_data,
-          campaign_tasks (
+          status,
+          current_stage,
+          accepted_at,
+          profiles!inner(
             id,
-            title,
-            description,
-            status,
-            progress,
-            task_type
+            name,
+            email
           )
         `)
         .eq('campaign_id', campaignId)
-        .eq('content_type', contentType)
-        .eq('category', category)
-        .eq('tier', tier);
+        .eq('status', 'accepted');
 
-      if (assignmentError) {
-        console.error('Error fetching assignments:', assignmentError);
+      if (participantError) {
+        console.error('Error fetching participants:', participantError);
         return;
       }
 
-      // Get influencer details for applicant-type assignments
-      const influencerIds = assignments
-        ?.filter(a => a.assignment_type === 'applicant' && a.influencer_id)
-        .map(a => a.influencer_id) || [];
-
-      let influencerProfiles: any[] = [];
-      if (influencerIds.length > 0) {
-        const { data: profiles, error: profileError } = await supabase
-          .from('profiles')
-          .select('id, name, email')
-          .in('id', influencerIds);
-
-        if (!profileError) {
-          influencerProfiles = profiles || [];
-        }
-      }
-
-      // Get workflow states for each task
-      const enrichedAssignments: AssignedInfluencer[] = await Promise.all(
-        assignments?.map(async (assignment) => {
-          const profile = influencerProfiles.find(p => p.id === assignment.influencer_id);
-          const manualData = assignment.manual_data as unknown as ManualInfluencerData | null;
-          
-          // Get workflow states for the first task (assuming one task per assignment for now)
+      // For participants that have moved past waiting stage, fetch their tasks
+      const participantsWithTasks = await Promise.all(
+        participants?.map(async (participant) => {
+          let tasks: Task[] = [];
           let workflowStates: WorkflowState[] = [];
-          if (assignment.campaign_tasks && assignment.campaign_tasks.length > 0) {
-            try {
-              workflowStates = await taskWorkflowService.getWorkflowStates(assignment.campaign_tasks[0].id);
-            } catch (error) {
-              console.error('Error fetching workflow states:', error);
+
+          // Only fetch tasks if participant is NOT waiting for requirements
+          if (participant.current_stage !== 'waiting_for_requirements') {
+            const { data: taskData } = await supabase
+              .from('campaign_tasks')
+              .select(`
+                id,
+                title,
+                description,
+                status,
+                progress,
+                task_type
+              `)
+              .eq('campaign_id', campaignId)
+              .eq('influencer_id', participant.influencer_id);
+
+            tasks = taskData || [];
+
+            // Get workflow states for the first task
+            if (tasks.length > 0) {
+              try {
+                workflowStates = await taskWorkflowService.getWorkflowStates(tasks[0].id);
+              } catch (error) {
+                console.error('Error fetching workflow states:', error);
+              }
             }
           }
-          
+
           return {
-            id: assignment.id,
-            influencer_id: assignment.influencer_id,
-            assignment_type: assignment.assignment_type as 'applicant' | 'manual',
-            manual_data: manualData,
-            influencer_name: assignment.assignment_type === 'applicant' 
-              ? profile?.name || 'Unknown User'
-              : manualData?.name || 'Manual Entry',
-            influencer_handle: assignment.assignment_type === 'applicant'
-              ? `user_${assignment.influencer_id?.slice(0, 8)}`
-              : manualData?.handle || 'unknown',
-            tasks: assignment.campaign_tasks || [],
-            workflowStates
+            id: participant.id,
+            influencer_id: participant.influencer_id,
+            assignment_type: 'applicant' as const,
+            manual_data: null,
+            influencer_name: participant.profiles?.name || 'Unknown User',
+            influencer_handle: `user_${participant.influencer_id?.slice(0, 8)}`,
+            tasks,
+            workflowStates,
+            isWaitingForRequirements: participant.current_stage === 'waiting_for_requirements'
           };
         }) || []
       );
 
-      setAssignedInfluencers(enrichedAssignments);
+      // Filter to only show non-waiting participants
+      const activeParticipants = participantsWithTasks.filter(p => !p.isWaitingForRequirements);
+      
+      setAssignedInfluencers(activeParticipants);
+
     } catch (error) {
       console.error('Error fetching assigned influencers:', error);
     } finally {

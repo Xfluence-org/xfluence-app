@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Search, UserPlus, Users, Instagram, Star, MessageSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface AssignmentRequest {
   contentType: string;
@@ -39,6 +40,7 @@ interface ManualInfluencer {
 
 interface AcceptedInfluencer {
   application_id: string;
+  influencer_id: string;
   influencer_name: string;
   influencer_handle: string;
   followers_count: number;
@@ -59,6 +61,7 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [manualInfluencers, setManualInfluencers] = useState<ManualInfluencer[]>([]);
   const [acceptedInfluencers, setAcceptedInfluencers] = useState<AcceptedInfluencer[]>([]);
+  const [pendingApplicants, setPendingApplicants] = useState<AcceptedInfluencer[]>([]);
   const [alreadyAssignedIds, setAlreadyAssignedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [newInfluencer, setNewInfluencer] = useState({
@@ -68,13 +71,14 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
     engagementRate: ''
   });
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Fetch accepted influencers and already assigned ones
   React.useEffect(() => {
     const fetchInfluencersData = async () => {
       if (!isOpen) return;
       
-      // Fetch accepted influencers for this campaign
+      // Fetch all applications for this campaign
       const { data, error } = await supabase.rpc('get_brand_applications_all');
       
       if (error) {
@@ -82,80 +86,56 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
         return;
       }
 
-      // Filter for accepted/approved influencers for this campaign
-      const accepted = data?.filter(app => 
-        app.campaign_id === campaignId && 
+      // Filter for this campaign's applications
+      const campaignApps = data?.filter(app => app.campaign_id === campaignId) || [];
+      
+      // Separate accepted and pending applicants
+      const accepted = campaignApps.filter(app => 
         ['accepted', 'approved', 'active'].includes(app.application_status)
-      ) || [];
+      );
+      
+      const pending = campaignApps.filter(app => 
+        ['pending', 'applied'].includes(app.application_status)
+      );
       
       setAcceptedInfluencers(accepted);
+      setPendingApplicants(pending);
 
-      // Fetch already assigned influencers for this specific content type, category, and tier
-      const { data: assignments, error: assignmentError } = await supabase
-        .from('campaign_content_assignments')
-        .select('influencer_id, campaign_participants!inner(id)')
+      // Fetch already accepted participants (those who are already assigned)
+      const { data: acceptedParticipants, error: participantError } = await supabase
+        .from('campaign_participants')
+        .select('id, influencer_id')
         .eq('campaign_id', campaignId)
-        .eq('content_type', assignmentRequest.contentType)
-        .eq('category', assignmentRequest.category)
-        .eq('tier', assignmentRequest.tier)
-        .not('influencer_id', 'is', null);
+        .eq('status', 'accepted');
 
-      if (!assignmentError && assignments) {
-        // Get the application IDs that are already assigned
-        const assignedApplicationIds: string[] = [];
+      if (!participantError && acceptedParticipants) {
+        // Get the influencer IDs that are already accepted
+        const acceptedInfluencerIds = acceptedParticipants
+          .map(p => p.influencer_id)
+          .filter(Boolean);
         
-        for (const assignment of assignments) {
-          // Find the application ID for this influencer_id
-          const matchingApp = accepted.find(app => {
-            // We need to match by influencer_id - get from campaign_participants
-            return true; // We'll handle this differently
-          });
-        }
-
-        // Alternative approach: get assigned influencer IDs directly
-        const assignedInfluencerIds = assignments.map(a => a.influencer_id).filter(Boolean);
-        
-        // Find corresponding application IDs
-        const assignedAppIds = accepted
+        // Find corresponding application IDs that should be excluded from ALL tabs
+        const allApps = [...accepted, ...pending];
+        const assignedAppIds = allApps
           .filter(app => {
-            // We need to check if this application's influencer is already assigned
-            // This requires checking the campaign_participants table
-            return false; // We'll implement this check below
+            // Check if this application's influencer is already accepted
+            return acceptedInfluencerIds.includes(app.influencer_id);
           })
           .map(app => app.application_id);
 
+        console.log('Already accepted influencer IDs:', acceptedInfluencerIds);
+        console.log('Application IDs to exclude:', assignedAppIds);
+        console.log('All accepted apps:', accepted);
+        console.log('All pending apps:', pending);
         setAlreadyAssignedIds(assignedAppIds);
       }
     };
 
-    const fetchAlreadyAssigned = async () => {
-      if (!isOpen) return;
-
-      // Get campaign participants that are already assigned to this specific content/category/tier
-      const { data: assignedParticipants, error } = await supabase
-        .from('campaign_content_assignments')
-        .select(`
-          campaign_participants!inner(id, influencer_id)
-        `)
-        .eq('campaign_id', campaignId)
-        .eq('content_type', assignmentRequest.contentType)
-        .eq('category', assignmentRequest.category)
-        .eq('tier', assignmentRequest.tier);
-
-      if (!error && assignedParticipants) {
-        const assignedIds = assignedParticipants.map(ap => 
-          (ap as any).campaign_participants?.id
-        ).filter(Boolean);
-        setAlreadyAssignedIds(assignedIds);
-      }
-    };
-
     fetchInfluencersData();
-    fetchAlreadyAssigned();
   }, [isOpen, campaignId, assignmentRequest]);
 
-  // Filter accepted influencers based on assignment requirements and search, excluding already assigned
-  const filteredApplicants = acceptedInfluencers.filter(app => {
+  // Filter pending applicants based on assignment requirements and search, excluding already assigned
+  const filteredApplicants = pendingApplicants.filter(app => {
     // Exclude already assigned influencers
     if (alreadyAssignedIds.includes(app.application_id)) {
       return false;
@@ -225,23 +205,109 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
         }))
       ];
 
-      // Call the database function to assign influencers
-      const { data: assignmentIds, error } = await supabase.rpc('assign_influencers_to_campaign', {
-        campaign_id_param: campaignId,
-        content_type_param: assignmentRequest.contentType,
-        category_param: assignmentRequest.category,
-        tier_param: assignmentRequest.tier,
-        assignments: assignments // Pass as JSONB directly, not stringified
-      });
+      // Instead of using the database function that creates tasks, 
+      // we'll manually add participants with waiting state
+      
+      // Process selected applicants
+      for (const applicantId of selectedInfluencers) {
+        // Get existing participant data
+        const { data: participant } = await supabase
+          .from('campaign_participants')
+          .select('application_message')
+          .eq('id', applicantId)
+          .single();
+        
+        // Append assignment info to existing message
+        const assignmentInfo = `[TIER:${assignmentRequest.category}:${assignmentRequest.tier}]`;
+        const updatedMessage = participant?.application_message 
+          ? `${participant.application_message} ${assignmentInfo}`
+          : assignmentInfo;
+          
+        await supabase
+          .from('campaign_participants')
+          .update({ 
+            status: 'accepted',
+            accepted_at: new Date().toISOString(),
+            current_stage: 'waiting_for_requirements',
+            application_message: updatedMessage
+          })
+          .eq('id', applicantId);
+      }
 
-      if (error) {
-        throw error;
+      // Process manual influencers
+      for (const manualInfluencer of manualInfluencers) {
+        // First check if this influencer already has a profile
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .ilike('name', manualInfluencer.name)
+          .single();
+
+        let influencerId = existingProfile?.id;
+
+        // If no profile exists, we'll use a placeholder approach
+        // In a real app, you'd create a proper profile or invitation system
+        if (!influencerId) {
+          // For now, skip manual influencers without profiles
+          console.log('Skipping manual influencer without profile:', manualInfluencer.name);
+          continue;
+        }
+
+        // Check if participant already exists
+        const { data: existingParticipant } = await supabase
+          .from('campaign_participants')
+          .select('id')
+          .eq('campaign_id', campaignId)
+          .eq('influencer_id', influencerId)
+          .single();
+
+        if (!existingParticipant) {
+          // Add as participant with assignment info
+          const assignmentInfo = `[TIER:${assignmentRequest.category}:${assignmentRequest.tier}]`;
+          await supabase
+            .from('campaign_participants')
+            .insert({
+              campaign_id: campaignId,
+              influencer_id: influencerId,
+              status: 'accepted',
+              accepted_at: new Date().toISOString(),
+              current_stage: 'waiting_for_requirements',
+              application_message: assignmentInfo
+            });
+        } else {
+          // Update existing participant - preserve existing message
+          const { data: participant } = await supabase
+            .from('campaign_participants')
+            .select('application_message')
+            .eq('id', existingParticipant.id)
+            .single();
+            
+          const assignmentInfo = `[TIER:${assignmentRequest.category}:${assignmentRequest.tier}]`;
+          const updatedMessage = participant?.application_message 
+            ? `${participant.application_message} ${assignmentInfo}`
+            : assignmentInfo;
+            
+          await supabase
+            .from('campaign_participants')
+            .update({
+              status: 'accepted',
+              accepted_at: new Date().toISOString(),
+              current_stage: 'waiting_for_requirements',
+              application_message: updatedMessage
+            })
+            .eq('id', existingParticipant.id);
+        }
       }
 
       toast({
         title: "Success",
         description: `Successfully assigned ${assignments.length} influencer(s) to ${assignmentRequest.contentType}`,
       });
+
+      // Invalidate relevant queries to refresh the UI
+      queryClient.invalidateQueries({ queryKey: ['waiting-participants', campaignId] });
+      queryClient.invalidateQueries({ queryKey: ['active-participants', campaignId] });
+      queryClient.invalidateQueries({ queryKey: ['campaign-participants', campaignId] });
 
       onAssignmentComplete(assignments);
       
@@ -298,7 +364,7 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="applicants" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
-              From Approved ({filteredApplicants.length})
+              Available Influencers ({filteredApplicants.length})
             </TabsTrigger>
             <TabsTrigger value="manual" className="flex items-center gap-2">
               <UserPlus className="h-4 w-4" />
@@ -311,7 +377,7 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search approved influencers by name or handle..."
+                placeholder="Search applicants by name or handle..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"

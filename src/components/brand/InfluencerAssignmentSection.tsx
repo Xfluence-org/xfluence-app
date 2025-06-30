@@ -5,12 +5,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Users, Plus, UserCheck, UserPlus } from 'lucide-react';
 import InfluencerAssignmentModal from './InfluencerAssignmentModal';
-import AssignedInfluencerStages from './AssignedInfluencerStages';
+import ContentTypeWaitingSection from './ContentTypeWaitingSection';
+import ContentTypeActiveSection from './ContentTypeActiveSection';
 import { supabase } from '@/integrations/supabase/client';
 
 interface InfluencerAssignmentSectionProps {
   campaignId: string;
   llmInteractions: any[];
+  onViewTasks?: (participantId: string, influencerId: string) => void;
 }
 
 interface ContentDistributionItem {
@@ -40,7 +42,8 @@ interface AssignmentCount {
 
 const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = ({ 
   campaignId, 
-  llmInteractions 
+  llmInteractions,
+  onViewTasks 
 }) => {
   const [activeContentType, setActiveContentType] = useState<string>('');
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
@@ -109,28 +112,75 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
   // Fetch current assignment counts
   const fetchAssignmentCounts = async () => {
     try {
+      // Count all accepted participants with their assignment info
       const { data, error } = await supabase
-        .from('campaign_content_assignments')
-        .select('content_type, category, tier')
-        .eq('campaign_id', campaignId);
+        .from('campaign_participants')
+        .select('id, influencer_id, application_message')
+        .eq('campaign_id', campaignId)
+        .eq('status', 'accepted');
 
       if (error) {
-        console.error('Error fetching assignment counts:', error);
+        console.error('Error fetching participant counts:', error);
         return;
       }
 
-      // Count assignments by content_type, category, and tier
-      const counts: { [key: string]: number } = {};
-      data?.forEach(assignment => {
-        const key = `${assignment.content_type}-${assignment.category}-${assignment.tier}`;
-        counts[key] = (counts[key] || 0) + 1;
+      console.log('Participants data:', data);
+      
+      // Parse assignment info from participants
+      const tierCategoryCounts = new Map<string, number>();
+      
+      data?.forEach(participant => {
+        const message = participant.application_message || '';
+        // Look for [TIER:category:tier] pattern
+        const tierMatch = message.match(/\[TIER:([^:]+):([^\]]+)\]/);
+        if (tierMatch) {
+          const category = tierMatch[1];
+          const tier = tierMatch[2];
+          const key = `${category}:${tier}`;
+          tierCategoryCounts.set(key, (tierCategoryCounts.get(key) || 0) + 1);
+        }
+      });
+      
+      console.log('Tier category counts:', tierCategoryCounts);
+      
+      // Create counts for each content type, category, and tier combination
+      const assignmentCountsArray: AssignmentCount[] = [];
+      
+      // For each content type
+      contentTypes.forEach(ct => {
+        // For each category
+        Object.entries(influencerAllocation?.allocation_by_category || {}).forEach(([category]) => {
+          // For each tier in this category
+          const tierAllocations = influencerAllocation?.allocation_by_tier?.[category] || {};
+          const tierEntries = Object.entries(tierAllocations);
+          
+          if (tierEntries.length === 0) {
+            // If no tiers, check for category-level assignment
+            const key = `${category}:all`;
+            const count = tierCategoryCounts.get(key) || 0;
+            assignmentCountsArray.push({
+              content_type: ct.type,
+              category: category,
+              tier: 'all',
+              count: count
+            });
+          } else {
+            // Get count for each specific tier
+            tierEntries.forEach(([tier]) => {
+              const key = `${category}:${tier}`;
+              const count = tierCategoryCounts.get(key) || 0;
+              assignmentCountsArray.push({
+                content_type: ct.type,
+                category: category,
+                tier: tier,
+                count: count
+              });
+            });
+          }
+        });
       });
 
-      const assignmentCountsArray: AssignmentCount[] = Object.entries(counts).map(([key, count]) => {
-        const [content_type, category, tier] = key.split('-');
-        return { content_type, category, tier, count };
-      });
-
+      console.log('Assignment counts array:', assignmentCountsArray);
       setAssignmentCounts(assignmentCountsArray);
     } catch (error) {
       console.error('Error fetching assignment counts:', error);
@@ -187,6 +237,8 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
     setCurrentAssignmentRequest(null);
     // Trigger refresh of the assigned influencers display and counts
     setRefreshKey(prev => prev + 1);
+    // Also manually refetch the counts immediately
+    fetchAssignmentCounts();
   };
 
   
@@ -338,8 +390,8 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
                           {/* Tier breakdown for this category */}
                           <div className="space-y-2">
                             {Object.entries(influencerAllocation?.allocation_by_tier?.[category] || {}).map(([tier, count]) => {
-                              const assignedCount = getAssignedCount(getContentTypeDisplay(content.type), category, tier);
-                              const remainingCount = getRemainingCount(getContentTypeDisplay(content.type), category, tier, Number(count));
+                              const assignedCount = getAssignedCount(content.type, category, tier);
+                              const remainingCount = getRemainingCount(content.type, category, tier, Number(count));
                               const isFullyAssigned = remainingCount === 0;
                               
                               return (
@@ -396,26 +448,20 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
                       ))}
                     </div>
 
-                    {/* Assigned Influencers for this Content Type */}
+                    {/* Content Type Specific Sections */}
                     <div className="space-y-4">
-                      <h4 className="font-medium text-gray-700">Assigned Influencers</h4>
-                      {Object.entries(influencerAllocation?.allocation_by_category || {}).map(([category]) => (
-                        Object.entries(influencerAllocation?.allocation_by_tier?.[category] || {}).map(([tier]) => (
-                          <div key={`${category}-${tier}`}>
-                            <h5 className="text-sm font-medium text-gray-600 mb-2">
-                              {category} - {tier.charAt(0).toUpperCase() + tier.slice(1)} Tier
-                            </h5>
-                            <AssignedInfluencerStages
-                              key={`${refreshKey}-${category}-${tier}`}
-                              campaignId={campaignId}
-                              contentType={getContentTypeDisplay(content.type)}
-                              category={category}
-                              tier={tier}
-                              onRefresh={() => setRefreshKey(prev => prev + 1)}
-                            />
-                          </div>
-                        ))
-                      ))}
+                      {/* Active Influencers */}
+                      <ContentTypeActiveSection 
+                        campaignId={campaignId} 
+                        contentType={getContentTypeDisplay(content.type)}
+                        onViewTasks={onViewTasks}
+                      />
+                      
+                      {/* Waiting for Requirements */}
+                      <ContentTypeWaitingSection 
+                        campaignId={campaignId} 
+                        contentType={getContentTypeDisplay(content.type)}
+                      />
                     </div>
                   </div>
                 </TabsContent>

@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-type CampaignView = 'active' | 'published' | 'completed' | 'archived';
+type CampaignView = 'published' | 'completed' | 'archived';
 
 export const useBrandCampaignsData = (view: CampaignView) => {
   const queryClient = useQueryClient();
@@ -15,9 +15,6 @@ export const useBrandCampaignsData = (view: CampaignView) => {
       // Map view to database status
       let statusFilter: string;
       switch (view) {
-        case 'active':
-          statusFilter = 'active';
-          break;
         case 'published':
           statusFilter = 'published';
           break;
@@ -28,7 +25,7 @@ export const useBrandCampaignsData = (view: CampaignView) => {
           statusFilter = 'archived';
           break;
         default:
-          statusFilter = 'active';
+          statusFilter = 'published';
       }
 
       // First get the brands associated with the current user
@@ -92,7 +89,6 @@ export const useBrandCampaignsData = (view: CampaignView) => {
           ? campaign.category[0] 
           : 'General', // Handle array category properly
         progress: campaign.status === 'completed' ? 100 : 
-                 campaign.status === 'active' ? 75 : 
                  campaign.status === 'published' ? 50 : 25,
         is_public: campaign.is_public || false
       }));

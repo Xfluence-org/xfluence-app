@@ -22,6 +22,7 @@ export interface DetailedCampaign {
   tasks: Task[];
   completedTasks: number;
   originalStatus?: string; // Store the original database status for filtering
+  isWaitingForRequirements?: boolean;
 }
 
 export type CampaignTab = 'Active' | 'Completed' | 'Requests';

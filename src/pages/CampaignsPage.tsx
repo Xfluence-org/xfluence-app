@@ -13,16 +13,20 @@ import { useCampaignData } from '@/hooks/useCampaignData';
 const CampaignsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const tabFromUrl = searchParams.get('tab') as CampaignTab;
+  const taskIdFromUrl = searchParams.get('task');
   const [activeTab, setActiveTab] = useState<CampaignTab>(tabFromUrl || 'Active');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(taskIdFromUrl);
 
-  // Update active tab when URL changes
+  // Update active tab and task when URL changes
   useEffect(() => {
     if (tabFromUrl && ['Active', 'Completed', 'Requests'].includes(tabFromUrl)) {
       setActiveTab(tabFromUrl);
     }
-  }, [tabFromUrl]);
+    if (taskIdFromUrl) {
+      setSelectedTaskId(taskIdFromUrl);
+    }
+  }, [tabFromUrl, taskIdFromUrl]);
 
   // Use the updated hook with tab filtering
   const { data: campaigns, isLoading: loading, error } = useCampaignData(activeTab);

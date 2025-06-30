@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { TaskDetail } from '@/types/taskDetail';
 import { taskWorkflowService } from '@/services/taskWorkflowService';
+import { formatTaskType, formatDeadline } from '@/utils/taskFormatters';
 
 export const useTaskDetail = (taskId: string | null) => {
   const [loading, setLoading] = useState(false);
@@ -82,15 +83,6 @@ export const useTaskDetail = (taskId: string | null) => {
         console.error('Error fetching uploads:', uploadsError);
       }
 
-      const formatDate = (dateStr: string) => {
-        if (!dateStr) return 'TBD';
-        const date = new Date(dateStr);
-        return date.toLocaleDateString('en-GB', { 
-          day: '2-digit', 
-          month: '2-digit', 
-          year: 'numeric' 
-        });
-      };
 
       const getStatusSteps = (status: string, currentPhase: string) => {
         return {
@@ -104,16 +96,16 @@ export const useTaskDetail = (taskId: string | null) => {
 
       const taskDetailData: TaskDetail = {
         id: task.id,
-        title: task.task_type || 'Task',
+        title: task.title || formatTaskType(task.task_type),
         platform: 'Instagram',
         brand: task.campaigns?.brands?.name || 'Unknown Brand',
-        dueDate: formatDate(task.next_deadline),
+        dueDate: formatDeadline(task.next_deadline || task.campaigns?.due_date),
         status: getStatusSteps(task.status || 'content_requirement', task.current_phase || 'content_requirement'),
-        description: task.description || `Create engaging ${task.task_type?.toLowerCase()} content`,
+        description: task.description || `Create engaging content for this campaign`,
         deliverables: [
-          `1 ${task.task_type} post`,
-          'High-quality content',
-          'Brand mention required'
+          'High-quality content as per requirements',
+          'Brand mention required',
+          'Follow brand guidelines'
         ],
         aiScore: task.ai_score || 0,
         feedbacks: feedbacks?.map(feedback => ({

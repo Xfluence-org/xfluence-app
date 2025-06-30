@@ -11,11 +11,12 @@ interface BrandSidebarProps {
 const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName = 'Brand Name' }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut } = useAuth();
+  const { signOut, profile } = useAuth();
   
   const getActiveItem = () => {
     if (location.pathname.includes('/brand-dashboard')) return 'dashboard';
     if (location.pathname.includes('/brand/campaigns')) return 'campaigns';
+    if (location.pathname.includes('/brand/progress')) return 'progress';
     if (location.pathname.includes('/brand/ai-assistant')) return 'ai-assistant';
     if (location.pathname.includes('/brand/settings')) return 'settings';
     return 'dashboard';
@@ -35,6 +36,12 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName = 'Brand Name' }) 
       label: 'Campaigns', 
       icon: '📱',
       onClick: () => navigate('/brand/campaigns')
+    },
+    { 
+      id: 'progress', 
+      label: 'Progress', 
+      icon: '📈',
+      onClick: () => navigate('/brand/progress')
     },
     { 
       id: 'ai-assistant', 
@@ -60,7 +67,7 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName = 'Brand Name' }) 
       {/* Logo/Brand */}
       <div className="p-6 border-b border-gray-200">
         <h1 className="text-2xl font-bold text-[#1a1f2e]">Xfluence</h1>
-        <p className="text-sm text-gray-600 mt-1">Brand Portal</p>
+        <p className="text-sm text-gray-600 mt-1">{profile?.user_type || 'Brand'} Portal</p>
       </div>
 
       {/* Navigation */}

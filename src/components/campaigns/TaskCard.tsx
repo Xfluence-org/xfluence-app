@@ -2,6 +2,7 @@
 import React from 'react';
 import { Task } from '@/types/campaigns';
 import { cn } from '@/lib/utils';
+import { formatTaskType, formatStatus } from '@/utils/taskFormatters';
 
 interface TaskCardProps {
   task: Task;
@@ -11,14 +12,21 @@ interface TaskCardProps {
 const TaskCard: React.FC<TaskCardProps> = ({ task, onViewDetails }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'content review':
+      case 'content_requirement':
+      case 'content_requirements':
+        return 'bg-purple-500';
+      case 'content_review':
         return 'bg-blue-500';
-      case 'post content':
+      case 'publish_analytics':
         return 'bg-green-500';
-      case 'content draft':
+      case 'content_creation':
         return 'bg-[#1DDCD3]';
       case 'completed':
         return 'bg-emerald-500';
+      case 'pending':
+        return 'bg-yellow-500';
+      case 'active':
+        return 'bg-blue-500';
       default:
         return 'bg-gray-500';
     }
@@ -29,7 +37,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onViewDetails }) => {
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h3 className="font-semibold text-[#1a1f2e] mb-1">{task.type}</h3>
+          <h3 className="font-semibold text-[#1a1f2e] mb-1">{formatTaskType(task.type)}</h3>
           <p className="text-sm text-gray-600">{task.deliverable}</p>
         </div>
         <button
@@ -52,7 +60,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onViewDetails }) => {
             "px-3 py-1 rounded-full text-white text-xs font-medium",
             getStatusColor(task.status)
           )}>
-            {task.status}
+            {formatStatus(task.status)}
           </span>
           <span className="px-3 py-1 rounded-full bg-gray-100 text-[#1a1f2e] text-xs font-medium">
             {task.progress}%

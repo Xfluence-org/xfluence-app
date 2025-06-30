@@ -18,17 +18,20 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEffect } from 'react';
 
 const campaignFormSchema = z.object({
   brand_name: z.string().min(1, 'Brand name is required'),
-  goals: z.string().min(1, 'Goals are required'),
+  goals: z.array(z.string()).min(1, 'At least one goal is required'),
+  custom_goal: z.string().optional(),
   campaign_description: z.string().min(1, 'Description is required'),
   categories: z.array(z.string()).min(1, 'At least one category is required'),
   total_influencers: z.number().min(1, 'Must have at least 1 influencer'),
@@ -51,6 +54,8 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
   onClose,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCustomGoal, setShowCustomGoal] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
@@ -64,13 +69,14 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
     resolver: zodResolver(campaignFormSchema),
     defaultValues: {
       brand_name: '',
-      goals: '',
+      goals: [],
+      custom_goal: '',
       campaign_description: '',
       categories: [],
       total_influencers: 5,
       influencer_tiers: [],
       content_types: [],
-      budget_min: 0,
+      budget_min: 1,
       budget_max: 1000,
       campaign_validity_days: 30,
     },
@@ -87,6 +93,32 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
   // Watch the campaign_validity_days field to show preview
   const validityDays = form.watch('campaign_validity_days');
   const previewDueDate = validityDays ? calculateDueDate(validityDays) : null;
+
+  // Animation steps for loading
+  const loadingSteps = [
+    { icon: "🔍", title: "Analyzing market trends", subtitle: "Scanning latest influencer data..." },
+    { icon: "🤖", title: "AI processing requirements", subtitle: "Understanding your campaign goals..." },
+    { icon: "🎯", title: "Finding perfect influencers", subtitle: "Matching creators to your brand..." },
+    { icon: "📊", title: "Optimizing budget allocation", subtitle: "Calculating best ROI strategy..." },
+    { icon: "✨", title: "Finalizing strategy", subtitle: "Preparing your campaign blueprint..." }
+  ];
+
+  // Animate through steps when submitting
+  useEffect(() => {
+    if (isSubmitting) {
+      setCurrentStep(0);
+      const interval = setInterval(() => {
+        setCurrentStep((prev) => {
+          if (prev < loadingSteps.length - 1) {
+            return prev + 1;
+          }
+          return prev;
+        });
+      }, 2000); // Change step every 2 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [isSubmitting, loadingSteps.length]);
 
   const onSubmit = async (data: CampaignFormData) => {
     setIsSubmitting(true);
@@ -188,10 +220,16 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
         created_at: new Date().toISOString(),
       };
       
+      // Combine selected goals with custom goal if provided
+      const allGoals = [...data.goals];
+      if (data.custom_goal && data.custom_goal.trim()) {
+        allGoals.push(data.custom_goal.trim());
+      }
+      
       // Prepare search parameters for the edge function
       const requestBody = {
         searchParams: {
-          goals: data.goals,
+          goals: allGoals.join(', '), // Convert array to comma-separated string
           campaign_description: data.campaign_description,
           categories: data.categories,
           total_influencers: data.total_influencers,
@@ -284,6 +322,8 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
 
   const handleClose = () => {
     form.reset();
+    setShowCustomGoal(false);
+    setCurrentStep(0);
     onClose();
   };
 
@@ -313,25 +353,132 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
   ];
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-[#1a1f2e]">
-            Create New Campaign
-          </DialogTitle>
-        </DialogHeader>
+    <>
+      {/* Fullscreen loading overlay - Higher z-index to appear above dialog */}
+      {isSubmitting && (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+            <div className="text-center space-y-6">
+              {/* Animated Icon */}
+              <div className="relative">
+                <div className="w-24 h-24 mx-auto bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center animate-pulse">
+                  <span className="text-5xl animate-bounce">{loadingSteps[currentStep].icon}</span>
+                </div>
+                <div className="absolute inset-0 w-24 h-24 mx-auto bg-gradient-to-r from-purple-600 to-pink-600 rounded-full animate-ping opacity-20" />
+              </div>
+              
+              {/* Dynamic Step Content */}
+              <div className="space-y-2">
+                <h3 className="text-2xl font-bold text-gray-900 transition-all duration-500">
+                  {loadingSteps[currentStep].title}
+                </h3>
+                <p className="text-gray-600 transition-all duration-500">
+                  {loadingSteps[currentStep].subtitle}
+                </p>
+              </div>
+              
+              {/* Progress Steps */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-center gap-2">
+                  {loadingSteps.map((_, index) => (
+                    <div
+                      key={index}
+                      className={`transition-all duration-500 ${
+                        index === currentStep
+                          ? 'w-8 h-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full'
+                          : index < currentStep
+                          ? 'w-2 h-2 bg-purple-600 rounded-full'
+                          : 'w-2 h-2 bg-gray-300 rounded-full'
+                      }`}
+                    />
+                  ))}
+                </div>
+                
+                {/* All Steps List */}
+                <div className="text-left space-y-2 mt-6">
+                  {loadingSteps.map((step, index) => (
+                    <div
+                      key={index}
+                      className={`flex items-start gap-3 transition-all duration-500 ${
+                        index === currentStep
+                          ? 'opacity-100 scale-105'
+                          : index < currentStep
+                          ? 'opacity-50'
+                          : 'opacity-30'
+                      }`}
+                    >
+                      <span className="text-lg mt-0.5">{step.icon}</span>
+                      <div className="flex-1">
+                        <p className={`text-sm font-medium ${
+                          index <= currentStep ? 'text-purple-900' : 'text-gray-600'
+                        }`}>
+                          {step.title}
+                        </p>
+                        {index === currentStep && (
+                          <div className="mt-1">
+                            <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-gradient-to-r from-purple-600 to-pink-600 rounded-full transition-all duration-[2000ms] ease-out"
+                                style={{ width: '100%' }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      {index < currentStep && (
+                        <span className="text-green-500">✓</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Dialog open={isOpen} onOpenChange={handleClose}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 border-purple-200">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg">
+                <Sparkles className="h-6 w-6 text-white" />
+              </div>
+              <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                AI-Powered Campaign Creator
+              </DialogTitle>
+            </div>
+            <p className="text-sm text-gray-600">Let AI help you create the perfect influencer campaign</p>
+          </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* AI Suggestion Box */}
+            <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg p-4 border border-purple-300">
+              <div className="flex items-start gap-3">
+                <div className="p-1.5 bg-white rounded-full">
+                  <Sparkles className="h-4 w-4 text-purple-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-purple-900">AI Tip</p>
+                  <p className="text-xs text-purple-700 mt-1">
+                    Fill in the details below and our AI will create a comprehensive campaign strategy tailored to your goals and budget.
+                  </p>
+                </div>
+              </div>
+            </div>
             <FormField
               control={form.control}
               name="brand_name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Brand Name</FormLabel>
+                  <FormLabel className="flex items-center gap-2">
+                    <span className="text-purple-600">✨</span> Brand Name
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Enter your brand name..."
+                      className="border-purple-200 focus:border-purple-400 focus:ring-purple-400"
                       {...field}
                     />
                   </FormControl>
@@ -343,16 +490,76 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
             <FormField
               control={form.control}
               name="goals"
-              render={({ field }) => (
+              render={() => (
                 <FormItem>
-                  <FormLabel>Campaign Goals</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Describe your campaign goals..."
-                      className="min-h-[80px]"
-                      {...field}
+                  <FormLabel className="flex items-center gap-2">
+                    <span className="text-purple-600">🎯</span> Campaign Goals
+                  </FormLabel>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {[
+                      { value: 'Brand Awareness', label: 'Brand Awareness' },
+                      { value: 'Sales', label: 'Sales' },
+                      { value: 'Engagement', label: 'Engagement' },
+                      { value: 'Website Traffic', label: 'Website Traffic' },
+                      { value: 'Lead Generation', label: 'Lead Generation' },
+                      { value: 'Other', label: 'Other' },
+                    ].map((goal) => (
+                      <FormField
+                        key={goal.value}
+                        control={form.control}
+                        name="goals"
+                        render={({ field }) => {
+                          return (
+                            <FormItem
+                              key={goal.value}
+                              className="flex flex-row items-start space-x-3 space-y-0"
+                            >
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value?.includes(goal.value)}
+                                  onCheckedChange={(checked) => {
+                                    const updatedValue = checked
+                                      ? [...field.value, goal.value]
+                                      : field.value?.filter((value) => value !== goal.value);
+                                    field.onChange(updatedValue);
+                                    
+                                    // Show/hide custom goal input
+                                    if (goal.value === 'Other') {
+                                      setShowCustomGoal(checked as boolean);
+                                      if (!checked) {
+                                        form.setValue('custom_goal', '');
+                                      }
+                                    }
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm font-normal cursor-pointer">
+                                {goal.label}
+                              </FormLabel>
+                            </FormItem>
+                          )
+                        }}
+                      />
+                    ))}
+                  </div>
+                  
+                  {showCustomGoal && (
+                    <FormField
+                      control={form.control}
+                      name="custom_goal"
+                      render={({ field }) => (
+                        <FormItem className="mt-3">
+                          <FormControl>
+                            <Input
+                              placeholder="Enter your custom goal..."
+                              {...field}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
                     />
-                  </FormControl>
+                  )}
+                  
                   <FormMessage />
                 </FormItem>
               )}
@@ -547,9 +754,9 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                     <FormControl>
                       <Input
                         type="number"
-                        min="0"
+                        min="1"
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -611,9 +818,18 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
             />
 
             <div className="space-y-4">
-              <div className="p-3 border rounded-md bg-gray-50">
-                <FormLabel className="text-sm font-medium text-gray-700">Platform</FormLabel>
-                <p className="text-sm text-gray-600 mt-1">Instagram (Beta)</p>
+              <div className="p-4 border-2 border-purple-200 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <FormLabel className="text-sm font-medium text-purple-900 flex items-center gap-2">
+                      <span className="text-purple-600">📱</span> Platform
+                    </FormLabel>
+                    <p className="text-sm text-purple-700 mt-1 font-medium">Instagram</p>
+                  </div>
+                  <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0">
+                    AI Optimized
+                  </Badge>
+                </div>
               </div>
             </div>
 
@@ -629,15 +845,18 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-[#1a1f2e] hover:bg-[#2a2f3e] text-white"
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg transform transition-all duration-200 hover:scale-105"
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating Strategy...
+                    Generating AI Strategy...
                   </>
                 ) : (
-                  'Generate Campaign Strategy'
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    AI Campaign Strategy
+                  </>
                 )}
               </Button>
             </div>
@@ -645,6 +864,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
         </Form>
       </DialogContent>
     </Dialog>
+    </>
   );
 };
 
