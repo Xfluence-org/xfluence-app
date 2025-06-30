@@ -8,6 +8,8 @@ import { Eye, Check, X, MessageSquare } from 'lucide-react';
 import { taskWorkflowService, ContentReview } from '@/services/taskWorkflowService';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ContentReviewPanelProps {
   taskId: string;
@@ -31,6 +33,8 @@ const ContentReviewPanel: React.FC<ContentReviewPanelProps> = ({
   const [feedback, setFeedback] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     fetchUploads();
@@ -64,6 +68,32 @@ const ContentReviewPanel: React.FC<ContentReviewPanelProps> = ({
   const handleReview = async (uploadId: string, status: 'approved' | 'rejected') => {
     if (!user?.id) return;
 
+    // Create optimistic review
+    const optimisticReview: ContentReview = {
+      id: `temp-${Date.now()}`,
+      task_id: taskId,
+      upload_id: uploadId,
+      ai_commentary: '',
+      status: status as 'approved' | 'rejected',
+      feedback: feedback,
+      reviewed_by: user.id,
+      reviewed_at: new Date().toISOString(),
+      created_at: new Date().toISOString()
+    };
+
+    // Optimistically update local state
+    setReviews(prev => [...prev, optimisticReview]);
+    setReviewingUpload(null);
+    setFeedback('');
+    
+    // Show immediate toast feedback
+    toast({
+      title: status === 'approved' ? 'Content Approved' : 'Content Rejected',
+      description: status === 'approved' 
+        ? 'The content has been approved successfully.' 
+        : 'The content has been rejected with feedback.',
+    });
+
     try {
       setIsSubmitting(true);
       await taskWorkflowService.createContentReview(
@@ -74,12 +104,25 @@ const ContentReviewPanel: React.FC<ContentReviewPanelProps> = ({
         user.id
       );
       
-      setReviewingUpload(null);
-      setFeedback('');
+      // Refresh actual data from server
       await fetchReviews();
+      
+      // Invalidate queries to refresh other components
+      queryClient.invalidateQueries({ queryKey: ['brand-participant-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['campaign-tasks'] });
+      
       onReviewComplete?.();
     } catch (error) {
       console.error('Error creating review:', error);
+      
+      // Rollback optimistic update on error
+      setReviews(prev => prev.filter(r => r.id !== optimisticReview.id));
+      
+      toast({
+        title: 'Error',
+        description: 'Failed to save review. Please try again.',
+        variant: 'destructive'
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -172,16 +215,34 @@ const ContentReviewPanel: React.FC<ContentReviewPanelProps> = ({
                               disabled={isSubmitting}
                               className="bg-green-600 hover:bg-green-700"
                             >
-                              <Check className="h-3 w-3 mr-1" />
-                              Approve
+                              {isSubmitting ? (
+                                <>
+                                  <div className="h-3 w-3 mr-1 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                  Processing...
+                                </>
+                              ) : (
+                                <>
+                                  <Check className="h-3 w-3 mr-1" />
+                                  Approve
+                                </>
+                              )}
                             </Button>
                             <Button
                               onClick={() => handleReview(upload.id, 'rejected')}
                               disabled={isSubmitting}
                               variant="destructive"
                             >
-                              <X className="h-3 w-3 mr-1" />
-                              Reject
+                              {isSubmitting ? (
+                                <>
+                                  <div className="h-3 w-3 mr-1 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                  Processing...
+                                </>
+                              ) : (
+                                <>
+                                  <X className="h-3 w-3 mr-1" />
+                                  Reject
+                                </>
+                              )}
                             </Button>
                             <Button
                               onClick={() => {

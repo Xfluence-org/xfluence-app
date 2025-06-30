@@ -12,86 +12,42 @@ export const useBrandCampaignsData = (view: CampaignView) => {
     queryFn: async () => {
       console.log('Fetching brand campaigns for view:', view);
       
-      // Map view to database status
-      let statusFilter: string;
+      // Map view to database filter
+      let brandFilter: string;
       switch (view) {
         case 'published':
-          statusFilter = 'published';
+          brandFilter = 'active'; // 'active' filter includes published
           break;
         case 'completed':
-          statusFilter = 'completed';
+          brandFilter = 'completed';
           break;
         case 'archived':
-          statusFilter = 'archived';
+          brandFilter = 'archived';
           break;
         default:
-          statusFilter = 'published';
+          brandFilter = 'active';
       }
 
-      // First get the brands associated with the current user
-      const { data: userBrands, error: brandsError } = await supabase
-        .from('brand_users')
-        .select('brand_id')
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
-
-      if (brandsError) {
-        console.error('Error fetching user brands:', brandsError);
-        throw brandsError;
-      }
-
-      if (!userBrands || userBrands.length === 0) {
-        console.log('No brands found for current user');
-        return [];
-      }
-
-      const brandIds = userBrands.map(ub => ub.brand_id);
-
-      const { data, error } = await supabase
-        .from('campaigns')
-        .select(`
-          id,
-          title,
-          status,
-          budget,
-          amount,
-          due_date,
-          category,
-          created_at,
-          is_public,
-          brand_id,
-          brands (
-            name
-          )
-        `)
-        .eq('status', statusFilter)
-        .in('brand_id', brandIds)
-        .order('created_at', { ascending: false });
+      // Use the RPC function to get campaigns with proper progress calculation
+      const { data, error } = await supabase.rpc('get_brand_campaigns', {
+        brand_filter: brandFilter
+      });
 
       if (error) {
         console.error('Error fetching brand campaigns:', error);
         throw error;
       }
 
-      console.log('Fetched brand campaigns:', data);
+      console.log('Fetched brand campaigns from RPC:', data);
       
-      // Transform data to match expected interface
-      return (data || []).map(campaign => ({
-        campaign_id: campaign.id,
-        campaign_title: campaign.title,
-        campaign_status: campaign.status,
-        budget: campaign.budget || campaign.amount || 0,
-        spent: 0, // This would come from actual spending data
-        applicants: 0, // This would be calculated from campaign_participants
-        accepted: 0, // This would be calculated from campaign_participants
-        due_date: campaign.due_date,
-        platforms: ['Instagram', 'TikTok'], // Default platforms
-        category: Array.isArray(campaign.category) && campaign.category.length > 0 
-          ? campaign.category[0] 
-          : 'General', // Handle array category properly
-        progress: campaign.status === 'completed' ? 100 : 
-                 campaign.status === 'published' ? 50 : 25,
-        is_public: campaign.is_public || false
-      }));
+      // Filter by specific status if needed (since 'active' filter returns multiple statuses)
+      let filteredData = data || [];
+      if (view === 'published' && brandFilter === 'active') {
+        filteredData = filteredData.filter((c: any) => c.campaign_status === 'published');
+      }
+      
+      // Data from RPC already has the correct structure
+      return filteredData;
     }
   });
 

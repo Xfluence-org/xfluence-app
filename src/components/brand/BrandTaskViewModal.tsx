@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import TaskProgressTracker from '@/components/shared/TaskProgressTracker';
 import ContentReviewPanel from '@/components/brand/ContentReviewPanel';
 import TaskFeedbackSection from '@/components/brand/TaskFeedbackSection';
@@ -65,9 +65,10 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   // Fetch participant details and tasks
-  const { data: participantData, isLoading, error } = useQuery({
+  const { data: participantData, isLoading, error, refetch } = useQuery({
     queryKey: ['brand-participant-tasks', participantId, influencerId, campaignId],
     enabled: isOpen && !!participantId && !!influencerId && !!campaignId,
     queryFn: async () => {
@@ -367,9 +368,19 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
                                       {isInReviewPhase ? (
                                         <ContentReviewPanel
                                           taskId={task.id}
-                                          onReviewComplete={() => {
-                                            // Refresh data
-                                            window.location.reload();
+                                          onReviewComplete={async () => {
+                                            // Refresh data using React Query
+                                            await refetch();
+                                            // Also invalidate related queries
+                                            queryClient.invalidateQueries({ 
+                                              queryKey: ['brand-participant-tasks'] 
+                                            });
+                                            queryClient.invalidateQueries({ 
+                                              queryKey: ['campaign-details', campaignId] 
+                                            });
+                                            queryClient.invalidateQueries({ 
+                                              queryKey: ['active-campaigns'] 
+                                            });
                                           }}
                                         />
                                       ) : (
