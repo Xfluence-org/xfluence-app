@@ -43,7 +43,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const [requirementsAccepted, setRequirementsAccepted] = useState(false);
   const [contentApproved, setContentApproved] = useState(false);
   const [checkingStatus, setCheckingStatus] = useState(true);
-  const [activeTab, setActiveTab] = useState('progress');
+  const [activeTab, setActiveTab] = useState('requirements');
   
   // console.log('TaskDetailModal - Current profile:', profile);
   // console.log('TaskDetailModal - User type:', profile?.user_type);
@@ -137,8 +137,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               <TaskPhaseIndicator taskId={taskDetail.id} />
               
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="progress">Progress</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="requirements" className="flex items-center gap-2">
                     <FileText className="h-4 w-4" />
                     Requirements
@@ -162,14 +161,6 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                     Publish
                   </TabsTrigger>
                 </TabsList>
-
-                <TabsContent value="progress" className="mt-6">
-                  <TaskProgressTracker 
-                    taskId={taskDetail.id} 
-                    campaignId={taskDetail.campaign?.id || ''} 
-                    influencerId={taskDetail.influencer_id}
-                  />
-                </TabsContent>
 
                 <TabsContent value="requirements" className="mt-6">
                   <ContentRequirementView 
