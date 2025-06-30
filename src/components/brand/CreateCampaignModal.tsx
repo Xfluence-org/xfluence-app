@@ -24,7 +24,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Loader2, Sparkles, Search, Bot, Target, BarChart3, Check } from 'lucide-react';
+import { ArrowLeft, Loader2, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect } from 'react';
 
@@ -96,11 +96,11 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
 
   // Animation steps for loading
   const loadingSteps = [
-    { icon: "search", title: "Analyzing market trends", subtitle: "Scanning latest influencer data..." },
-    { icon: "bot", title: "AI processing requirements", subtitle: "Understanding your campaign goals..." },
-    { icon: "target", title: "Finding perfect influencers", subtitle: "Matching creators to your brand..." },
-    { icon: "chart", title: "Optimizing budget allocation", subtitle: "Calculating best ROI strategy..." },
-    { icon: "sparkles", title: "Finalizing strategy", subtitle: "Preparing your campaign blueprint..." }
+    { icon: "🔍", title: "Analyzing market trends", subtitle: "Scanning latest influencer data..." },
+    { icon: "🤖", title: "AI processing requirements", subtitle: "Understanding your campaign goals..." },
+    { icon: "🎯", title: "Finding perfect influencers", subtitle: "Matching creators to your brand..." },
+    { icon: "📊", title: "Optimizing budget allocation", subtitle: "Calculating best ROI strategy..." },
+    { icon: "✨", title: "Finalizing strategy", subtitle: "Preparing your campaign blueprint..." }
   ];
 
   // Animate through steps when submitting
@@ -295,41 +295,9 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
         }
       }
       
-      // Extract the actual strategy data from the response
-      let strategyData = parsedResponse;
-      
-      // Check if the response has a success wrapper
-      if (parsedResponse && typeof parsedResponse === 'object') {
-        console.log('Checking for nested data structure...');
-        console.log('Response keys:', Object.keys(parsedResponse));
-        
-        if (parsedResponse.success === true) {
-          // Try common patterns for nested data
-          if (parsedResponse.data) {
-            console.log('Found data field:', parsedResponse.data);
-            strategyData = parsedResponse.data;
-          } else if (parsedResponse.result) {
-            console.log('Found result field:', parsedResponse.result);
-            strategyData = parsedResponse.result;
-          } else if (parsedResponse.response) {
-            console.log('Found response field:', parsedResponse.response);
-            strategyData = parsedResponse.response;
-          } else {
-            // Remove meta fields and use the rest
-            const { success, error, message, status, ...actualData } = parsedResponse;
-            if (Object.keys(actualData).length > 0) {
-              console.log('Extracted data after removing meta fields:', actualData);
-              strategyData = actualData;
-            }
-          }
-        }
-      }
-      
-      console.log('Final strategy data to be stored:', strategyData);
-      
       // Store campaign data in localStorage for the review page
       localStorage.setItem('temp_campaign', JSON.stringify(campaignData));
-      localStorage.setItem('temp_campaign_results', JSON.stringify(strategyData));
+      localStorage.setItem('temp_campaign_results', JSON.stringify(parsedResponse));
       
       toast({
         title: "Success",
@@ -394,11 +362,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
               {/* Animated Icon */}
               <div className="relative">
                 <div className="w-24 h-24 mx-auto bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center animate-pulse">
-                  {loadingSteps[currentStep].icon === 'search' && <Search className="h-12 w-12 text-white animate-bounce" />}
-                  {loadingSteps[currentStep].icon === 'bot' && <Bot className="h-12 w-12 text-white animate-bounce" />}
-                  {loadingSteps[currentStep].icon === 'target' && <Target className="h-12 w-12 text-white animate-bounce" />}
-                  {loadingSteps[currentStep].icon === 'chart' && <BarChart3 className="h-12 w-12 text-white animate-bounce" />}
-                  {loadingSteps[currentStep].icon === 'sparkles' && <Sparkles className="h-12 w-12 text-white animate-bounce" />}
+                  <span className="text-5xl animate-bounce">{loadingSteps[currentStep].icon}</span>
                 </div>
                 <div className="absolute inset-0 w-24 h-24 mx-auto bg-gradient-to-r from-purple-600 to-pink-600 rounded-full animate-ping opacity-20" />
               </div>
@@ -443,13 +407,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                           : 'opacity-30'
                       }`}
                     >
-                      <div className="mt-0.5">
-                        {step.icon === 'search' && <Search className="h-5 w-5 text-purple-600" />}
-                        {step.icon === 'bot' && <Bot className="h-5 w-5 text-purple-600" />}
-                        {step.icon === 'target' && <Target className="h-5 w-5 text-purple-600" />}
-                        {step.icon === 'chart' && <BarChart3 className="h-5 w-5 text-purple-600" />}
-                        {step.icon === 'sparkles' && <Sparkles className="h-5 w-5 text-purple-600" />}
-                      </div>
+                      <span className="text-lg mt-0.5">{step.icon}</span>
                       <div className="flex-1">
                         <p className={`text-sm font-medium ${
                           index <= currentStep ? 'text-purple-900' : 'text-gray-600'
@@ -468,7 +426,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                         )}
                       </div>
                       {index < currentStep && (
-                        <Check className="h-5 w-5 text-green-500" />
+                        <span className="text-green-500">✓</span>
                       )}
                     </div>
                   ))}
@@ -515,7 +473,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-2">
-                    Brand Name
+                    <span className="text-purple-600">✨</span> Brand Name
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -535,7 +493,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
               render={() => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-2">
-                    Campaign Goals
+                    <span className="text-purple-600">🎯</span> Campaign Goals
                   </FormLabel>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {[
@@ -864,7 +822,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                 <div className="flex items-center justify-between">
                   <div>
                     <FormLabel className="text-sm font-medium text-purple-900 flex items-center gap-2">
-                      Platform
+                      <span className="text-purple-600">📱</span> Platform
                     </FormLabel>
                     <p className="text-sm text-purple-700 mt-1 font-medium">Instagram</p>
                   </div>

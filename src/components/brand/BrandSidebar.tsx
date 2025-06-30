@@ -3,7 +3,6 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogOut } from 'lucide-react';
 
 interface BrandSidebarProps {
   userName?: string;
@@ -17,6 +16,7 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName = 'Brand Name' }) 
   const getActiveItem = () => {
     if (location.pathname.includes('/brand-dashboard')) return 'dashboard';
     if (location.pathname.includes('/brand/campaigns')) return 'campaigns';
+    if (location.pathname.includes('/brand/progress')) return 'progress';
     if (location.pathname.includes('/brand/ai-assistant')) return 'ai-assistant';
     if (location.pathname.includes('/brand/settings')) return 'settings';
     return 'dashboard';
@@ -36,6 +36,12 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName = 'Brand Name' }) 
       label: 'Campaigns', 
       icon: '📱',
       onClick: () => navigate('/brand/campaigns')
+    },
+    { 
+      id: 'progress', 
+      label: 'Progress', 
+      icon: '📈',
+      onClick: () => navigate('/brand/progress')
     },
     { 
       id: 'ai-assistant', 
@@ -84,13 +90,12 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName = 'Brand Name' }) 
       </nav>
 
       {/* User Section */}
-      <div className="p-4 border-t border-gray-200 flex justify-end">
+      <div className="p-4 border-t border-gray-200">
         <button 
           onClick={handleLogout}
-          className="p-3 text-gray-600 hover:bg-gray-100 hover:text-[#1a1f2e] rounded-lg transition-all duration-200"
-          title="Logout"
+          className="w-full text-left px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-[#1a1f2e] rounded-xl transition-all duration-200"
         >
-          <LogOut className="h-5 w-5" />
+          {userName} [log out →]
         </button>
       </div>
     </div>

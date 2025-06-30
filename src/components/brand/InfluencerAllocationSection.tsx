@@ -113,9 +113,9 @@ const InfluencerAllocationSection: React.FC<InfluencerAllocationSectionProps> = 
   const getTierDescription = (tier: string) => {
     switch (tier) {
       case 'nano': return '1K - 10K followers';
-      case 'micro': return '10K - 50K followers';
+      case 'micro': return '10K - 100K followers';
       case 'mid': return '50K - 500K followers';
-      case 'macro': return '500K - 1M followers';
+      case 'macro': return '100K - 1M followers';
       case 'mega': return '1M+ followers';
       default: return '';
     }
