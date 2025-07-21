@@ -258,7 +258,7 @@ const InfluencerDashboard = () => {
                 ) : (
                   <div className="bg-white rounded-lg p-6 text-center">
                     <p className="text-gray-500">No active campaigns</p>
-                    <p className="text-sm text-gray-400 mt-1">Check out available opportunities!</p>
+                    <p className="text-sm text-gray-400 mt-1">New campaigns will appear here when you're invited!</p>
                   </div>
                 )}
               </div>

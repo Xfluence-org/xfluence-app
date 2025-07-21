@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,8 @@ import { Upload, File, X, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import AIContentAnalysis from '@/components/shared/AIContentAnalysis';
+import PublishLinkForm from '@/components/influencer/PublishLinkForm';
 
 interface ContentUploadPanelProps {
   taskId: string;
@@ -37,12 +38,14 @@ const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({
   const [uploads, setUploads] = useState<TaskUpload[]>([]);
   const [reviews, setReviews] = useState<ContentReview[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [publishedLink, setPublishedLink] = useState<string>('');
   const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
     fetchUploads();
     fetchReviews();
+    fetchPublishedLink();
   }, [taskId]);
 
   const fetchUploads = async () => {
@@ -70,7 +73,6 @@ const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({
 
       if (error) throw error;
       
-      // Cast the data to properly typed ContentReview array
       const typedReviews = (data || []).map(item => ({
         ...item,
         status: item.status as 'pending' | 'approved' | 'rejected'
@@ -80,6 +82,11 @@ const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({
     } catch (error) {
       console.error('Error fetching reviews:', error);
     }
+  };
+
+  const fetchPublishedLink = async () => {
+    // Simplified - will be loaded when needed
+    setPublishedLink('');
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,7 +102,7 @@ const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({
             task_id: taskId,
             uploader_id: user.id,
             filename: file.name,
-            file_url: `placeholder-url-${file.name}`, // In real app, upload to storage first
+            file_url: `placeholder-url-${file.name}`,
             file_size: file.size,
             mime_type: file.type
           });
@@ -105,6 +112,7 @@ const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({
 
       await Promise.all(uploadPromises);
       await fetchUploads();
+      await fetchReviews();
       onUploadComplete();
 
       toast({
@@ -120,7 +128,6 @@ const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({
       });
     } finally {
       setUploading(false);
-      // Reset file input
       event.target.value = '';
     }
   };
@@ -141,6 +148,8 @@ const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({
         return <Badge variant="outline">Pending Review</Badge>;
     }
   };
+
+  const hasApprovedContent = reviews.some(review => review.status === 'approved');
 
   return (
     <Card>
@@ -176,46 +185,65 @@ const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({
               const review = getReviewForUpload(upload.id);
               
               return (
-                <Card key={upload.id} className="border-l-4 border-l-blue-500">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <File className="h-5 w-5 text-gray-500" />
-                        <div>
-                          <h4 className="font-medium text-gray-900">{upload.filename}</h4>
-                          <p className="text-sm text-gray-500">
-                            Uploaded {new Date(upload.created_at).toLocaleDateString()}
-                          </p>
+                <div key={upload.id} className="space-y-4">
+                  <Card className="border-l-4 border-l-blue-500">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <File className="h-5 w-5 text-gray-500" />
+                          <div>
+                            <h4 className="font-medium text-gray-900">{upload.filename}</h4>
+                            <p className="text-sm text-gray-500">
+                              Uploaded {new Date(upload.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
                         </div>
+                        {getStatusBadge(review?.status || 'pending')}
                       </div>
-                      {getStatusBadge(review?.status || 'pending')}
-                    </div>
 
-                    {review && review.feedback && (
-                      <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                        <p className="text-sm font-medium text-gray-700 mb-1">Brand Feedback:</p>
-                        <p className="text-sm text-gray-900">{review.feedback}</p>
-                      </div>
-                    )}
+                      {review && review.feedback && (
+                        <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                          <p className="text-sm font-medium text-gray-700 mb-1">Brand Feedback:</p>
+                          <p className="text-sm text-gray-900">{review.feedback}</p>
+                        </div>
+                      )}
 
-                    {review?.status === 'approved' && (
-                      <div className="mt-3 flex items-center gap-2 text-green-600">
-                        <Check className="h-4 w-4" />
-                        <span className="text-sm font-medium">Content approved! You can now proceed to publish.</span>
-                      </div>
-                    )}
+                      {review?.status === 'approved' && (
+                        <div className="mt-3 flex items-center gap-2 text-green-600">
+                          <Check className="h-4 w-4" />
+                          <span className="text-sm font-medium">Content approved! You can now proceed to publish.</span>
+                        </div>
+                      )}
 
-                    {review?.status === 'rejected' && (
-                      <div className="mt-3 flex items-center gap-2 text-red-600">
-                        <X className="h-4 w-4" />
-                        <span className="text-sm font-medium">Please address the feedback and upload revised content.</span>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                      {review?.status === 'rejected' && (
+                        <div className="mt-3 flex items-center gap-2 text-red-600">
+                          <X className="h-4 w-4" />
+                          <span className="text-sm font-medium">Please address the feedback and upload revised content.</span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* AI Analysis appears after upload */}
+                  <AIContentAnalysis 
+                    uploadId={upload.id}
+                    filename={upload.filename}
+                    isVisible={true}
+                  />
+                </div>
               );
             })}
           </div>
+        )}
+
+        {/* Publish Link Form - appears when content is approved */}
+        {uploads.length > 0 && (
+          <PublishLinkForm
+            taskId={taskId}
+            isApproved={hasApprovedContent}
+            existingLink={publishedLink}
+            onLinkSubmitted={fetchPublishedLink}
+          />
         )}
 
         {uploads.length === 0 && (
