@@ -165,17 +165,17 @@ const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({ cam
                         </div>
                         
                         <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
-                          <span>{participant.followers_count.toLocaleString()} followers</span>
-                          <span>{participant.engagement_rate.toFixed(1)}% engagement</span>
+                          <span>{(participant.followers_count || 0).toLocaleString()} followers</span>
+                          <span>{(participant.engagement_rate || 0).toFixed(1)}% engagement</span>
                           <span className="flex items-center gap-1">
                             <CheckCircle className="h-3 w-3" />
-                            {participant.tasks_completed}/{participant.total_tasks} tasks
+                            {participant.tasks_completed || 0}/{participant.total_tasks || 0} tasks
                           </span>
                         </div>
                         
                         <div className="flex items-center gap-2">
-                          <Progress value={participant.task_progress} className="h-2 flex-1" />
-                          <span className="text-xs text-gray-600">{participant.task_progress.toFixed(0)}%</span>
+                          <Progress value={participant.task_progress || 0} className="h-2 flex-1" />
+                          <span className="text-xs text-gray-600">{(participant.task_progress || 0).toFixed(0)}%</span>
                         </div>
                       </div>
                     </div>
