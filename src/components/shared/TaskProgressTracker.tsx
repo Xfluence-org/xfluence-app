@@ -100,25 +100,25 @@ const TaskProgressTracker: React.FC<TaskProgressTrackerProps> = ({
 
       // Add workflow state changes as activities
       for (const state of workflowStates) {
-        if (state.started_at) {
+        if (state.created_at && state.status !== 'not_started') {
           logs.push({
             id: `${state.id}-started`,
             action: 'phase_started',
             description: `Started ${state.phase.replace('_', ' ')} phase`,
             actor_name: 'System',
             actor_type: 'system',
-            created_at: state.started_at,
+            created_at: state.created_at,
             metadata: { phase: state.phase }
           });
         }
-        if (state.completed_at) {
+        if (state.updated_at && state.status === 'completed') {
           logs.push({
             id: `${state.id}-completed`,
             action: 'phase_completed',
             description: `Completed ${state.phase.replace('_', ' ')} phase`,
             actor_name: 'System',
             actor_type: 'system',
-            created_at: state.completed_at,
+            created_at: state.updated_at,
             metadata: { phase: state.phase }
           });
         }
@@ -162,10 +162,10 @@ const TaskProgressTracker: React.FC<TaskProgressTrackerProps> = ({
     const state = workflowStates.find(s => s.phase === phaseId);
     return {
       status: state?.status || 'not_started',
-      startedAt: state?.started_at,
-      completedAt: state?.completed_at,
-      rejectedAt: state?.rejected_at,
-      rejectionReason: state?.rejection_reason
+      startedAt: state?.created_at,
+      completedAt: state?.status === 'completed' ? state?.updated_at : undefined,
+      rejectedAt: undefined,
+      rejectionReason: undefined
     };
   };
 

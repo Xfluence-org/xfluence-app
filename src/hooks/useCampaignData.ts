@@ -14,7 +14,7 @@ export const useCampaignData = (tabFilter?: CampaignTab) => {
       
       // Call the database function to get filtered campaigns
       const { data: campaignData, error } = await supabase.rpc('get_influencer_campaigns', {
-        status_filter: dbTabFilter
+        tab_filter: dbTabFilter
       });
 
       if (error) {

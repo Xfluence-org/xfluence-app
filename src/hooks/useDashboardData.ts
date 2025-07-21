@@ -72,7 +72,7 @@ export const useDashboardData = () => {
       console.log('Fetching invitations for dashboard');
       
       const { data: campaignData, error } = await supabase.rpc('get_influencer_campaigns', {
-        status_filter: 'requests'
+        tab_filter: 'requests'
       });
 
       if (error) {
@@ -159,7 +159,7 @@ export const useDashboardData = () => {
       console.log('Fetching active campaigns for dashboard');
       
       const { data: campaignData, error } = await supabase.rpc('get_influencer_campaigns', {
-        status_filter: 'active'
+        tab_filter: 'active'
       });
 
       if (error) {

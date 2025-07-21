@@ -190,11 +190,13 @@ const InfluencerDashboard = () => {
                             title: campaign.campaign_title,
                             brand: campaign.brand_name,
                             status: campaign.campaign_status,
+                            taskCount: campaign.task_count || 0,
                             platforms: campaign.platforms || [],
                             amount: campaign.amount,
                             dueDate: campaign.due_date,
                             overall_progress: campaign.overall_progress,
-                            tasks: campaign.tasks
+                            tasks: campaign.tasks,
+                            completedTasks: campaign.completed_tasks || 0
                           }}
                           onViewTaskDetails={handleViewTaskDetails}
                         />
