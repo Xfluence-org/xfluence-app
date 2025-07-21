@@ -8,6 +8,7 @@ import InfluencerAssignmentModal from './InfluencerAssignmentModal';
 import ContentTypeWaitingSection from './ContentTypeWaitingSection';
 import ContentTypeActiveSection from './ContentTypeActiveSection';
 import { supabase } from '@/integrations/supabase/client';
+import { useCampaignDetail } from '@/hooks/useCampaignDetail';
 
 interface InfluencerAssignmentSectionProps {
   campaignId: string;
@@ -50,6 +51,9 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
   const [currentAssignmentRequest, setCurrentAssignmentRequest] = useState<AssignmentRequest | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [assignmentCounts, setAssignmentCounts] = useState<AssignmentCount[]>([]);
+  
+  // Fetch campaign data to get categories
+  const { data: campaignData } = useCampaignDetail(campaignId);
 
   
   // Extract campaign strategy data
@@ -371,7 +375,7 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
                   className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
                 >
                   <UserPlus className="h-4 w-4 mr-2" />
-                  Add Influencer Manually
+                  Add Influencer
                 </Button>
               </div>
               
@@ -380,7 +384,7 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
                 <UserPlus className="h-10 w-10 mx-auto text-gray-400 mb-2" />
                 <p className="text-gray-600 font-medium text-sm">No participants assigned yet</p>
                 <p className="text-gray-500 text-xs mt-1">
-                  Use the "Add Influencer Manually" button above to assign influencers.
+                  Use the "Add Influencer" button above to assign influencers.
                 </p>
               </div>
             </div>
@@ -395,6 +399,7 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
           campaignId={campaignId}
           assignmentRequest={currentAssignmentRequest}
           onAssignmentComplete={handleAssignmentComplete}
+          campaignCategories={Array.isArray(campaignData?.category) ? campaignData.category : [campaignData?.category || 'General']}
         />
       )}
     </div>

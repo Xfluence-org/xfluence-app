@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UserPlus, Instagram, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -22,11 +23,12 @@ interface InfluencerAssignmentModalProps {
   campaignId: string;
   assignmentRequest: AssignmentRequest;
   onAssignmentComplete: (assignments: any[]) => void;
+  campaignCategories: string[];
 }
 
 interface ManualInfluencer {
   id: string;
-  name: string;
+  category: string;
   handle: string;
   email: string;
   platform: string;
@@ -37,12 +39,13 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
   onClose,
   campaignId,
   assignmentRequest,
-  onAssignmentComplete
+  onAssignmentComplete,
+  campaignCategories
 }) => {
   const [manualInfluencers, setManualInfluencers] = useState<ManualInfluencer[]>([]);
   const [loading, setLoading] = useState(false);
   const [newInfluencer, setNewInfluencer] = useState({
-    name: '',
+    category: '',
     handle: '',
     email: ''
   });
@@ -50,17 +53,17 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
   const queryClient = useQueryClient();
 
   const handleAddManualInfluencer = () => {
-    if (newInfluencer.name && newInfluencer.handle && newInfluencer.email) {
+    if (newInfluencer.category && newInfluencer.handle && newInfluencer.email) {
       const influencer: ManualInfluencer = {
         id: `manual-${Date.now()}`,
-        name: newInfluencer.name,
+        category: newInfluencer.category,
         handle: newInfluencer.handle.startsWith('@') ? newInfluencer.handle : `@${newInfluencer.handle}`,
         email: newInfluencer.email,
         platform: 'Instagram'
       };
       
       setManualInfluencers(prev => [...prev, influencer]);
-      setNewInfluencer({ name: '', handle: '', email: '' });
+      setNewInfluencer({ category: '', handle: '', email: '' });
     }
   };
 
@@ -81,7 +84,7 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
           category: assignmentRequest.category,
           contentType: assignmentRequest.contentType,
           influencerDetails: {
-            name: manualInfluencer.name,
+            category: manualInfluencer.category,
             handle: manualInfluencer.handle,
             email: manualInfluencer.email,
             platform: manualInfluencer.platform
@@ -160,19 +163,29 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
           <div className="bg-gray-50 rounded-lg p-6">
             <div className="flex items-center gap-2 mb-4">
               <UserPlus className="h-5 w-5 text-[#1DDCD3]" />
-              <h3 className="text-lg font-semibold">Add Influencer Manually</h3>
+              <h3 className="text-lg font-semibold">Add Influencer</h3>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name *
+                  Category *
                 </label>
-                <Input
-                  value={newInfluencer.name}
-                  onChange={(e) => setNewInfluencer(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter full name"
-                />
+                <Select
+                  value={newInfluencer.category}
+                  onValueChange={(value) => setNewInfluencer(prev => ({ ...prev, category: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {campaignCategories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               
               <div>
@@ -205,7 +218,7 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
             
             <Button
               onClick={handleAddManualInfluencer}
-              disabled={!newInfluencer.name || !newInfluencer.handle || !newInfluencer.email}
+              disabled={!newInfluencer.category || !newInfluencer.handle || !newInfluencer.email}
               className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
             >
               <UserPlus className="h-4 w-4 mr-2" />
@@ -227,7 +240,7 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
                             <Instagram className="h-5 w-5 text-white" />
                           </div>
                           <div>
-                            <h4 className="font-medium">{influencer.name}</h4>
+                            <h4 className="font-medium">{influencer.category}</h4>
                             <div className="flex items-center gap-2 text-sm text-gray-600">
                               <span>{influencer.handle}</span>
                               <span>•</span>
