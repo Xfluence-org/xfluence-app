@@ -137,25 +137,6 @@ const BrandCampaignCard: React.FC<BrandCampaignCardProps> = ({
           </p>
         </div>
         
-        {/* Visibility Toggle - Only show for published campaigns */}
-        {campaign.campaign_status.toLowerCase() === 'published' && (
-          <div className="flex items-center gap-2">
-            <div className="flex items-center text-sm text-gray-600">
-              {isPublic ? (
-                <Globe className="h-4 w-4 mr-1" />
-              ) : (
-                <Lock className="h-4 w-4 mr-1" />
-              )}
-              {isPublic ? 'Public' : 'Private'}
-            </div>
-            <Switch
-              checked={isPublic}
-              onCheckedChange={handleVisibilityToggle}
-              disabled={isUpdating}
-              className="data-[state=checked]:bg-[#1DDCD3]"
-            />
-          </div>
-        )}
       </div>
 
       {/* Campaign Metrics */}

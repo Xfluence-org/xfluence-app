@@ -264,22 +264,15 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
           </div>
         ) : campaign ? (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="strategy">Strategy</TabsTrigger>
               <TabsTrigger value="content">Requirements</TabsTrigger>
               <TabsTrigger value="influencers">Influencers</TabsTrigger>
-              <TabsTrigger value="applications">Applications</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6 mt-6">
-              {/* Public Campaign Toggle */}
-              <PublicCampaignToggle
-                campaignId={campaignId}
-                isPublic={campaignPublicStatus}
-                onToggle={handlePublicToggle}
-              />
 
               <div className="bg-gray-50 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-[#1a1f2e] mb-4">Campaign Information</h3>
@@ -485,12 +478,6 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
               />
             </TabsContent>
 
-            <TabsContent value="applications" className="space-y-6 mt-6">
-              <ApplicationsManagementSection 
-                campaignId={campaignId} 
-                onUpdate={() => setRefreshKey(prev => prev + 1)}
-              />
-            </TabsContent>
 
             <TabsContent value="analytics" className="space-y-6 mt-6">
               <CampaignAnalyticsDashboard campaignId={campaignId} />

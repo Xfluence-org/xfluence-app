@@ -130,9 +130,9 @@ const BrandDashboard: React.FC = () => {
                   icon="💰"
                 />
                 <MetricsCard
-                  title="Pending Applications"
-                  value={recentApplications.length}
-                  subtitle="Awaiting review"
+                  title="Active Campaigns"
+                  value={metrics.publishedCampaigns || 0}
+                  subtitle="In progress"
                   icon="📝"
                 />
                 <MetricsCard
@@ -177,34 +177,6 @@ const BrandDashboard: React.FC = () => {
               </div>
             </section>
 
-          {/* Recent Applications */}
-          <section>
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-[#1a1f2e]">Recent Applications</h2>
-                <button className="text-gray-600 hover:text-[#1DDCD3] font-medium transition-colors duration-200">
-                  View All →
-                </button>
-              </div>
-              {recentApplications.length > 0 ? (
-                <div className="space-y-4">
-                  {recentApplications.map((application) => (
-                    <ApplicationCard
-                      key={application.id}
-                      application={application}
-                      onApprove={handleApproveApplication}
-                      onReject={handleRejectApplication}
-                      onViewProfile={handleViewProfile}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No recent applications found.</p>
-                </div>
-              )}
-            </div>
-          </section>
         </div>
       </main>
     </div>

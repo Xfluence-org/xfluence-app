@@ -348,128 +348,41 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
         </Card>
       )}
 
-      {/* Content Distribution & Assignment */}
-      {contentTypes.length > 0 && (
+        {/* Manual Influencer Assignment Only */}
         <Card>
           <CardHeader>
-            <CardTitle>Content Distribution & Influencer Assignment</CardTitle>
+            <CardTitle>Manual Influencer Assignment</CardTitle>
+            <p className="text-sm text-gray-600 mt-2">Add influencers manually by providing their Instagram handle and email address.</p>
           </CardHeader>
           <CardContent>
-            <Tabs value={activeContentType} onValueChange={setActiveContentType}>
-              <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${contentTypes.length}, 1fr)` }}>
-                {contentTypes.map((content) => (
-                  <TabsTrigger key={content.type} value={content.type}>
-                    <span className="mr-1">{getContentTypeIcon(content.type)}</span>
-                    {getContentTypeDisplay(content.type)}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-
-              {contentTypes.map((content) => (
-                <TabsContent key={content.type} value={content.type} className="mt-6">
-                  <div className="space-y-6">
-                    {/* Content Type Info */}
-                    <div className="bg-blue-50 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium text-blue-800">
-                          {getContentTypeDisplay(content.type)} - {content.percentage}% of Content
-                        </h4>
-                      </div>
-                      <p className="text-blue-700 text-sm">{content.purpose}</p>
-                    </div>
-
-                    {/* Influencer Categories for this Content Type */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {Object.entries(influencerAllocation?.allocation_by_category || {}).map(([category, totalCount]) => (
-                        <div key={category} className="bg-gray-50 rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <h5 className="font-medium text-gray-700">{category}</h5>
-                            <Badge variant="outline">{safeRender(totalCount)} influencers</Badge>
-                          </div>
-                          
-                          {/* Tier breakdown for this category */}
-                          <div className="space-y-2">
-                            {Object.entries(influencerAllocation?.allocation_by_tier?.[category] || {}).map(([tier, count]) => {
-                              const assignedCount = getAssignedCount(content.type, category, tier);
-                              const remainingCount = getRemainingCount(content.type, category, tier, Number(count));
-                              const isFullyAssigned = remainingCount === 0;
-                              
-                              return (
-                                <div key={tier} className="flex items-center justify-between bg-white rounded p-3">
-                                  <div className="flex items-center gap-3">
-                                    <span className="text-lg">{getTierIcon(tier)}</span>
-                                    <div>
-                                      <div className="text-sm font-medium capitalize">{tier}</div>
-                                      <div className="text-xs text-gray-500">{getTierDescription(tier)}</div>
-                                    </div>
-                                  </div>
-                                  <div className="text-center">
-                                    <div className="text-sm font-bold mb-1">
-                                      {assignedCount}/{safeRender(count)}
-                                      {remainingCount > 0 && (
-                                        <span className="text-orange-600 ml-1">
-                                          ({remainingCount} left)
-                                        </span>
-                                      )}
-                                    </div>
-                                    <Button
-                                      size="sm"
-                                      className={`${
-                                        isFullyAssigned 
-                                          ? 'bg-green-500 hover:bg-green-600' 
-                                          : 'bg-[#1DDCD3] hover:bg-[#1DDCD3]/90'
-                                      } text-white`}
-                                      onClick={() => handleAssignInfluencers(
-                                        getContentTypeDisplay(content.type),
-                                        category,
-                                        tier,
-                                        Number(count)
-                                      )}
-                                      disabled={isFullyAssigned}
-                                    >
-                                      {isFullyAssigned ? (
-                                        <>
-                                          <UserCheck className="h-3 w-3 mr-1" />
-                                          Complete
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Plus className="h-3 w-3 mr-1" />
-                                          Assign ({remainingCount})
-                                        </>
-                                      )}
-                                    </Button>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Content Type Specific Sections */}
-                    <div className="space-y-4">
-                      {/* Active Influencers */}
-                      <ContentTypeActiveSection 
-                        campaignId={campaignId} 
-                        contentType={getContentTypeDisplay(content.type)}
-                        onViewTasks={onViewTasks}
-                      />
-                      
-                      {/* Waiting for Requirements */}
-                      <ContentTypeWaitingSection 
-                        campaignId={campaignId} 
-                        contentType={getContentTypeDisplay(content.type)}
-                      />
-                    </div>
-                  </div>
-                </TabsContent>
-              ))}
-            </Tabs>
+            {/* Simple Manual Assignment Section */}
+            <div className="space-y-4">
+              <div className="text-center">
+                <Button
+                  onClick={() => {
+                    setCurrentAssignmentRequest({
+                      contentType: 'Manual Assignment',
+                      category: 'General',
+                      tier: 'all',
+                      requiredCount: 1
+                    });
+                    setShowAssignmentModal(true);
+                  }}
+                  className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add Influencer Manually
+                </Button>
+              </div>
+              
+              {/* Show waiting participants */}
+              <ContentTypeWaitingSection 
+                campaignId={campaignId} 
+                contentType="Manual"
+              />
+            </div>
           </CardContent>
         </Card>
-      )}
 
       {/* Assignment Modal */}
       {showAssignmentModal && currentAssignmentRequest && (
