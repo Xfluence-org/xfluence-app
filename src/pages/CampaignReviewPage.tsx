@@ -160,13 +160,22 @@ const CampaignReviewPage = () => {
     
     console.log('Creating mock LLM interactions with results:', campaignResults);
     
+    // Check if campaignResults has a 'plan' structure or is the plan itself
+    let planData = campaignResults;
+    if (campaignResults.plan) {
+      planData = campaignResults.plan;
+    }
+    
     return [{
-      raw_output: campaignResults
+      raw_output: planData
     }];
   };
 
   const renderStrategyOverview = () => {
     if (!campaignResults) return null;
+
+    // Get the actual plan data
+    const planData = campaignResults?.plan || campaignResults;
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -174,7 +183,7 @@ const CampaignReviewPage = () => {
           <CardContent className="p-4 text-center">
             <Users className="h-8 w-8 text-[#1DDCD3] mx-auto mb-2" />
             <div className="text-2xl font-bold text-[#1a1f2e]">
-              {campaignResults.influencer_allocation?.total_influencers || 0}
+              {planData?.influencer_allocation?.total_influencers || 0}
             </div>
             <div className="text-sm text-gray-600">Total Influencers</div>
           </CardContent>
@@ -184,7 +193,7 @@ const CampaignReviewPage = () => {
           <CardContent className="p-4 text-center">
             <Target className="h-8 w-8 text-[#1DDCD3] mx-auto mb-2" />
             <div className="text-2xl font-bold text-[#1a1f2e]">
-              {Object.keys(campaignResults.influencer_allocation?.allocation_by_category || {}).length}
+              {Object.keys(planData?.influencer_allocation?.allocation_by_category || {}).length}
             </div>
             <div className="text-sm text-gray-600">Categories</div>
           </CardContent>
@@ -194,7 +203,7 @@ const CampaignReviewPage = () => {
           <CardContent className="p-4 text-center">
             <Hash className="h-8 w-8 text-[#1DDCD3] mx-auto mb-2" />
             <div className="text-2xl font-bold text-[#1a1f2e]">
-              {campaignResults.actionable_search_tactics?.niche_hashtags?.length || 0}
+              {planData?.actionable_search_tactics?.niche_hashtags?.length || 0}
             </div>
             <div className="text-sm text-gray-600">Niche Hashtags</div>
           </CardContent>
@@ -204,7 +213,7 @@ const CampaignReviewPage = () => {
           <CardContent className="p-4 text-center">
             <Globe className="h-8 w-8 text-[#1DDCD3] mx-auto mb-2" />
             <div className="text-2xl font-bold text-[#1a1f2e]">
-              {campaignResults.actionable_search_tactics?.platform_tools?.length || 0}
+              {planData?.actionable_search_tactics?.platform_tools?.length || 0}
             </div>
             <div className="text-sm text-gray-600">Platform Tools</div>
           </CardContent>
@@ -214,7 +223,9 @@ const CampaignReviewPage = () => {
   };
 
   const renderSearchStrategy = () => {
-    if (!campaignResults.actionable_search_tactics && !campaignResults.search_strategy_summary && !campaignResults.justification) return null;
+    // Get the actual plan data
+    const planData = campaignResults?.plan || campaignResults;
+    if (!planData?.actionable_search_tactics && !planData?.search_strategy_summary && !planData?.justification) return null;
 
     return (
       <Card>
@@ -226,20 +237,20 @@ const CampaignReviewPage = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {campaignResults.search_strategy_summary && (
+            {planData.search_strategy_summary && (
               <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
                 <h4 className="font-medium text-blue-800 mb-2">Strategy Summary</h4>
-                <p className="text-blue-700 text-sm">{campaignResults.search_strategy_summary}</p>
+                <p className="text-blue-700 text-sm">{planData.search_strategy_summary}</p>
               </div>
             )}
 
-            {campaignResults.actionable_search_tactics && (
+            {planData.actionable_search_tactics && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {campaignResults.actionable_search_tactics.niche_hashtags && (
+                {planData.actionable_search_tactics.niche_hashtags && (
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h4 className="font-medium text-gray-700 mb-3">Niche Hashtags</h4>
                     <div className="flex flex-wrap gap-2">
-                      {campaignResults.actionable_search_tactics.niche_hashtags.map((hashtag: string, index: number) => (
+                      {planData.actionable_search_tactics.niche_hashtags.map((hashtag: string, index: number) => (
                         <span key={index} className="bg-[#1DDCD3] text-white px-2 py-1 rounded text-sm">
                           {hashtag}
                         </span>
@@ -248,11 +259,11 @@ const CampaignReviewPage = () => {
                   </div>
                 )}
 
-                {campaignResults.actionable_search_tactics.platform_tools && (
+                {planData.actionable_search_tactics.platform_tools && (
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h4 className="font-medium text-gray-700 mb-3">Platform Tools</h4>
                     <div className="space-y-2">
-                      {campaignResults.actionable_search_tactics.platform_tools.map((tool: string, index: number) => (
+                      {planData.actionable_search_tactics.platform_tools.map((tool: string, index: number) => (
                         <div key={index} className="flex items-center gap-2">
                           <Globe className="h-4 w-4 text-[#1DDCD3]" />
                           <span className="text-sm text-gray-700">{tool}</span>
@@ -264,10 +275,10 @@ const CampaignReviewPage = () => {
               </div>
             )}
 
-            {campaignResults.justification && (
+            {planData.justification && (
               <div className="bg-green-50 border-l-4 border-green-400 p-4">
                 <h4 className="font-medium text-green-800 mb-2">Strategy Justification</h4>
-                <p className="text-green-700 text-sm">{campaignResults.justification}</p>
+                <p className="text-green-700 text-sm">{planData.justification}</p>
               </div>
             )}
           </div>
