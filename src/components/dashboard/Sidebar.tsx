@@ -12,7 +12,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ userName = 'Name' }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut } = useAuth();
+  const { signOut, profile } = useAuth();
 
   const getActiveItem = () => {
     if (location.pathname === '/dashboard') return 'dashboard';
@@ -27,7 +27,8 @@ const Sidebar: React.FC<SidebarProps> = ({ userName = 'Name' }) => {
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊', path: '/dashboard' },
-    { id: 'opportunities', label: 'Opportunities', icon: '💡', path: '/opportunities' },
+    // Only show opportunities for brands/agencies, not influencers
+    ...(profile?.user_type !== 'Influencer' ? [{ id: 'opportunities', label: 'Opportunities', icon: '💡', path: '/opportunities' }] : []),
     { id: 'campaigns', label: 'Campaigns', icon: '📱', path: '/campaigns' },
     { id: 'settings', label: 'Settings', icon: '⚙️', path: '/settings' },
   ];

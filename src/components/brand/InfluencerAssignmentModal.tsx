@@ -71,21 +71,32 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
   const handleAssignmentSubmit = async () => {
     setLoading(true);
     try {
-      // For now, we'll create campaign participants with manual data
-      // In a real system, you'd send invitations to the email addresses
+      // Create campaign participants with manual data for email invitations
+      // These will become "invitations" that influencers see when they log in with the same email
       
       for (const manualInfluencer of manualInfluencers) {
-        // Create a campaign participant entry with manual data
-        const assignmentInfo = `[TIER:${assignmentRequest.category}:${assignmentRequest.tier}][MANUAL:${manualInfluencer.name}:${manualInfluencer.handle}:${manualInfluencer.email}]`;
+        // Store assignment details in a structured format for easy access
+        const assignmentData = {
+          tier: assignmentRequest.tier,
+          category: assignmentRequest.category,
+          contentType: assignmentRequest.contentType,
+          influencerDetails: {
+            name: manualInfluencer.name,
+            handle: manualInfluencer.handle,
+            email: manualInfluencer.email,
+            platform: manualInfluencer.platform
+          }
+        };
         
+        // Create invitation record that influencer will see when they sign in
         await supabase
           .from('campaign_participants')
           .insert({
             campaign_id: campaignId,
-            influencer_id: null, // No profile exists yet
+            influencer_id: null, // Will be set when influencer claims this invitation
             status: 'invited',
             current_stage: 'waiting_for_requirements',
-            application_message: assignmentInfo
+            application_message: JSON.stringify(assignmentData)
           });
       }
 
