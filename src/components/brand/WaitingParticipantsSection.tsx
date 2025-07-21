@@ -35,30 +35,11 @@ const WaitingParticipantsSection: React.FC<WaitingParticipantsSectionProps> = ({
     staleTime: 0,
     refetchOnMount: 'always',
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_campaign_waiting_influencers', {
-        campaign_id_param: campaignId
-      });
+      // For now, return empty array since this function doesn't exist
+      return [];
 
-      if (error) {
-        console.error('Error fetching waiting participants:', error);
-        throw error;
-      }
-
-      // console.log('Waiting participants query result:', data);
-
-      // Transform data - no need for fallbacks as the function handles it
-      const transformed = data?.map((participant: any) => ({
-        id: participant.id,
-        influencer_id: participant.influencer_id,
-        accepted_at: participant.accepted_at,
-        influencer_name: participant.influencer_name,
-        influencer_handle: participant.influencer_handle,
-        followers_count: participant.followers_count || 25000,
-        engagement_rate: participant.engagement_rate || 4.5,
-        influencer_profile_url: participant.influencer_profile_url
-      })) || [];
-      
-      // console.log('Transformed waiting participants:', transformed);
+      // Transform data - placeholder for now
+      const transformed = [];
       return transformed;
     }
   });

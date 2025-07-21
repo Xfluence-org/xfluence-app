@@ -302,7 +302,7 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {tasks.map((task: TaskData) => {
+                      {tasks.map((task: any) => {
                         const isExpanded = expandedTaskId === task.id;
                         const workflowStates = task.workflow_states || task.task_workflow_states;
                         const requirementsAccepted = workflowStates?.find((ws: any) => ws.phase === 'content_requirement')?.status === 'completed';
@@ -328,7 +328,7 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
                               <div className="flex items-center justify-between mb-2">
                                 <h4 className="font-medium">{task.title}</h4>
                                 <div className="flex items-center gap-2">
-                                  {getStatusBadge(task.progress === 100 ? 'completed' : (task.current_phase || task.status))}
+                                  {getStatusBadge(task.progress === 100 ? 'completed' : (task.status))}
                                   <ChevronRight className={`h-4 w-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
                                 </div>
                               </div>
@@ -461,12 +461,12 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
                   </CardContent>
                 </Card>
               ) : (
-                tasks.map((task: TaskData) => (
+                tasks.map((task: any) => (
                   <Card key={task.id} className="border-gray-200 rounded-xl shadow-sm">
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-lg text-[#1a1f2e]">{task.title}</CardTitle>
-                        {getStatusBadge(task.progress === 100 ? 'completed' : (task.current_phase || task.status))}
+                        {getStatusBadge(task.progress === 100 ? 'completed' : task.status)}
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -529,7 +529,7 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
 
             <TabsContent value="progress" className="space-y-4 mt-4">
               {tasks.length > 0 ? (
-                tasks.map((task: TaskData) => (
+                tasks.map((task: any) => (
                   <TaskProgressTracker
                     key={task.id}
                     taskId={task.id}
