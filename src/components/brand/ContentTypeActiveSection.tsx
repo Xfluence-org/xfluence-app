@@ -36,9 +36,12 @@ const ContentTypeActiveSection: React.FC<ContentTypeActiveSectionProps> = ({
     staleTime: 0,
     refetchOnMount: 'always',
     queryFn: async () => {
-      const { data: participants, error: participantsError } = await supabase.rpc('get_campaign_active_influencers', {
-        campaign_id_param: campaignId
-      });
+      // Use direct database query instead of missing function
+      const { data: participants, error: participantsError } = await supabase
+        .from('campaign_participants')
+        .select('*')
+        .eq('campaign_id', campaignId)
+        .eq('status', 'accepted');
 
       if (participantsError) {
         console.error('Error fetching active participants:', participantsError);

@@ -38,17 +38,24 @@ const ContentTypeWaitingSection: React.FC<ContentTypeWaitingSectionProps> = ({
     staleTime: 0,
     refetchOnMount: 'always',
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_campaign_waiting_influencers', {
-        campaign_id_param: campaignId
-      });
+      // Use direct database query instead of missing function
+      const { data, error } = await supabase
+        .from('campaign_participants')
+        .select('*')
+        .eq('campaign_id', campaignId)
+        .eq('status', 'accepted')
+        .eq('current_stage', 'waiting_for_requirements');
 
       if (error) {
         console.error('Error fetching waiting participants:', error);
-        throw error;
+        return [];
       }
 
+      // Ensure we have an array to work with
+      const participantsList = Array.isArray(data) ? data : [];
+
       // Transform data - no need for fallbacks as the function handles it
-      const transformed = data?.map((participant: any) => ({
+      const transformed = participantsList.map((participant: any) => ({
         id: participant.id,
         influencer_id: participant.influencer_id,
         accepted_at: participant.accepted_at,

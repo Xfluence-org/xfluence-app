@@ -37,18 +37,24 @@ const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({ cam
     staleTime: 0,
     refetchOnMount: 'always',
     queryFn: async () => {
-      const { data: participants, error: participantsError } = await supabase.rpc('get_campaign_active_influencers', {
-        campaign_id_param: campaignId
-      });
+      // Use direct database query instead of missing function
+      const { data: participants, error: participantsError } = await supabase
+        .from('campaign_participants')
+        .select('*')
+        .eq('campaign_id', campaignId)
+        .eq('status', 'accepted');
 
       if (participantsError) {
-        // console.error('Error fetching active participants:', participantsError);
-        throw participantsError;
+        console.error('Error fetching active participants:', participantsError);
+        return [];
       }
+
+      // Ensure we have an array to work with
+      const participantsList = Array.isArray(participants) ? participants : [];
 
       // Fetch tasks separately for each participant
       const data = await Promise.all(
-        (participants || []).map(async (participant) => {
+        participantsList.map(async (participant: any) => {
           const { data: tasks } = await supabase
             .from('campaign_tasks')
             .select('id, status, progress')

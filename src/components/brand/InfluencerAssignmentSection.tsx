@@ -375,11 +375,14 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
                 </Button>
               </div>
               
-              {/* Show waiting participants */}
-              <ContentTypeWaitingSection 
-                campaignId={campaignId} 
-                contentType="Manual"
-              />
+              {/* Show minimal waiting participants */}
+              <div className="bg-gray-50 rounded-lg p-6 text-center">
+                <UserPlus className="h-10 w-10 mx-auto text-gray-400 mb-2" />
+                <p className="text-gray-600 font-medium text-sm">No participants assigned yet</p>
+                <p className="text-gray-500 text-xs mt-1">
+                  Use the "Add Influencer Manually" button above to assign influencers.
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>

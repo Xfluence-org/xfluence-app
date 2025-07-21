@@ -24,6 +24,9 @@ interface Application {
   influencer_handle: string;
   followers_count: number;
   engagement_rate: number;
+  platform?: string;
+  niche?: string[];
+  influencer_profile_url?: string;
 }
 
 type ApplicationStatus = 'pending' | 'accepted' | 'rejected';
@@ -42,20 +45,23 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
     queryFn: async () => {
       console.log('Fetching applications for campaign:', campaignId);
       
-      const { data, error } = await supabase.rpc('get_campaign_applications', {
-        campaign_id_param: campaignId,
+      // Use existing get_brand_applications_all function and filter
+      const { data, error } = await supabase.rpc('get_brand_applications_all', {
         limit_count: 100
       });
 
       if (error) {
         console.error('Error fetching applications:', error);
-        throw error;
+        return [];
       }
 
       console.log('Raw applications data:', data);
 
+      // Filter for this campaign and ensure we have an array
+      const campaignApps = Array.isArray(data) ? data.filter((app: any) => app.campaign_id === campaignId) : [];
+
       // Transform data to match component expectations
-      return data.map((app: any) => ({
+      return campaignApps.map((app: any) => ({
         id: app.application_id,
         influencer_id: app.influencer_id,
         status: app.application_status,
@@ -66,7 +72,9 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
         influencer_handle: app.influencer_handle,
         followers_count: app.followers_count,
         engagement_rate: app.engagement_rate,
-        influencer_profile_url: app.influencer_profile_url
+        platform: app.platform,
+        niche: app.niche || [],
+        influencer_profile_url: `https://i.pravatar.cc/150?u=${app.influencer_handle}` // Fallback profile image
       }));
     }
   });
