@@ -143,7 +143,7 @@ const ContentTypeActiveSection: React.FC<ContentTypeActiveSectionProps> = ({
                     <div className="flex items-center gap-2">
                       <h4 className="font-medium text-sm">{participant.influencer_name}</h4>
                       <Badge variant="outline" className="text-xs">
-                        {participant.influencer_handle.startsWith('@') ? participant.influencer_handle : `@${participant.influencer_handle}`}
+                        {participant.influencer_handle ? (participant.influencer_handle.startsWith('@') ? participant.influencer_handle : `@${participant.influencer_handle}`) : '@user'}
                       </Badge>
                     </div>
                     

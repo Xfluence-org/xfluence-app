@@ -189,7 +189,7 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
                   </div>
                   <div>
                     <h5 className="font-medium text-gray-900">{application.influencer_name}</h5>
-                    <p className="text-sm text-gray-600">{application.influencer_handle.startsWith('@') ? application.influencer_handle : `@${application.influencer_handle}`}</p>
+                    <p className="text-sm text-gray-600">{application.influencer_handle ? (application.influencer_handle.startsWith('@') ? application.influencer_handle : `@${application.influencer_handle}`) : '@user'}</p>
                   </div>
                   {getStatusBadge(application.status)}
                 </div>
