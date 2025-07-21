@@ -26,10 +26,10 @@ interface InvitationCardProps {
 const InvitationCard: React.FC<InvitationCardProps> = ({ campaign, onAccept, onDecline }) => {
   const formatRequirements = () => {
     const parts = [];
-    if (campaign.requirements.posts) parts.push(`${campaign.requirements.posts} Posts`);
-    if (campaign.requirements.stories) parts.push(`${campaign.requirements.stories} Stories`);
-    if (campaign.requirements.reels) parts.push(`${campaign.requirements.reels} Reel`);
-    return parts.join(', ');
+    if (campaign.requirements?.posts) parts.push(`${campaign.requirements.posts} Posts`);
+    if (campaign.requirements?.stories) parts.push(`${campaign.requirements.stories} Stories`);
+    if (campaign.requirements?.reels) parts.push(`${campaign.requirements.reels} Reel`);
+    return parts.length > 0 ? parts.join(', ') : 'Content creation required';
   };
 
   return (
