@@ -95,9 +95,20 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
         return;
       }
 
+      if (!participants || participants.length === 0) {
+        setAssignedInfluencers([]);
+        return;
+      }
+
       // For participants that have moved past waiting stage, fetch their tasks
       const participantsWithTasks = await Promise.all(
-        participants?.map(async (participant) => {
+        participants.map(async (participant) => {
+          // Type guard to ensure we have the expected data structure
+          if (!participant || typeof participant !== 'object' || !('current_stage' in participant)) {
+            console.error('Invalid participant data:', participant);
+            return null;
+          }
+
           let tasks: Task[] = [];
           let workflowStates: WorkflowState[] = [];
 
@@ -116,7 +127,14 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
               .eq('campaign_id', campaignId)
               .eq('influencer_id', participant.influencer_id);
 
-            tasks = taskData || [];
+            tasks = (taskData || []).map(task => ({
+              id: task.id,
+              title: task.title || '',
+              description: task.description || '',
+              status: task.status || '',
+              progress: task.progress || 0,
+              task_type: task.task_type || ''
+            }));
 
             // Get workflow states for the first task
             if (tasks.length > 0) {
@@ -128,24 +146,29 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
             }
           }
 
+          // Type guard for profiles
+          const profiles = Array.isArray(participant.profiles) ? participant.profiles : [];
+          const profile = profiles.length > 0 ? profiles[0] : null;
+
           return {
             id: participant.id,
             influencer_id: participant.influencer_id,
             assignment_type: 'applicant' as const,
             manual_data: null,
-            influencer_name: participant.profiles?.name || 'Unknown User',
+            influencer_name: profile?.name || 'Unknown User',
             influencer_handle: `user_${participant.influencer_id?.slice(0, 8)}`,
             tasks,
             workflowStates,
             isWaitingForRequirements: participant.current_stage === 'waiting_for_requirements'
           };
-        }) || []
+        })
       );
 
-      // Filter to only show non-waiting participants
-      const activeParticipants = participantsWithTasks.filter(p => !p.isWaitingForRequirements);
+      // Filter out null results and only show non-waiting participants
+      const validParticipants = participantsWithTasks
+        .filter((p): p is AssignedInfluencer => p !== null && !p.isWaitingForRequirements);
       
-      setAssignedInfluencers(activeParticipants);
+      setAssignedInfluencers(validParticipants);
 
     } catch (error) {
       console.error('Error fetching assigned influencers:', error);
