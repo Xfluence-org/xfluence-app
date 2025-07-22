@@ -104,29 +104,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const userProfile = await fetchUserProfile(session.user.id);
             setProfile(userProfile);
             
-            // Only redirect on initial sign-in and only once per session
-            // Prevent redirects on tab switches, token refresh, etc.
-            if (userProfile && 
-                event === 'SIGNED_IN' && 
-                !hasInitialized && 
-                !hasRedirectedOnce &&
-                location.pathname === '/') {
+            // Only redirect on specific sign-in events and only from the root page
+            // Prevent redirects on TOKEN_REFRESHED, tab focus, or when user is on other pages
+            const shouldPerformRedirect = userProfile && 
+                                        (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && 
+                                        !hasInitialized && 
+                                        !hasRedirectedOnce &&
+                                        location.pathname === '/';
+            
+            if (shouldPerformRedirect) {
+              console.log('Performing initial redirect for user type:', userProfile.user_type);
               setHasRedirectedOnce(true);
               redirectToDashboard(userProfile.user_type);
             }
           }, 0);
         } else {
           setProfile(null);
-          // Reset redirect flag when user signs out
-          setHasRedirectedOnce(false);
+          // Only reset redirect flag on actual sign out, not on token refresh failures
+          if (event === 'SIGNED_OUT') {
+            setHasRedirectedOnce(false);
+          }
         }
 
-        setLoading(false);
-        setHasInitialized(true);
+        // Only set loading to false after initial setup
+        if (!hasInitialized) {
+          setLoading(false);
+          setHasInitialized(true);
+        }
       }
     );
 
-    // Check for existing session
+    // Check for existing session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -135,14 +143,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         fetchUserProfile(session.user.id).then((userProfile) => {
           setProfile(userProfile);
           setLoading(false);
+          setHasInitialized(true);
         });
       } else {
         setLoading(false);
+        setHasInitialized(true);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, []); // Remove dependencies to prevent re-running
 
   const signUp = async (email: string, password: string, userType: UserType, name: string) => {
     try {
