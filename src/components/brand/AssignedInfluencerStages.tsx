@@ -68,7 +68,7 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
     taskTitle: string;
     workflowStates: WorkflowState[];
   } | null>(null);
-  const { castToUuid, isValidResult } = useSupabaseTypeCasts();
+  const { castToUuid, isValidResult, filterValidResults } = useSupabaseTypeCasts();
 
   const fetchAssignedInfluencers = async () => {
     try {
@@ -90,7 +90,7 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
           )
         `)
         .eq('campaign_id', castToUuid(campaignId))
-        .eq('status', 'accepted');
+        .eq('status', 'accepted' as any);
 
       if (participantError) {
         console.error('Error fetching participants:', participantError);
@@ -106,7 +106,7 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
       const participantsWithTasks = await Promise.all(
         participants.map(async (participant) => {
           // Type guard to ensure we have the expected data structure
-          if (!participant || typeof participant !== 'object' || !('current_stage' in participant)) {
+          if (!isValidResult(participant)) {
             console.error('Invalid participant data:', participant);
             return null;
           }
@@ -131,9 +131,7 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
 
             if (!taskError && taskData && Array.isArray(taskData)) {
               // Filter out any error objects and only process valid task data
-              const validTasks = taskData.filter(task => 
-                task && typeof task === 'object' && 'id' in task && !('error' in task) && isValidResult(task)
-              );
+              const validTasks = filterValidResults(taskData);
               
               tasks = validTasks.map(task => ({
                 id: task.id || '',
@@ -174,13 +172,9 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
       );
 
       // Filter out null results and only show non-waiting participants
-      const validParticipants = participantsWithTasks
-        .filter((p): p is AssignedInfluencer => 
-          p !== null && 
-          !p.isWaitingForRequirements &&
-          typeof p === 'object' &&
-          'assignment_type' in p
-        );
+      const validParticipants = participantsWithTasks.filter((p): p is AssignedInfluencer => 
+        p !== null && !p.isWaitingForRequirements
+      );
       
       setAssignedInfluencers(validParticipants);
 

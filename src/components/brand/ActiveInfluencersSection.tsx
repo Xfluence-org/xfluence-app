@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +32,7 @@ const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({
 }) => {
   const [activeInfluencers, setActiveInfluencers] = useState<ActiveInfluencer[]>([]);
   const [loading, setLoading] = useState(true);
-  const { castToUuid } = useSupabaseTypeCasts();
+  const { castToUuid, isValidArrayResult, isValidResult, filterValidResults } = useSupabaseTypeCasts();
 
   useEffect(() => {
     fetchActiveInfluencers();
@@ -54,7 +53,8 @@ const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({
         return;
       }
 
-      if (!influencers || influencers.length === 0) {
+      // Ensure we have a valid array result
+      if (!isValidArrayResult(influencers) || influencers.length === 0) {
         setActiveInfluencers([]);
         return;
       }
@@ -62,15 +62,26 @@ const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({
       // Get task counts and progress for each influencer
       const influencersWithTasks = await Promise.all(
         influencers.map(async (influencer) => {
+          if (!isValidResult(influencer)) {
+            return null;
+          }
+
           const { data: tasks, error: tasksError } = await supabase
             .from('campaign_tasks')
             .select('id, progress')
             .eq('campaign_id', castToUuid(campaignId))
             .eq('influencer_id', castToUuid(influencer.influencer_id));
 
-          const taskCount = tasks?.length || 0;
-          const avgProgress = tasks?.length > 0 
-            ? Math.round(tasks.reduce((sum, task) => sum + (task.progress || 0), 0) / tasks.length)
+          if (tasksError) {
+            console.error('Error fetching tasks:', tasksError);
+          }
+
+          const validTasks = tasks ? filterValidResults(tasks) : [];
+          const taskCount = validTasks.length;
+          const avgProgress = validTasks.length > 0 
+            ? Math.round(validTasks.reduce((sum, task) => {
+                return sum + (isValidResult(task) && typeof task.progress === 'number' ? task.progress : 0);
+              }, 0) / validTasks.length)
             : 0;
 
           return {
@@ -89,7 +100,9 @@ const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({
         })
       );
 
-      setActiveInfluencers(influencersWithTasks);
+      // Filter out null results
+      const validInfluencers = influencersWithTasks.filter((inf): inf is ActiveInfluencer => inf !== null);
+      setActiveInfluencers(validInfluencers);
     } catch (error) {
       console.error('Error in fetchActiveInfluencers:', error);
     } finally {
