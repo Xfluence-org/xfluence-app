@@ -31,7 +31,9 @@ const CampaignReviewPage = () => {
     
     if (tempResults) {
       const results = JSON.parse(tempResults);
-      console.log('Campaign results loaded:', results);
+      console.log('Campaign results loaded from localStorage:', results);
+      console.log('Results keys:', Object.keys(results));
+      console.log('Results structure:', JSON.stringify(results, null, 2));
       setCampaignResults(results);
     }
   }, []);
@@ -159,12 +161,29 @@ const CampaignReviewPage = () => {
     if (!campaignResults) return [];
     
     console.log('Creating mock LLM interactions with results:', campaignResults);
+    console.log('Campaign results keys:', Object.keys(campaignResults));
     
-    // Check if campaignResults has a 'plan' structure or is the plan itself
+    // Try different data access patterns based on common AI response structures
     let planData = campaignResults;
+    
+    // Check if data is nested under 'plan' key
     if (campaignResults.plan) {
       planData = campaignResults.plan;
+      console.log('Found plan data:', planData);
     }
+    // Check if data is nested under 'campaign_strategy' or similar
+    else if (campaignResults.campaign_strategy) {
+      planData = campaignResults.campaign_strategy;
+      console.log('Found campaign_strategy data:', planData);
+    }
+    // Check if data is nested under 'strategy' key
+    else if (campaignResults.strategy) {
+      planData = campaignResults.strategy;
+      console.log('Found strategy data:', planData);
+    }
+    
+    console.log('Final plan data being passed to components:', planData);
+    console.log('Plan data keys:', Object.keys(planData));
     
     return [{
       raw_output: planData
@@ -174,8 +193,19 @@ const CampaignReviewPage = () => {
   const renderStrategyOverview = () => {
     if (!campaignResults) return null;
 
-    // Get the actual plan data
-    const planData = campaignResults?.plan || campaignResults;
+    // Try different data access patterns
+    let planData = campaignResults;
+    if (campaignResults.plan) {
+      planData = campaignResults.plan;
+    } else if (campaignResults.campaign_strategy) {
+      planData = campaignResults.campaign_strategy;
+    } else if (campaignResults.strategy) {
+      planData = campaignResults.strategy;
+    }
+
+    console.log('Strategy overview accessing plan data:', planData);
+    console.log('Influencer allocation in plan data:', planData?.influencer_allocation);
+    console.log('Search tactics in plan data:', planData?.actionable_search_tactics);
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -223,8 +253,19 @@ const CampaignReviewPage = () => {
   };
 
   const renderSearchStrategy = () => {
-    // Get the actual plan data
-    const planData = campaignResults?.plan || campaignResults;
+    // Try different data access patterns
+    let planData = campaignResults;
+    if (campaignResults?.plan) {
+      planData = campaignResults.plan;
+    } else if (campaignResults?.campaign_strategy) {
+      planData = campaignResults.campaign_strategy;
+    } else if (campaignResults?.strategy) {
+      planData = campaignResults.strategy;
+    }
+    
+    console.log('Search strategy accessing plan data:', planData);
+    console.log('Search tactics:', planData?.actionable_search_tactics);
+    
     if (!planData?.actionable_search_tactics && !planData?.search_strategy_summary && !planData?.justification) return null;
 
     return (

@@ -34,16 +34,38 @@ const ContentStrategySection: React.FC<ContentStrategySectionProps> = ({ llmInte
     console.log('ContentStrategySection - llmInteractions:', llmInteractions);
     
     for (const interaction of llmInteractions) {
+      console.log('Processing interaction:', interaction);
+      
       // Check if data is in raw_output field directly
       if (interaction.raw_output?.content_strategy) {
         console.log('Found content_strategy in raw_output:', interaction.raw_output.content_strategy);
         return interaction.raw_output.content_strategy;
       }
       
+      // Check for various nested structures
+      const possiblePaths = [
+        interaction.raw_output?.plan?.content_strategy,
+        interaction.raw_output?.campaign_strategy?.content_strategy,
+        interaction.raw_output?.strategy?.content_strategy,
+        interaction.raw_output // In case the whole thing is the content strategy
+      ];
+      
+      for (const path of possiblePaths) {
+        if (path && typeof path === 'object') {
+          // Check if this looks like content strategy data
+          if (path.content_distribution || path.platform_specific_strategies) {
+            console.log('Found content strategy at path:', path);
+            return path;
+          }
+        }
+      }
+      
       // Check if raw_output is a string that needs parsing
       if (typeof interaction.raw_output === 'string') {
         try {
           const parsed = JSON.parse(interaction.raw_output);
+          console.log('Parsed string raw_output:', parsed);
+          
           if (parsed.content_strategy) {
             console.log('Found content_strategy after parsing string:', parsed.content_strategy);
             return parsed.content_strategy;
@@ -58,21 +80,23 @@ const ContentStrategySection: React.FC<ContentStrategySectionProps> = ({ llmInte
         }
       }
       
-      // Check for nested plan structure
-      if (interaction.raw_output?.plan?.content_strategy) {
-        console.log('Found content_strategy in plan:', interaction.raw_output.plan.content_strategy);
-        return interaction.raw_output.plan.content_strategy;
-      }
-      
       // Legacy check for nested structure
       if (interaction.raw_output && typeof interaction.raw_output === 'object') {
         const keys = Object.keys(interaction.raw_output);
+        console.log('Raw output keys:', keys);
+        
         for (const key of keys) {
           const value = interaction.raw_output[key];
           if (value && typeof value === 'object' && value.content_strategy) {
             console.log('Found nested content_strategy:', value.content_strategy);
             return value.content_strategy;
           }
+        }
+        
+        // Check if the raw_output itself has the expected structure
+        if (interaction.raw_output.content_distribution || interaction.raw_output.platform_specific_strategies) {
+          console.log('Raw output appears to be content strategy data:', interaction.raw_output);
+          return interaction.raw_output;
         }
       }
     }

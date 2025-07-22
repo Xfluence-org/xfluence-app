@@ -30,16 +30,38 @@ const InfluencerAllocationSection: React.FC<InfluencerAllocationSectionProps> = 
     console.log('InfluencerAllocationSection - llmInteractions:', llmInteractions);
     
     for (const interaction of llmInteractions) {
+      console.log('Processing interaction:', interaction);
+      
       // Check if data is in raw_output field directly
       if (interaction.raw_output?.influencer_allocation) {
         console.log('Found influencer_allocation in raw_output:', interaction.raw_output.influencer_allocation);
         return interaction.raw_output.influencer_allocation;
       }
       
+      // Check for various nested structures
+      const possiblePaths = [
+        interaction.raw_output?.plan?.influencer_allocation,
+        interaction.raw_output?.campaign_strategy?.influencer_allocation,
+        interaction.raw_output?.strategy?.influencer_allocation,
+        interaction.raw_output // In case the whole thing is the influencer allocation
+      ];
+      
+      for (const path of possiblePaths) {
+        if (path && typeof path === 'object') {
+          // Check if this looks like influencer allocation data
+          if (path.total_influencers || path.allocation_by_tier || path.allocation_by_category) {
+            console.log('Found influencer allocation at path:', path);
+            return path;
+          }
+        }
+      }
+      
       // Check if raw_output is a string that needs parsing
       if (typeof interaction.raw_output === 'string') {
         try {
           const parsed = JSON.parse(interaction.raw_output);
+          console.log('Parsed string raw_output:', parsed);
+          
           if (parsed.influencer_allocation) {
             console.log('Found influencer_allocation after parsing string:', parsed.influencer_allocation);
             return parsed.influencer_allocation;
@@ -54,21 +76,23 @@ const InfluencerAllocationSection: React.FC<InfluencerAllocationSectionProps> = 
         }
       }
       
-      // Check for nested plan structure
-      if (interaction.raw_output?.plan?.influencer_allocation) {
-        console.log('Found influencer_allocation in plan:', interaction.raw_output.plan.influencer_allocation);
-        return interaction.raw_output.plan.influencer_allocation;
-      }
-      
       // Legacy check for nested structure
       if (interaction.raw_output && typeof interaction.raw_output === 'object') {
         const keys = Object.keys(interaction.raw_output);
+        console.log('Raw output keys:', keys);
+        
         for (const key of keys) {
           const value = interaction.raw_output[key];
           if (value && typeof value === 'object' && value.influencer_allocation) {
             console.log('Found nested influencer_allocation:', value.influencer_allocation);
             return value.influencer_allocation;
           }
+        }
+        
+        // Check if the raw_output itself has the expected structure
+        if (interaction.raw_output.total_influencers || interaction.raw_output.allocation_by_tier || interaction.raw_output.allocation_by_category) {
+          console.log('Raw output appears to be influencer allocation data:', interaction.raw_output);
+          return interaction.raw_output;
         }
       }
     }
