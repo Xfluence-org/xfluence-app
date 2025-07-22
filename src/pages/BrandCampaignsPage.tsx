@@ -3,13 +3,14 @@ import { useSearchParams, useLocation } from 'react-router-dom';
 import BrandSidebar from '@/components/brand/BrandSidebar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 import { useBrandCampaignsData } from '@/hooks/useBrandCampaignsData';
 import BrandCampaignCard from '@/components/brand/BrandCampaignCard';
 import CampaignDetailModal from '@/components/brand/CampaignDetailModal';
 import CreateCampaignModal from '@/components/brand/CreateCampaignModal';
+import InvitationManagement from '@/components/brand/InvitationManagement';
 
-type CampaignView = 'published' | 'completed' | 'archived';
+type CampaignView = 'published' | 'completed' | 'archived' | 'influencers';
 
 const BrandCampaignsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -24,14 +25,14 @@ const BrandCampaignsPage: React.FC = () => {
     error, 
     archiveCampaign,
     updateCampaign 
-  } = useBrandCampaignsData(activeTab);
+  } = useBrandCampaignsData(activeTab === 'influencers' ? 'published' : activeTab);
 
   // Handle URL parameters for tab and campaign view
   useEffect(() => {
     const tabParam = searchParams.get('tab') as CampaignView;
     const viewParam = searchParams.get('view');
     
-    if (tabParam && ['published', 'completed', 'archived'].includes(tabParam)) {
+    if (tabParam && ['published', 'completed', 'archived', 'influencers'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
     
@@ -125,10 +126,14 @@ const BrandCampaignsPage: React.FC = () => {
 
           <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as CampaignView)}>
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="published">Published Campaigns</TabsTrigger>
                 <TabsTrigger value="completed">Completed Campaigns</TabsTrigger>
                 <TabsTrigger value="archived">Archived Campaigns</TabsTrigger>
+                <TabsTrigger value="influencers">
+                  <Users className="mr-2 h-4 w-4" />
+                  Influencers
+                </TabsTrigger>
               </TabsList>
 
 
@@ -198,6 +203,18 @@ const BrandCampaignsPage: React.FC = () => {
                       <p className="text-gray-400 mt-2">Archived campaigns will appear here</p>
                     </div>
                   )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="influencers" className="mt-6">
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h2 className="text-xl font-semibold text-gray-900">Invited Influencers</h2>
+                      <p className="text-gray-600 mt-1">Manage your sent invitations and copy invitation links</p>
+                    </div>
+                  </div>
+                  <InvitationManagement />
                 </div>
               </TabsContent>
             </Tabs>
