@@ -15,6 +15,10 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     detectSessionInUrl: true,
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
     storageKey: 'supabase.auth.token',
-    flowType: 'pkce'
+    flowType: 'pkce',
+    // Add session validation options
+    debug: false,
+    // Refresh session 60 seconds before expiry
+    autoRefreshTokenTick: 60
   }
 });

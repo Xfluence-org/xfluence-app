@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -17,10 +17,13 @@ interface AuthContextType {
   profile: UserProfile | null;
   session: Session | null;
   loading: boolean;
+  error: Error | null;
   signUp: (email: string, password: string, userType: UserType, name: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
+  clearError: () => void;
+  forceClearSession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,31 +41,77 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [hasInitialized, setHasInitialized] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
+  const profileCacheRef = useRef<Map<string, { profile: UserProfile; timestamp: number }>>(new Map());
+  const profileFetchPromiseRef = useRef<Map<string, Promise<UserProfile>>>(new Map());
 
-  const fetchUserProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching profile:', error);
-        return null;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      return null;
+  const fetchUserProfile = useCallback(async (userId: string): Promise<UserProfile> => {
+    // Check cache first (cache for 5 seconds)
+    const cached = profileCacheRef.current.get(userId);
+    if (cached && Date.now() - cached.timestamp < 5000) {
+      return cached.profile;
     }
-  };
 
-  const claimPendingInvitations = async (userEmail: string, userId: string) => {
+    // Check if there's already a fetch in progress for this user
+    const existingPromise = profileFetchPromiseRef.current.get(userId);
+    if (existingPromise) {
+      return existingPromise;
+    }
+
+    // Create new fetch promise
+    const fetchPromise = (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+
+        if (error) {
+          console.error('Error fetching profile:', error);
+          console.error('Profile fetch error details:', { userId, error });
+          
+          // If it's a not found error, return null instead of throwing
+          if (error.code === 'PGRST116') {
+            return null;
+          }
+          throw error;
+        }
+
+        if (!data) {
+          console.error('Profile data is null for user:', userId);
+          return null;
+        }
+
+        // Cache the result
+        profileCacheRef.current.set(userId, {
+          profile: data,
+          timestamp: Date.now()
+        });
+
+        return data;
+      } catch (error) {
+        console.error('Error in profile fetch:', error);
+        throw error;
+      } finally {
+        // Clean up the promise ref
+        profileFetchPromiseRef.current.delete(userId);
+      }
+    })();
+
+    // Store the promise to prevent duplicate fetches
+    profileFetchPromiseRef.current.set(userId, fetchPromise);
+    
+    return fetchPromise;
+  }, []);
+
+  const claimPendingInvitations = useCallback(async (userEmail: string, userId: string) => {
+    if (!isMountedRef.current) return;
+    
     try {
       console.log('Checking for pending invitations for email:', userEmail);
       
@@ -84,6 +133,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .is('campaign_participants.influencer_id', null)
         .is('campaign_participants.invitation_claimed_at', null);
 
+      if (!isMountedRef.current) return;
+
       if (emailError) {
         console.error('Error fetching invitation emails:', emailError);
         return;
@@ -98,6 +149,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Claim each invitation
       for (const invitationEmail of invitationEmails) {
+        if (!isMountedRef.current) break;
+        
         try {
           // Update the campaign participant
           const { error: updateError } = await supabase
@@ -134,22 +187,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Error claiming pending invitations:', error);
     }
-  };
+  }, []);
 
-  const shouldRedirect = (userType: UserType, currentPath: string) => {
-    // Only redirect if user is on the root path "/"
-    // Never redirect users from other pages
-    if (currentPath !== '/') {
-      return false;
-    }
-
-    return true;
-  };
-
-  const redirectToDashboard = (userType: UserType) => {
+  const redirectToDashboard = useCallback((userType: UserType) => {
     // Only redirect if we're on the root path
-    if (window.location.pathname !== '/') {
-      console.log('Not redirecting - user is not on root path:', window.location.pathname);
+    const currentPath = window.location.pathname;
+    if (currentPath !== '/') {
+      console.log('Not redirecting - user is not on root path:', currentPath);
       return;
     }
 
@@ -159,23 +203,156 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } else {
       navigate('/brand-dashboard');
     }
-  };
+  }, [navigate]);
 
   useEffect(() => {
-    let initialLoadComplete = false;
+    isMountedRef.current = true;
+    
+    // Cancel any ongoing operations when component unmounts
+    return () => {
+      isMountedRef.current = false;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, 'Current path:', window.location.pathname);
+  useEffect(() => {
+    let isInitialized = false;
+    let authStateHandled = false;
+    
+    const handleAuthStateChange = async (event: string, session: Session | null) => {
+      console.log('Auth state changed:', event, 'Session:', !!session);
+      
+      if (!isMountedRef.current) return;
+      
+      // Mark that we've handled an auth state change
+      authStateHandled = true;
+      
+      // Handle different auth events
+      switch (event) {
+        case 'SIGNED_OUT':
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+          profileCacheRef.current.clear();
+          setLoading(false);
+          break;
+          
+        case 'TOKEN_REFRESHED':
+        case 'SIGNED_IN':
+        case 'USER_UPDATED':
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          if (session?.user) {
+            try {
+              console.log('Fetching profile for user:', session.user.id);
+              const userProfile = await fetchUserProfile(session.user.id);
+              
+              if (!isMountedRef.current) return;
+              
+              if (!userProfile) {
+                console.error('No profile found for user, clearing session');
+                // Profile doesn't exist, clear the session
+                await supabase.auth.signOut();
+                setSession(null);
+                setUser(null);
+                setProfile(null);
+                setLoading(false);
+                return;
+              }
+              
+              setProfile(userProfile);
+              console.log('Profile set successfully:', userProfile);
+              
+              // Only claim invitations on actual sign-in
+              if (event === 'SIGNED_IN' && userProfile?.user_type === 'Influencer' && session.user.email) {
+                await claimPendingInvitations(session.user.email, session.user.id);
+              }
+              
+              // Only redirect on actual sign-in events AND only from the root path
+              const isActualSignIn = event === 'SIGNED_IN';
+              const isOnRootPath = window.location.pathname === '/';
+              const shouldPerformRedirect = userProfile && 
+                                          isActualSignIn && 
+                                          isOnRootPath &&
+                                          isInitialized;
+              
+              if (shouldPerformRedirect) {
+                console.log('Performing redirect for user type:', userProfile.user_type);
+                redirectToDashboard(userProfile.user_type);
+              }
+            } catch (error) {
+              console.error('Error handling auth state change:', error);
+              console.error('Error details:', error);
+              
+              // If profile fetch fails, try to refresh the session
+              if (event === 'SIGNED_IN') {
+                console.log('Attempting to refresh session due to profile fetch error');
+                try {
+                  const { data: { session: newSession }, error: refreshError } = await supabase.auth.refreshSession();
+                  if (refreshError || !newSession) {
+                    console.error('Session refresh failed, signing out', refreshError);
+                    await supabase.auth.signOut();
+                  }
+                } catch (refreshError) {
+                  console.error('Error refreshing session:', refreshError);
+                  await supabase.auth.signOut();
+                }
+              }
+              
+              setProfile(null);
+              if (isMountedRef.current) {
+                setError(error instanceof Error ? error : new Error('Failed to fetch user profile'));
+              }
+            }
+          } else {
+            // No user in session
+            setProfile(null);
+          }
+          
+          // Always set loading to false after handling auth event
+          setLoading(false);
+          break;
+          
+        default:
+          console.log('Unhandled auth event:', event);
+          setLoading(false);
+      }
+    };
+
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
+
+    // Check for existing session on mount
+    const initializeAuth = async () => {
+      console.log('Starting initializeAuth...');
+      
+      // Wait a bit to see if auth state change fires first
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // If auth state change already handled the session, skip initialization
+      if (authStateHandled) {
+        console.log('Auth state already handled, skipping initialization');
+        return;
+      }
+      
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('Initial session check:', !!session);
+        
+        if (!isMountedRef.current) return;
         
         setSession(session);
         setUser(session?.user ?? null);
-
+        
         if (session?.user) {
-          // Fetch user profile after authentication
-          setTimeout(async () => {
+          try {
             const userProfile = await fetchUserProfile(session.user.id);
+            
+            if (!isMountedRef.current) return;
+            
             setProfile(userProfile);
             
             // Claim pending invitations for influencers
@@ -183,73 +360,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               await claimPendingInvitations(session.user.email, session.user.id);
             }
             
-            // ONLY redirect on actual sign-in events AND only from the root path
-            // Never redirect on TOKEN_REFRESHED, session recovery, or when on other pages
-            const isActualSignIn = event === 'SIGNED_IN';
-            const isOnRootPath = window.location.pathname === '/';
-            const shouldPerformRedirect = userProfile && 
-                                        isActualSignIn && 
-                                        isOnRootPath &&
-                                        initialLoadComplete; // Only after initial load
-            
-            if (shouldPerformRedirect) {
-              console.log('Performing redirect for user type:', userProfile.user_type);
+            // Only redirect if we're on the root path and this is the initial load
+            if (userProfile && window.location.pathname === '/') {
+              console.log('Initial redirect for existing session:', userProfile.user_type);
               redirectToDashboard(userProfile.user_type);
-            } else {
-              console.log('Skipping redirect:', {
-                isActualSignIn,
-                isOnRootPath,
-                initialLoadComplete,
-                userType: userProfile?.user_type
-              });
             }
-          }, 0);
+          } catch (error) {
+            console.error('Error fetching initial profile:', error);
+            setProfile(null);
+            if (isMountedRef.current) {
+              setError(error instanceof Error ? error : new Error('Failed to fetch user profile'));
+            }
+          }
         } else {
           setProfile(null);
         }
-
-        // Only update loading state if this is the first time
-        if (!hasInitialized) {
+      } catch (error) {
+        console.error('Error getting initial session:', error);
+        if (isMountedRef.current) {
+          setError(error instanceof Error ? error : new Error('Failed to get session'));
+        }
+      } finally {
+        console.log('InitializeAuth complete, setting loading to false');
+        if (isMountedRef.current) {
           setLoading(false);
-          setHasInitialized(true);
-          initialLoadComplete = true;
         }
       }
-    );
+    };
 
-    // Check for existing session on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session check:', !!session, 'Current path:', window.location.pathname);
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserProfile(session.user.id).then(async (userProfile) => {
-          setProfile(userProfile);
-          setLoading(false);
-          setHasInitialized(true);
-          initialLoadComplete = true;
-          
-          // Claim pending invitations for influencers
-          if (userProfile?.user_type === 'Influencer' && session.user.email) {
-            await claimPendingInvitations(session.user.email, session.user.id);
-          }
-          
-          // Only redirect if we're on the root path and this is the initial load
-          if (userProfile && window.location.pathname === '/') {
-            console.log('Initial redirect for existing session:', userProfile.user_type);
-            redirectToDashboard(userProfile.user_type);
-          }
-        });
-      } else {
-        setLoading(false);
-        setHasInitialized(true);
-        initialLoadComplete = true;
-      }
+    initializeAuth().then(() => {
+      isInitialized = true;
     });
 
-    return () => subscription.unsubscribe();
-  }, []); // Remove all dependencies to prevent re-running
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [fetchUserProfile, claimPendingInvitations, redirectToDashboard]);
 
   const signUp = async (email: string, password: string, userType: UserType, name: string) => {
     try {
@@ -305,15 +451,98 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     navigate('/');
   };
 
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  // Force clear session - useful for corrupted sessions
+  const forceClearSession = useCallback(async () => {
+    console.log('Force clearing session and local storage');
+    try {
+      // Clear all auth-related local storage
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.includes('supabase') || key.includes('auth'))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      
+      // Clear cache
+      profileCacheRef.current.clear();
+      
+      // Sign out from Supabase
+      await supabase.auth.signOut();
+      
+      // Clear state
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+      setError(null);
+      setLoading(false);
+      
+      // Reload the page to ensure clean state
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Error force clearing session:', error);
+    }
+  }, []);
+
+  // Validate session and refresh if needed
+  const validateSession = useCallback(async () => {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('Session validation error:', error);
+        throw error;
+      }
+      
+      if (!session) {
+        throw new Error('No valid session');
+      }
+      
+      // Check if session is about to expire (within 5 minutes)
+      const expiresAt = new Date(session.expires_at! * 1000);
+      const now = new Date();
+      const timeUntilExpiry = expiresAt.getTime() - now.getTime();
+      
+      if (timeUntilExpiry < 5 * 60 * 1000) {
+        // Refresh the session
+        const { data: { session: newSession }, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshError) {
+          console.error('Session refresh error:', refreshError);
+          throw refreshError;
+        }
+        
+        return newSession;
+      }
+      
+      return session;
+    } catch (error) {
+      console.error('Session validation failed:', error);
+      // Clear auth state on validation failure
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+      throw error;
+    }
+  }, []);
+
   const value = {
     user,
     profile,
     session,
     loading,
+    error,
     signUp,
     signIn,
     signOut,
-    resetPassword
+    resetPassword,
+    clearError,
+    forceClearSession
   };
 
   return (

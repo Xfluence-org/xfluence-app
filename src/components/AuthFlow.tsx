@@ -24,34 +24,8 @@ const AuthFlow = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Handle redirect when user is authenticated - fixed logic
-  useEffect(() => {
-    // Skip if still loading
-    if (loading) return;
-    
-    // Skip if no user or profile
-    if (!user || !profile) return;
-    
-    // Only redirect if we're on the root path (where AuthFlow is rendered)
-    const currentPath = window.location.pathname;
-    if (currentPath !== '/') {
-      console.log('AuthFlow - Skipping redirect, not on root path:', currentPath);
-      return;
-    }
-    
-    console.log('AuthFlow - Redirecting user based on profile type:', profile.user_type);
-    
-    // Use setTimeout to ensure the toast is shown before navigation
-    setTimeout(() => {
-      if (profile.user_type === 'Influencer') {
-        console.log('AuthFlow - Navigating to /dashboard');
-        navigate('/dashboard', { replace: true });
-      } else {
-        console.log('AuthFlow - Navigating to /brand-dashboard');
-        navigate('/brand-dashboard', { replace: true });
-      }
-    }, 100);
-  }, [user, profile, loading, navigate]);
+  // Remove the navigation logic - let AuthContext handle it
+  // This prevents duplicate navigation attempts
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -122,23 +96,20 @@ const AuthFlow = () => {
           backToLogin();
         }
       } else if (isLogin) {
-        console.log('AuthFlow - Attempting login');
         const { error } = await signIn(formData.email, formData.password);
         
         if (error) {
-          console.log('AuthFlow - Login error:', error);
           toast({
             title: "Login Failed",
             description: error.message || "Failed to login. Please try again.",
             variant: "destructive"
           });
         } else {
-          console.log('AuthFlow - Login successful');
           toast({
             title: "Login Successful",
             description: "Welcome back!"
           });
-          // Don't navigate here - let the useEffect handle it after profile is loaded
+          // Navigation will be handled by AuthContext after profile is loaded
         }
       } else {
         // Validation for signup
@@ -190,7 +161,6 @@ const AuthFlow = () => {
         }
       }
     } catch (error) {
-      console.log('AuthFlow - Unexpected error:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",

@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import React from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AuthErrorBoundary from "@/components/AuthErrorBoundary";
 import Index from "./pages/Index";
 import InfluencerDashboard from "./pages/InfluencerDashboard";
 import OpportunitiesPage from "./pages/OpportunitiesPage";
@@ -30,8 +31,9 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AuthProvider>
-          <Routes>
+        <AuthErrorBoundary>
+          <AuthProvider>
+            <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/invite/:token" element={<InvitationPage />} />
             <Route 
@@ -126,6 +128,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
+      </AuthErrorBoundary>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
