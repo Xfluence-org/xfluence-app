@@ -46,7 +46,7 @@ const BrandDashboard: React.FC = () => {
     },
     appliedAt: app.applied_at,
     status: app.application_status as 'pending' | 'approved' | 'rejected',
-    engagementRate: parseFloat(app.engagement_rate.toString()),
+    engagementRate: app.engagement_rate ? parseFloat(app.engagement_rate.toString()) : 0,
     averageViews: app.average_views,
     niche: app.niche,
     aiScore: app.ai_score
