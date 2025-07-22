@@ -157,7 +157,7 @@ const TaskWorkflowCard: React.FC<TaskWorkflowCardProps> = ({
                 {/* Workflow Phases */}
                 <div className="flex items-center gap-2">
                   {phases.map((phase, index) => (
-                    <React.Fragment key={phase.id}>
+                    <div key={phase.id} className="contents">
                       <div className="flex items-center gap-1">
                         <div className={`
                           p-1 rounded-full transition-colors
@@ -182,7 +182,7 @@ const TaskWorkflowCard: React.FC<TaskWorkflowCardProps> = ({
                           ${phases[index + 1].status !== 'pending' ? 'bg-green-500' : 'bg-gray-300'}
                         `} />
                       )}
-                    </React.Fragment>
+                    </div>
                   ))}
                 </div>
 
@@ -210,8 +210,11 @@ const TaskWorkflowCard: React.FC<TaskWorkflowCardProps> = ({
           className="w-full bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
           onClick={(e) => {
             e.stopPropagation();
+            console.log('View Task Details clicked', { campaign, taskId: campaign.tasks[0]?.id });
             if (campaign.tasks[0]) {
               onViewTaskDetails(campaign.tasks[0].id);
+            } else {
+              console.error('No tasks found in campaign:', campaign);
             }
           }}
         >

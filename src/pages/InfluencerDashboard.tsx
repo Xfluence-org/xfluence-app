@@ -61,6 +61,7 @@ const InfluencerDashboard = () => {
   };
 
   const handleViewTaskDetails = (taskId: string) => {
+    console.log('handleViewTaskDetails called with taskId:', taskId);
     // Navigate directly to the task workflow page 
     navigate(`/task-workflow/${taskId}`);
   };
