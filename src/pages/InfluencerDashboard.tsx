@@ -222,6 +222,8 @@ const InfluencerDashboard = () => {
               <div className="space-y-4">
                 {activeCampaigns?.length > 0 ? (
                   activeCampaigns.slice(0, 2).map((campaign: any) => {
+                    console.log('Dashboard campaign data:', campaign); // Debug log
+                    
                     // Check if campaign has tasks to show the workflow card
                     if (campaign.tasks?.length > 0) {
                       return (

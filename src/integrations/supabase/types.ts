@@ -1114,6 +1114,10 @@ export type Database = {
           has_applied: boolean
         }[]
       }
+      user_has_campaign_access: {
+        Args: { campaign_id_param: string; user_id_param: string }
+        Returns: boolean
+      }
     }
     Enums: {
       user_type: "Agency" | "Brand" | "Influencer"

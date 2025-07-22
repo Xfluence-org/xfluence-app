@@ -204,6 +204,22 @@ const TaskWorkflowCard: React.FC<TaskWorkflowCardProps> = ({
             );
           })}
         </div>
+
+        {/* View Task Details Button */}
+        <Button 
+          className="w-full bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
+          onClick={(e) => {
+            e.stopPropagation();
+            console.log('View Task Details clicked', { campaign, taskId: campaign.tasks[0]?.id });
+            if (campaign.tasks[0]) {
+              onViewTaskDetails(campaign.tasks[0].id);
+            } else {
+              console.error('No tasks found in campaign:', campaign);
+            }
+          }}
+        >
+          View Task Details
+        </Button>
       </CardContent>
     </Card>
   );
