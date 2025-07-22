@@ -1,8 +1,10 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ExternalLink, Link, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,12 +24,13 @@ const PublishLinkForm: React.FC<PublishLinkFormProps> = ({
   onLinkSubmitted
 }) => {
   const [publishUrl, setPublishUrl] = useState(existingLink || '');
+  const [platform, setPlatform] = useState('Instagram');
   const [submitting, setSubmitting] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
   const handleSubmitLink = async () => {
-    if (!publishUrl.trim() || !user?.id) return;
+    if (!publishUrl.trim() || !user?.id || !platform) return;
 
     setSubmitting(true);
     try {
@@ -38,7 +41,7 @@ const PublishLinkForm: React.FC<PublishLinkFormProps> = ({
           task_id: taskId,
           influencer_id: user.id,
           published_url: publishUrl.trim(),
-          platform: 'Instagram', // Default platform
+          platform: platform,
           status: 'active',
           notes: 'Content published by influencer'
         }, {
@@ -91,8 +94,24 @@ const PublishLinkForm: React.FC<PublishLinkFormProps> = ({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">Platform</label>
+          <Select value={platform} onValueChange={setPlatform}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select platform" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Instagram">Instagram</SelectItem>
+              <SelectItem value="TikTok">TikTok</SelectItem>
+              <SelectItem value="YouTube">YouTube</SelectItem>
+              <SelectItem value="Facebook">Facebook</SelectItem>
+              <SelectItem value="Twitter">Twitter</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
           <label className="text-sm font-medium text-gray-700">
-            Post URL (Instagram, TikTok, etc.)
+            Post URL
           </label>
           <div className="flex gap-2">
             <div className="relative flex-1">
@@ -107,7 +126,7 @@ const PublishLinkForm: React.FC<PublishLinkFormProps> = ({
             </div>
             <Button
               onClick={handleSubmitLink}
-              disabled={!publishUrl.trim() || submitting}
+              disabled={!publishUrl.trim() || !platform || submitting}
               className="bg-green-600 hover:bg-green-700"
             >
               {submitting ? 'Submitting...' : 'Submit Link'}

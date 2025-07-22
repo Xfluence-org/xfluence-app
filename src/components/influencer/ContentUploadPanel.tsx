@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Upload, File, X, Check } from 'lucide-react';
+import { Upload, File, X, Check, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -21,6 +22,7 @@ interface TaskUpload {
   file_url: string;
   created_at: string;
   mime_type?: string;
+  file_size?: number;
 }
 
 interface ContentReview {
@@ -85,8 +87,47 @@ const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({
   };
 
   const fetchPublishedLink = async () => {
-    // Simplified - will be loaded when needed
-    setPublishedLink('');
+    try {
+      const { data, error } = await supabase
+        .from('task_published_content')
+        .select('published_url')
+        .eq('task_id', taskId)
+        .maybeSingle();
+
+      if (error) throw error;
+      setPublishedLink(data?.published_url || '');
+    } catch (error) {
+      console.error('Error fetching published link:', error);
+    }
+  };
+
+  const uploadFileToStorage = async (file: File): Promise<string> => {
+    // Create a unique filename with timestamp and user ID
+    const timestamp = Date.now();
+    const fileExtension = file.name.split('.').pop();
+    const uniqueFilename = `${taskId}/${user?.id}/${timestamp}_${file.name}`;
+
+    console.log('Uploading file to storage:', uniqueFilename);
+
+    const { data, error } = await supabase.storage
+      .from('campaign-assets')
+      .upload(uniqueFilename, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (error) {
+      console.error('Storage upload error:', error);
+      throw error;
+    }
+
+    // Get the public URL for the uploaded file
+    const { data: urlData } = supabase.storage
+      .from('campaign-assets')
+      .getPublicUrl(uniqueFilename);
+
+    console.log('File uploaded successfully:', urlData.publicUrl);
+    return urlData.publicUrl;
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,18 +137,25 @@ const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({
     setUploading(true);
     try {
       const uploadPromises = Array.from(files).map(async (file) => {
+        // Upload file to storage first
+        const fileUrl = await uploadFileToStorage(file);
+
+        // Then create database record
         const { error } = await supabase
           .from('task_uploads')
           .insert({
             task_id: taskId,
             uploader_id: user.id,
             filename: file.name,
-            file_url: `placeholder-url-${file.name}`,
+            file_url: fileUrl,
             file_size: file.size,
             mime_type: file.type
           });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Database insert error:', error);
+          throw error;
+        }
       });
 
       await Promise.all(uploadPromises);
@@ -117,18 +165,58 @@ const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({
 
       toast({
         title: "Content Uploaded",
-        description: "Your content has been uploaded for review!"
+        description: "Your content has been uploaded successfully and is ready for review!"
       });
     } catch (error) {
       console.error('Error uploading files:', error);
       toast({
         title: "Upload Error",
-        description: "Failed to upload content",
+        description: error instanceof Error ? error.message : "Failed to upload content",
         variant: "destructive"
       });
     } finally {
       setUploading(false);
       event.target.value = '';
+    }
+  };
+
+  const deleteUpload = async (uploadId: string, fileUrl: string) => {
+    try {
+      // Extract the file path from the URL for storage deletion
+      const urlParts = fileUrl.split('/');
+      const bucketPath = urlParts.slice(-3).join('/'); // Get last 3 parts: taskId/userId/filename
+
+      // Delete from storage
+      const { error: storageError } = await supabase.storage
+        .from('campaign-assets')
+        .remove([bucketPath]);
+
+      if (storageError) {
+        console.warn('Storage deletion error (file may not exist):', storageError);
+      }
+
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from('task_uploads')
+        .delete()
+        .eq('id', uploadId);
+
+      if (dbError) throw dbError;
+
+      await fetchUploads();
+      await fetchReviews();
+
+      toast({
+        title: "File Deleted",
+        description: "The file has been removed successfully."
+      });
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      toast({
+        title: "Delete Error",
+        description: "Failed to delete the file",
+        variant: "destructive"
+      });
     }
   };
 
@@ -174,7 +262,12 @@ const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({
             disabled={uploading}
             className="max-w-xs mx-auto"
           />
-          {uploading && <p className="text-sm text-blue-600 mt-2">Uploading...</p>}
+          {uploading && (
+            <div className="flex items-center justify-center gap-2 text-sm text-blue-600 mt-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Uploading files...
+            </div>
+          )}
         </div>
 
         {/* Uploaded Files */}
@@ -195,11 +288,41 @@ const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({
                             <h4 className="font-medium text-gray-900">{upload.filename}</h4>
                             <p className="text-sm text-gray-500">
                               Uploaded {new Date(upload.created_at).toLocaleDateString()}
+                              {upload.file_size && (
+                                <span className="ml-2">
+                                  ({Math.round(upload.file_size / 1024)} KB)
+                                </span>
+                              )}
                             </p>
                           </div>
                         </div>
-                        {getStatusBadge(review?.status || 'pending')}
+                        <div className="flex items-center gap-2">
+                          {getStatusBadge(review?.status || 'pending')}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteUpload(upload.id, upload.file_url)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
+
+                      {/* Show preview for images */}
+                      {upload.mime_type?.startsWith('image/') && (
+                        <div className="mb-3">
+                          <img 
+                            src={upload.file_url} 
+                            alt={upload.filename}
+                            className="max-w-xs rounded-lg shadow-sm"
+                            onError={(e) => {
+                              console.log('Image load error for:', upload.file_url);
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      )}
 
                       {review && review.feedback && (
                         <div className="mt-3 p-3 bg-gray-50 rounded-lg">
@@ -228,6 +351,7 @@ const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({
                   <AIContentAnalysis 
                     uploadId={upload.id}
                     filename={upload.filename}
+                    fileUrl={upload.file_url}
                     isVisible={true}
                   />
                 </div>
