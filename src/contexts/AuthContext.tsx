@@ -40,7 +40,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasInitialized, setHasInitialized] = useState(false);
-  const [hasRedirectedOnce, setHasRedirectedOnce] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -65,24 +64,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const shouldRedirect = (userType: UserType, currentPath: string) => {
-    // Don't redirect if user is already on an appropriate page
-    if (userType === 'Influencer') {
-      return !currentPath.startsWith('/dashboard') && 
-             !currentPath.startsWith('/opportunities') && 
-             !currentPath.startsWith('/campaigns') &&
-             !currentPath.startsWith('/settings');
-    } else {
-      return !currentPath.startsWith('/brand-dashboard') && 
-             !currentPath.startsWith('/brand/') && 
-             !currentPath.startsWith('/campaign-review');
+    // Only redirect if user is on the root path "/"
+    // Never redirect users from other pages
+    if (currentPath !== '/') {
+      return false;
     }
+
+    return true;
   };
 
   const redirectToDashboard = (userType: UserType) => {
-    if (!shouldRedirect(userType, location.pathname)) {
-      return; // Don't redirect if user is already on appropriate page
+    // Only redirect if we're on the root path
+    if (location.pathname !== '/') {
+      console.log('Not redirecting - user is not on root path:', location.pathname);
+      return;
     }
 
+    console.log('Redirecting user to dashboard for type:', userType);
     if (userType === 'Influencer') {
       navigate('/dashboard');
     } else {
@@ -91,10 +89,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    let initialLoadComplete = false;
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session);
+        console.log('Auth state changed:', event, 'Current path:', location.pathname);
+        
         setSession(session);
         setUser(session?.user ?? null);
 
@@ -104,38 +105,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const userProfile = await fetchUserProfile(session.user.id);
             setProfile(userProfile);
             
-            // Only redirect on specific sign-in events and only from the root page
-            // Prevent redirects on TOKEN_REFRESHED, tab focus, or when user is on other pages
+            // ONLY redirect on actual sign-in events AND only from the root path
+            // Never redirect on TOKEN_REFRESHED, session recovery, or when on other pages
+            const isActualSignIn = event === 'SIGNED_IN';
+            const isOnRootPath = location.pathname === '/';
             const shouldPerformRedirect = userProfile && 
-                                        (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && 
-                                        !hasInitialized && 
-                                        !hasRedirectedOnce &&
-                                        location.pathname === '/';
+                                        isActualSignIn && 
+                                        isOnRootPath &&
+                                        initialLoadComplete; // Only after initial load
             
             if (shouldPerformRedirect) {
-              console.log('Performing initial redirect for user type:', userProfile.user_type);
-              setHasRedirectedOnce(true);
+              console.log('Performing redirect for user type:', userProfile.user_type);
               redirectToDashboard(userProfile.user_type);
+            } else {
+              console.log('Skipping redirect:', {
+                isActualSignIn,
+                isOnRootPath,
+                initialLoadComplete,
+                userType: userProfile?.user_type
+              });
             }
           }, 0);
         } else {
           setProfile(null);
-          // Only reset redirect flag on actual sign out, not on token refresh failures
-          if (event === 'SIGNED_OUT') {
-            setHasRedirectedOnce(false);
-          }
         }
 
-        // Only set loading to false after initial setup
+        // Only update loading state if this is the first time
         if (!hasInitialized) {
           setLoading(false);
           setHasInitialized(true);
+          initialLoadComplete = true;
         }
       }
     );
 
     // Check for existing session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', !!session, 'Current path:', location.pathname);
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -144,15 +150,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setProfile(userProfile);
           setLoading(false);
           setHasInitialized(true);
+          initialLoadComplete = true;
+          
+          // Only redirect if we're on the root path and this is the initial load
+          if (userProfile && location.pathname === '/') {
+            console.log('Initial redirect for existing session:', userProfile.user_type);
+            redirectToDashboard(userProfile.user_type);
+          }
         });
       } else {
         setLoading(false);
         setHasInitialized(true);
+        initialLoadComplete = true;
       }
     });
 
     return () => subscription.unsubscribe();
-  }, []); // Remove dependencies to prevent re-running
+  }, []); // Remove all dependencies to prevent re-running
 
   const signUp = async (email: string, password: string, userType: UserType, name: string) => {
     try {
