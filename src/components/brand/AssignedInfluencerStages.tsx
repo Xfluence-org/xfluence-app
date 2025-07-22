@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -114,7 +115,7 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
 
           // Only fetch tasks if participant is NOT waiting for requirements
           if (participant.current_stage !== 'waiting_for_requirements') {
-            const { data: taskData } = await supabase
+            const { data: taskData, error: taskError } = await supabase
               .from('campaign_tasks')
               .select(`
                 id,
@@ -127,21 +128,23 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
               .eq('campaign_id', campaignId)
               .eq('influencer_id', participant.influencer_id);
 
-            tasks = (taskData || []).map(task => ({
-              id: task.id,
-              title: task.title || '',
-              description: task.description || '',
-              status: task.status || '',
-              progress: task.progress || 0,
-              task_type: task.task_type || ''
-            }));
+            if (!taskError && taskData) {
+              tasks = taskData.map(task => ({
+                id: task.id,
+                title: task.title || '',
+                description: task.description || '',
+                status: task.status || '',
+                progress: task.progress || 0,
+                task_type: task.task_type || ''
+              }));
 
-            // Get workflow states for the first task
-            if (tasks.length > 0) {
-              try {
-                workflowStates = await taskWorkflowService.getWorkflowStates(tasks[0].id);
-              } catch (error) {
-                console.error('Error fetching workflow states:', error);
+              // Get workflow states for the first task
+              if (tasks.length > 0) {
+                try {
+                  workflowStates = await taskWorkflowService.getWorkflowStates(tasks[0].id);
+                } catch (error) {
+                  console.error('Error fetching workflow states:', error);
+                }
               }
             }
           }
