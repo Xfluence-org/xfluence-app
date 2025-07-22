@@ -14,7 +14,7 @@ import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import TaskProgressTracker from '@/components/shared/TaskProgressTracker';
-import ContentReviewPanel from '@/components/brand/ContentReviewPanel';
+import ContentReviewPanelEnhanced from '@/components/brand/ContentReviewPanelEnhanced';
 import TaskFeedbackSection from '@/components/brand/TaskFeedbackSection';
 import FormattedContentRequirements from '@/components/brand/FormattedContentRequirements';
 import {
@@ -384,7 +384,7 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
                                     
                                     <TabsContent value="review" className="mt-0">
                                       {isInReviewPhase ? (
-                                        <ContentReviewPanel
+                                        <ContentReviewPanelEnhanced
                                           taskId={task.id}
                                           onReviewComplete={async () => {
                                             // Refresh data using React Query
