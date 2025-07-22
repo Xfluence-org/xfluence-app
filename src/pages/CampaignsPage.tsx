@@ -73,8 +73,7 @@ const CampaignsPage: React.FC = () => {
   };
 
   const handleViewTaskDetails = (taskId: string) => {
-    // Navigate to the task workflow page for consistency with dashboard
-    window.location.href = `/task-workflow/${taskId}`;
+    setSelectedTaskId(taskId);
   };
 
   const handleCloseTaskDetail = () => {

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import Sidebar from '@/components/dashboard/Sidebar';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,8 +9,10 @@ import InvitationCard from '@/components/dashboard/InvitationCard';
 import WaitingForRequirementsCard from '@/components/dashboard/WaitingForRequirementsCard';
 import PendingApplicationCard from '@/components/dashboard/PendingApplicationCard';
 import TaskWorkflowCard from '@/components/campaigns/TaskWorkflowCard';
+import TaskDetailModal from '@/components/campaigns/TaskDetailModal';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
+import { useTaskDetail } from '@/hooks/useTaskDetail';
 
 const InfluencerDashboard = () => {
   const { user, profile, loading } = useAuth();
@@ -25,6 +27,17 @@ const InfluencerDashboard = () => {
   } = useDashboardData();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+
+  const {
+    taskDetail,
+    loading: taskLoading,
+    submitForReview,
+    downloadBrief,
+    sendMessage,
+    uploadFiles,
+    deleteFile
+  } = useTaskDetail(selectedTaskId);
 
   if (loading || dashboardLoading) {
     return (
@@ -62,8 +75,36 @@ const InfluencerDashboard = () => {
 
   const handleViewTaskDetails = (taskId: string) => {
     console.log('handleViewTaskDetails called with taskId:', taskId);
-    // Navigate directly to the task workflow page 
-    navigate(`/task-workflow/${taskId}`);
+    setSelectedTaskId(taskId);
+  };
+
+  const handleCloseTaskDetail = () => {
+    setSelectedTaskId(null);
+  };
+
+  const handleSubmitForReview = async (taskId: string) => {
+    const result = await submitForReview(taskId);
+    console.log('Submit result:', result);
+  };
+
+  const handleDownloadBrief = async (taskId: string) => {
+    const result = await downloadBrief(taskId);
+    console.log('Download result:', result);
+  };
+
+  const handleSendMessage = async (taskId: string, message: string) => {
+    const result = await sendMessage(taskId, message);
+    console.log('Message result:', result);
+  };
+
+  const handleFileUpload = async (taskId: string, files: FileList) => {
+    const result = await uploadFiles(taskId, files);
+    console.log('Upload result:', result);
+  };
+
+  const handleDeleteFile = async (taskId: string, fileId: string) => {
+    const result = await deleteFile(taskId, fileId);
+    console.log('Delete result:', result);
   };
 
   return (
@@ -219,8 +260,8 @@ const InfluencerDashboard = () => {
                               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
                                 {campaign.campaign_status}
                               </span>
-                              {campaign.platforms?.map((platform: string) => (
-                                <span key={platform} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                              {campaign.platforms?.map((platform: string, index: number) => (
+                                <span key={`${campaign.id}-platform-${index}`} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
                                   {platform}
                                 </span>
                               ))}
@@ -300,6 +341,18 @@ const InfluencerDashboard = () => {
 
         </div>
       </div>
+
+      {/* Task Detail Modal */}
+      <TaskDetailModal
+        isOpen={!!selectedTaskId}
+        onClose={handleCloseTaskDetail}
+        taskDetail={taskDetail}
+        onSubmitForReview={handleSubmitForReview}
+        onDownloadBrief={handleDownloadBrief}
+        onSendMessage={handleSendMessage}
+        onFileUpload={handleFileUpload}
+        onDeleteFile={handleDeleteFile}
+      />
     </div>
   );
 };
