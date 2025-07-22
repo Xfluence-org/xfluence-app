@@ -182,7 +182,13 @@ const TaskWorkflowView: React.FC<TaskWorkflowViewProps> = ({
               </TabsList>
 
               <TabsContent value="content_requirement" className="mt-6 space-y-6">
-                <ContentRequirementView taskId={taskId} />
+                <ContentRequirementView 
+                  taskId={taskId} 
+                  onRequirementsAccepted={() => {
+                    fetchData(); // Refresh the workflow data
+                    setActiveTab('content_review'); // Switch to next tab
+                  }} 
+                />
                 <TaskFeedbackSection
                   taskId={taskId}
                   phase="content_requirement"

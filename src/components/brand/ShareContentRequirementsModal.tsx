@@ -37,11 +37,16 @@ const ShareContentRequirementsModal: React.FC<ShareContentRequirementsModalProps
   const [requirements, setRequirements] = useState('');
   const [deadline, setDeadline] = useState('');
   const [isSharing, setIsSharing] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Hardcoded AI-generated content requirements for now
-  const generateAIRequirements = () => {
+  // AI-generated content requirements with dummy data
+  const generateAIRequirements = async () => {
+    setIsGeneratingAI(true);
+    try {
+      // Simulate AI generation delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
     let contentSpecificRequirements = '';
     
     switch (contentType?.toLowerCase()) {
@@ -164,18 +169,34 @@ Submission Process:
 2. Wait for brand approval before posting
 3. Share live links after publishing`;
 
-    setRequirements(aiRequirements);
+      setRequirements(aiRequirements);
+      toast({
+        title: "AI Requirements Generated",
+        description: "Review and customize the generated requirements before sharing.",
+        className: "bg-green-50 border-green-200"
+      });
+    } catch (error) {
+      console.error('Error generating AI requirements:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate AI requirements",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeneratingAI(false);
+    }
   };
 
   React.useEffect(() => {
     if (isOpen) {
-      generateAIRequirements();
+      // Reset state when modal opens
+      setRequirements('');
       // Set default deadline to 14 days from now
       const defaultDeadline = new Date();
       defaultDeadline.setDate(defaultDeadline.getDate() + 14);
       setDeadline(defaultDeadline.toISOString().split('T')[0]);
     }
-  }, [isOpen, influencerName]);
+  }, [isOpen]);
 
   const handleShareRequirements = async () => {
     if (!requirements.trim()) {
@@ -317,12 +338,33 @@ Submission Process:
 
         <div className="space-y-4">
           <div>
-            <Label htmlFor="requirements">Content Requirements</Label>
+            <div className="flex items-center justify-between mb-2">
+              <Label htmlFor="requirements">Content Requirements</Label>
+              <Button
+                onClick={generateAIRequirements}
+                variant="outline"
+                size="sm"
+                disabled={isGeneratingAI}
+                className="text-xs"
+              >
+                {isGeneratingAI ? (
+                  <>
+                    <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="mr-2 h-3 w-3" />
+                    AI Generate
+                  </>
+                )}
+              </Button>
+            </div>
             <Textarea
               id="requirements"
               value={requirements}
               onChange={(e) => setRequirements(e.target.value)}
-              placeholder="Enter content requirements..."
+              placeholder="Enter your own content requirements, or click 'AI Generate' to get started with AI-powered suggestions..."
               rows={12}
               className="mt-2"
             />
