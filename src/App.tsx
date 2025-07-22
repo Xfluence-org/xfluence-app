@@ -19,6 +19,7 @@ import BrandSettingsPage from "./pages/BrandSettingsPage";
 import BrandAIAssistantPage from "./pages/BrandAIAssistantPage";
 import TaskWorkflowPage from "./pages/TaskWorkflowPage";
 import BrandProgressDashboard from "./pages/BrandProgressDashboard";
+import InvitationPage from "./pages/InvitationPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/invite/:token" element={<InvitationPage />} />
             <Route 
               path="/dashboard" 
               element={

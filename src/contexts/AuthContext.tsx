@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -63,6 +62,80 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const claimPendingInvitations = async (userEmail: string, userId: string) => {
+    try {
+      console.log('Checking for pending invitations for email:', userEmail);
+      
+      // Find invitation emails for this user
+      const { data: invitationEmails, error: emailError } = await supabase
+        .from('invitation_emails')
+        .select(`
+          id,
+          campaign_participant_id,
+          campaign_participants!inner(
+            id,
+            campaign_id,
+            influencer_id,
+            status,
+            invitation_claimed_at
+          )
+        `)
+        .eq('email', userEmail)
+        .is('campaign_participants.influencer_id', null)
+        .is('campaign_participants.invitation_claimed_at', null);
+
+      if (emailError) {
+        console.error('Error fetching invitation emails:', emailError);
+        return;
+      }
+
+      if (!invitationEmails || invitationEmails.length === 0) {
+        console.log('No pending invitations found');
+        return;
+      }
+
+      console.log('Found pending invitations:', invitationEmails.length);
+
+      // Claim each invitation
+      for (const invitationEmail of invitationEmails) {
+        try {
+          // Update the campaign participant
+          const { error: updateError } = await supabase
+            .from('campaign_participants')
+            .update({
+              influencer_id: userId,
+              invitation_claimed_at: new Date().toISOString(),
+              status: 'accepted'
+            })
+            .eq('id', invitationEmail.campaign_participant_id);
+
+          if (updateError) {
+            console.error('Error claiming invitation:', updateError);
+            continue;
+          }
+
+          // Update the invitation email record
+          const { error: emailUpdateError } = await supabase
+            .from('invitation_emails')
+            .update({
+              clicked_at: new Date().toISOString()
+            })
+            .eq('id', invitationEmail.id);
+
+          if (emailUpdateError) {
+            console.error('Error updating invitation email:', emailUpdateError);
+          }
+
+          console.log('Successfully claimed invitation:', invitationEmail.campaign_participant_id);
+        } catch (error) {
+          console.error('Error processing invitation:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Error claiming pending invitations:', error);
+    }
+  };
+
   const shouldRedirect = (userType: UserType, currentPath: string) => {
     // Only redirect if user is on the root path "/"
     // Never redirect users from other pages
@@ -105,6 +178,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const userProfile = await fetchUserProfile(session.user.id);
             setProfile(userProfile);
             
+            // Claim pending invitations for influencers
+            if (userProfile?.user_type === 'Influencer' && session.user.email) {
+              await claimPendingInvitations(session.user.email, session.user.id);
+            }
+            
             // ONLY redirect on actual sign-in events AND only from the root path
             // Never redirect on TOKEN_REFRESHED, session recovery, or when on other pages
             const isActualSignIn = event === 'SIGNED_IN';
@@ -146,11 +224,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        fetchUserProfile(session.user.id).then((userProfile) => {
+        fetchUserProfile(session.user.id).then(async (userProfile) => {
           setProfile(userProfile);
           setLoading(false);
           setHasInitialized(true);
           initialLoadComplete = true;
+          
+          // Claim pending invitations for influencers
+          if (userProfile?.user_type === 'Influencer' && session.user.email) {
+            await claimPendingInvitations(session.user.email, session.user.id);
+          }
           
           // Only redirect if we're on the root path and this is the initial load
           if (userProfile && location.pathname === '/') {

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UserPlus, Instagram, X } from 'lucide-react';
+import { UserPlus, Instagram, X, Copy, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -34,6 +35,15 @@ interface ManualInfluencer {
   platform: string;
 }
 
+interface GeneratedInvitation {
+  id: string;
+  email: string;
+  handle: string;
+  category: string;
+  invitationLink: string;
+  token: string;
+}
+
 const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
   isOpen,
   onClose,
@@ -43,7 +53,9 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
   campaignCategories
 }) => {
   const [manualInfluencers, setManualInfluencers] = useState<ManualInfluencer[]>([]);
+  const [generatedInvitations, setGeneratedInvitations] = useState<GeneratedInvitation[]>([]);
   const [loading, setLoading] = useState(false);
+  const [copiedTokens, setCopiedTokens] = useState<Set<string>>(new Set());
   const [newInfluencer, setNewInfluencer] = useState({
     category: '',
     handle: '',
@@ -71,14 +83,29 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
     setManualInfluencers(prev => prev.filter(inf => inf.id !== id));
   };
 
+  const copyToClipboard = async (text: string, token: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedTokens(prev => new Set(prev).add(token));
+      setTimeout(() => {
+        setCopiedTokens(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(token);
+          return newSet;
+        });
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
   const handleAssignmentSubmit = async () => {
     setLoading(true);
     try {
-      // Create campaign participants with manual data for email invitations
-      // These will become "invitations" that influencers see when they log in with the same email
+      const invitations: GeneratedInvitation[] = [];
       
       for (const manualInfluencer of manualInfluencers) {
-        // Store assignment details in a structured format for easy access
+        // Create campaign participant with invitation data
         const assignmentData = {
           tier: assignmentRequest.tier,
           category: assignmentRequest.category,
@@ -91,21 +118,49 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
           }
         };
         
-        // Create invitation record that influencer will see when they sign in
-        await supabase
+        // Create invitation record
+        const { data: participantData, error: participantError } = await supabase
           .from('campaign_participants')
           .insert({
             campaign_id: campaignId,
-            influencer_id: null, // Will be set when influencer claims this invitation
+            influencer_id: null, // Will be set when influencer claims invitation
             status: 'invited',
             current_stage: 'waiting_for_requirements',
             application_message: JSON.stringify(assignmentData)
+          })
+          .select('id, invitation_token')
+          .single();
+
+        if (participantError) throw participantError;
+
+        // Create invitation email tracking record
+        const { error: emailError } = await supabase
+          .from('invitation_emails')
+          .insert({
+            campaign_participant_id: participantData.id,
+            email: manualInfluencer.email
           });
+
+        if (emailError) throw emailError;
+
+        // Generate invitation link
+        const invitationLink = `${window.location.origin}/invite/${participantData.invitation_token}`;
+        
+        invitations.push({
+          id: participantData.id,
+          email: manualInfluencer.email,
+          handle: manualInfluencer.handle,
+          category: manualInfluencer.category,
+          invitationLink,
+          token: participantData.invitation_token
+        });
       }
+
+      setGeneratedInvitations(invitations);
 
       toast({
         title: "Success",
-        description: `Successfully added ${manualInfluencers.length} influencer(s) to ${assignmentRequest.contentType}`,
+        description: `Successfully created ${invitations.length} invitation(s) for ${assignmentRequest.contentType}`,
       });
 
       // Invalidate relevant queries to refresh the UI
@@ -117,18 +172,24 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
       
       // Reset form
       setManualInfluencers([]);
-      onClose();
       
     } catch (error) {
-      console.error('Error assigning influencers:', error);
+      console.error('Error creating invitations:', error);
       toast({
         title: "Error",
-        description: "Failed to assign influencers. Please try again.",
+        description: "Failed to create invitations. Please try again.",
         variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClose = () => {
+    setManualInfluencers([]);
+    setGeneratedInvitations([]);
+    setCopiedTokens(new Set());
+    onClose();
   };
 
   const getTierColor = (tier: string) => {
@@ -143,8 +204,8 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
             Add Influencers for {assignmentRequest.contentType.charAt(0).toUpperCase() + assignmentRequest.contentType.slice(1)}
@@ -159,6 +220,55 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Generated Invitations */}
+          {generatedInvitations.length > 0 && (
+            <div className="bg-green-50 rounded-lg p-6">
+              <h3 className="text-lg font-semibold mb-4 text-green-800">
+                🎉 Invitation Links Generated ({generatedInvitations.length})
+              </h3>
+              <p className="text-sm text-green-700 mb-4">
+                Copy these links and send them to your influencers. They can use these to sign up and automatically join your campaign.
+              </p>
+              <div className="space-y-3">
+                {generatedInvitations.map((invitation) => (
+                  <Card key={invitation.id} className="border-green-200">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium text-green-800">{invitation.handle}</h4>
+                          <p className="text-sm text-green-600">{invitation.email} • {invitation.category}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="bg-white rounded px-3 py-1 text-xs font-mono border border-green-200 max-w-xs truncate">
+                            {invitation.invitationLink}
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyToClipboard(invitation.invitationLink, invitation.token)}
+                            className="flex items-center gap-1"
+                          >
+                            {copiedTokens.has(invitation.token) ? (
+                              <>
+                                <Check className="h-3 w-3" />
+                                Copied
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-3 w-3" />
+                                Copy
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Add Manual Influencer Form */}
           <div className="bg-gray-50 rounded-lg p-6">
             <div className="flex items-center gap-2 mb-4">
@@ -266,16 +376,18 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button variant="outline" onClick={onClose}>
-              Cancel
+            <Button variant="outline" onClick={handleClose}>
+              {generatedInvitations.length > 0 ? 'Done' : 'Cancel'}
             </Button>
-            <Button
-              onClick={handleAssignmentSubmit}
-              disabled={manualInfluencers.length === 0 || loading}
-              className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
-            >
-              {loading ? 'Assigning...' : `Assign ${manualInfluencers.length} Influencer${manualInfluencers.length !== 1 ? 's' : ''}`}
-            </Button>
+            {manualInfluencers.length > 0 && (
+              <Button
+                onClick={handleAssignmentSubmit}
+                disabled={loading}
+                className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
+              >
+                {loading ? 'Creating Invitations...' : `Create ${manualInfluencers.length} Invitation${manualInfluencers.length !== 1 ? 's' : ''}`}
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>
