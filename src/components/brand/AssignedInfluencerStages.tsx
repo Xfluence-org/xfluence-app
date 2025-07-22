@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -88,8 +87,8 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
             email
           )
         `)
-        .eq('campaign_id', campaignId)
-        .eq('status', 'accepted');
+        .eq('campaign_id', campaignId as any)
+        .eq('status', 'accepted' as any);
 
       if (participantError) {
         console.error('Error fetching participants:', participantError);
@@ -125,12 +124,12 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
                 progress,
                 task_type
               `)
-              .eq('campaign_id', campaignId)
-              .eq('influencer_id', participant.influencer_id);
+              .eq('campaign_id', campaignId as any)
+              .eq('influencer_id', participant.influencer_id as any);
 
-            if (!taskError && taskData) {
+            if (!taskError && taskData && Array.isArray(taskData)) {
               tasks = taskData.map(task => ({
-                id: task.id,
+                id: task.id || '',
                 title: task.title || '',
                 description: task.description || '',
                 status: task.status || '',
@@ -169,7 +168,12 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
 
       // Filter out null results and only show non-waiting participants
       const validParticipants = participantsWithTasks
-        .filter((p): p is AssignedInfluencer => p !== null && !p.isWaitingForRequirements);
+        .filter((p): p is AssignedInfluencer => 
+          p !== null && 
+          !p.isWaitingForRequirements &&
+          typeof p === 'object' &&
+          'assignment_type' in p
+        );
       
       setAssignedInfluencers(validParticipants);
 

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -91,7 +90,7 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
           updated_at: new Date().toISOString(),
           accepted_at: action === 'approved' ? new Date().toISOString() : null
         } as any)
-        .eq('id', applicationId);
+        .eq('id', applicationId as any);
 
       if (updateError) {
         console.error('Error updating application:', updateError);
@@ -110,7 +109,7 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
           .update({ 
             current_stage: 'waiting_for_requirements'
           } as any)
-          .eq('id', applicationId);
+          .eq('id', applicationId as any);
       }
 
       toast({
