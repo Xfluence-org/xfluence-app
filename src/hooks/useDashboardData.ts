@@ -100,12 +100,45 @@ export const useDashboardData = () => {
     }
   });
 
-  // For active campaigns - temporarily disabled
+  // For active campaigns
   const { data: activeCampaigns = [], isLoading: isLoadingActive } = useQuery({
     queryKey: ['dashboard-active-campaigns'],
     queryFn: async () => {
-      console.log('Active campaigns temporarily disabled for marketplace hiding');
-      return [];
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from('campaign_participants')
+        .select(`
+          id,
+          campaign_id,
+          current_stage,
+          accepted_at,
+          campaigns!inner(
+            id,
+            title,
+            amount,
+            due_date,
+            brands!inner(
+              name
+            )
+          )
+        `)
+        .eq('influencer_id', user.id)
+        .eq('status', 'accepted')
+        .neq('current_stage', 'waiting_for_requirements');
+
+      if (error) throw error;
+
+      return (data || []).map((item: any) => ({
+        id: item.campaign_id,
+        title: item.campaigns.title,
+        brand: item.campaigns.brands.name,
+        amount: item.campaigns.amount,
+        dueDate: item.campaigns.due_date,
+        currentStage: item.current_stage,
+        acceptedAt: item.accepted_at
+      }));
     }
   });
 

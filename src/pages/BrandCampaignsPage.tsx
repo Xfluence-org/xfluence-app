@@ -3,23 +3,19 @@ import { useSearchParams, useLocation } from 'react-router-dom';
 import BrandSidebar from '@/components/brand/BrandSidebar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Plus, Users } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useBrandCampaignsData } from '@/hooks/useBrandCampaignsData';
 import BrandCampaignCard from '@/components/brand/BrandCampaignCard';
 import CampaignDetailModal from '@/components/brand/CampaignDetailModal';
 import CreateCampaignModal from '@/components/brand/CreateCampaignModal';
 
 
-type MainView = 'campaigns' | 'influencers';
 type CampaignView = 'published' | 'completed' | 'archived';
-type InfluencerView = 'invitations' | 'active' | 'performance';
 
 const BrandCampaignsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
-  const [mainView, setMainView] = useState<MainView>('campaigns');
   const [campaignTab, setCampaignTab] = useState<CampaignView>('published');
-  const [influencerTab, setInfluencerTab] = useState<InfluencerView>('invitations');
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   
@@ -33,13 +29,8 @@ const BrandCampaignsPage: React.FC = () => {
 
   // Handle URL parameters for tab and campaign view
   useEffect(() => {
-    const mainParam = searchParams.get('main') as MainView;
     const campaignParam = searchParams.get('campaign') as CampaignView;
     const viewParam = searchParams.get('view');
-    
-    if (mainParam && ['campaigns', 'influencers'].includes(mainParam)) {
-      setMainView(mainParam);
-    }
     
     if (campaignParam && ['published', 'completed', 'archived'].includes(campaignParam)) {
       setCampaignTab(campaignParam);
@@ -164,14 +155,6 @@ const BrandCampaignsPage: React.FC = () => {
     );
   };
 
-  const renderInfluencerContent = () => {
-    return (
-      <div className="text-center py-12">
-        <p className="text-gray-500 text-lg">Influencer management is available in individual campaigns</p>
-        <p className="text-gray-400 mt-2">Open a specific campaign to manage influencers and invitations</p>
-      </div>
-    );
-  };
 
   if (loading) {
     return (
@@ -214,43 +197,21 @@ const BrandCampaignsPage: React.FC = () => {
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-3xl font-bold text-[#1a1f2e] mb-2">
-                  {mainView === 'campaigns' ? 'Campaign Management' : 'Influencer Management'}
+                  Campaign Management
                 </h1>
                 <p className="text-gray-600">
-                  {mainView === 'campaigns' 
-                    ? 'Manage your published, completed, and archived campaigns' 
-                    : 'Manage your influencers, invitations, and performance'
-                  }
+                  Manage your published, completed, and archived campaigns
                 </p>
               </div>
-              {mainView === 'campaigns' && (
-                <Button onClick={handleCreateCampaign} className="bg-[#1a1f2e] hover:bg-[#2a2f3e] text-white">
-                  <Plus className="mr-2" />
-                  Create Campaign
-                </Button>
-              )}
+              <Button onClick={handleCreateCampaign} className="bg-[#1a1f2e] hover:bg-[#2a2f3e] text-white">
+                <Plus className="mr-2" />
+                Create Campaign
+              </Button>
             </div>
           </header>
 
           <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
-            {/* Main Navigation */}
-            <Tabs value={mainView} onValueChange={(value) => setMainView(value as MainView)}>
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
-                <TabsTrigger value="influencers">
-                  <Users className="mr-2 h-4 w-4" />
-                  Influencers
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="campaigns" className="mt-0">
-                {renderCampaignContent()}
-              </TabsContent>
-
-              <TabsContent value="influencers" className="mt-0">
-                {renderInfluencerContent()}
-              </TabsContent>
-            </Tabs>
+            {renderCampaignContent()}
           </div>
         </div>
       </main>
