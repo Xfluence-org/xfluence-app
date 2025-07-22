@@ -37,11 +37,16 @@ export const useTaskDetail = (taskId: string | null) => {
           )
         `)
         .eq('id', taskId)
-        .single();
+        .maybeSingle();
 
       if (taskError) {
         console.error('Error fetching task:', taskError);
         throw taskError;
+      }
+
+      if (!task) {
+        console.warn('Task not found:', taskId);
+        throw new Error('Task not found');
       }
 
       // Initialize workflow if it doesn't exist

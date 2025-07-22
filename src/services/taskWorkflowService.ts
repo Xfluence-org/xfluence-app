@@ -121,7 +121,7 @@ export const taskWorkflowService = {
       .from('task_content_drafts')
       .select('id')
       .eq('task_id', taskId)
-      .single();
+      .maybeSingle();
 
     if (existingDraft) {
       // Update existing draft
@@ -324,7 +324,7 @@ export const taskWorkflowService = {
       .from('campaign_tasks')
       .select('phase_visibility, current_phase')
       .eq('id', taskId)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Error checking phase visibility:', error);

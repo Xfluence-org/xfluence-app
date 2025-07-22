@@ -33,7 +33,7 @@ const TaskWorkflowPage = () => {
           )
         `)
         .eq('id', taskId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
@@ -48,7 +48,7 @@ const TaskWorkflowPage = () => {
         .from('profiles')
         .select('user_type')
         .eq('id', user?.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
@@ -60,7 +60,7 @@ const TaskWorkflowPage = () => {
     if (userProfile?.user_type === 'Brand' || userProfile?.user_type === 'Agency') {
       navigate('/brand/campaigns');
     } else {
-      navigate('/campaigns');
+      navigate('/dashboard'); // Go back to influencer dashboard instead of campaigns
     }
   };
 
@@ -91,17 +91,23 @@ const TaskWorkflowPage = () => {
         )}
         <main className="flex-1 ml-64 p-8">
           <div className="text-center py-12">
-            <p className="text-red-500 text-lg">
-              {error?.message || 'Task not found'}
-            </p>
-            <Button 
-              onClick={handleGoBack}
-              className="mt-4"
-              variant="outline"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Go Back
-            </Button>
+            <div className="max-w-md mx-auto">
+              <div className="text-red-500 text-6xl mb-4">⚠️</div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Task Not Found</h2>
+              <p className="text-gray-600 mb-6">
+                {error?.message === 'Task not found' 
+                  ? 'This task may have been deleted or you may not have permission to view it.'
+                  : error?.message || 'The requested task could not be found.'
+                }
+              </p>
+              <Button 
+                onClick={handleGoBack}
+                className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Button>
+            </div>
           </div>
         </main>
       </div>
@@ -125,7 +131,7 @@ const TaskWorkflowPage = () => {
               className="mb-4"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Campaigns
+              Back to Dashboard
             </Button>
             
             <h1 className="text-3xl font-bold text-[#1a1f2e] mb-2">
