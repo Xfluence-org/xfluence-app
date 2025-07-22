@@ -105,7 +105,14 @@ const TaskWorkflowView: React.FC<TaskWorkflowViewProps> = ({
     }
   ];
 
-  const availablePhases = phases.filter(phase => phaseVisibility[phase.id]);
+  // For testing purposes, make all phases visible
+  const testPhaseVisibility = {
+    content_requirement: true,
+    content_review: true,
+    publish_analytics: true
+  };
+
+  const availablePhases = phases.filter(phase => testPhaseVisibility[phase.id]);
 
   if (loading) {
     return (
@@ -138,7 +145,7 @@ const TaskWorkflowView: React.FC<TaskWorkflowViewProps> = ({
               {phases.map((phase, index) => {
                 const status = getPhaseStatus(phase.id);
                 const Icon = phase.icon;
-                const isVisible = phaseVisibility[phase.id];
+                const isVisible = testPhaseVisibility[phase.id];
                 
                 return (
                   <div 

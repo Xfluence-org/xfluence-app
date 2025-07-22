@@ -29,34 +29,39 @@ interface AnalysisResult {
   };
 }
 
-// Enhanced AI analysis generator with more realistic patterns
-const generateEnhancedAnalysis = (filename: string, fileUrl?: string): AnalysisResult => {
+// Dummy AI analysis generator with consistent scoring
+const generateDummyAnalysis = (filename: string, fileUrl?: string): AnalysisResult => {
   const isVideo = filename.toLowerCase().match(/\.(mp4|mov|avi|mkv|webm)$/);
   const isImage = filename.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)$/);
   
   const contentType = isVideo ? 'video' : isImage ? 'image' : 'unknown';
   
-  // Base scoring with some variation
-  const baseScore = 78 + Math.floor(Math.random() * 17); // 78-95 range
-  const variation = () => Math.floor(Math.random() * 10) - 5; // -5 to +5
+  // Generate consistent dummy scores based on filename hash
+  const fileHash = filename.split('').reduce((a, b) => {
+    a = ((a << 5) - a) + b.charCodeAt(0);
+    return a & a;
+  }, 0);
+  
+  const baseScore = 75 + Math.abs(fileHash % 20); // 75-95 range
+  const variation = () => Math.abs(fileHash % 10) - 5; // -5 to +5
   
   const categories = [
     { name: 'Brand Alignment', score: Math.max(65, Math.min(95, baseScore + variation())) },
-    { name: 'Visual Quality', score: Math.max(70, Math.min(98, baseScore + variation())) },
-    { name: 'Content Relevance', score: Math.max(60, Math.min(92, baseScore + variation())) },
-    { name: 'Engagement Potential', score: Math.max(65, Math.min(96, baseScore + variation())) }
+    { name: 'Visual Quality', score: Math.max(70, Math.min(98, baseScore + variation() + 2)) },
+    { name: 'Content Relevance', score: Math.max(60, Math.min(92, baseScore + variation() - 3)) },
+    { name: 'Engagement Potential', score: Math.max(65, Math.min(96, baseScore + variation() + 1)) }
   ];
 
   if (contentType === 'video') {
     categories.push(
       { name: 'Audio Quality', score: Math.max(70, Math.min(95, baseScore + variation())) },
-      { name: 'Video Editing', score: Math.max(65, Math.min(90, baseScore + variation())) }
+      { name: 'Video Editing', score: Math.max(65, Math.min(90, baseScore + variation() - 2)) }
     );
   }
 
   const overallScore = Math.round(categories.reduce((sum, cat) => sum + cat.score, 0) / categories.length);
   
-  // Generate contextual strengths based on content type
+  // Dummy strengths based on content type
   const imageStrengths = [
     "Excellent lighting and exposure balance",
     "Strong composition following rule of thirds",
@@ -75,42 +80,41 @@ const generateEnhancedAnalysis = (filename: string, fileUrl?: string): AnalysisR
     "Natural and authentic delivery"
   ];
 
-  const strengths = (contentType === 'video' ? videoStrengths : imageStrengths)
-    .sort(() => 0.5 - Math.random())
-    .slice(0, Math.floor(Math.random() * 2) + 2);
+  // Select 2-3 dummy strengths
+  const allStrengths = contentType === 'video' ? videoStrengths : imageStrengths;
+  const strengthCount = 2 + Math.abs(fileHash % 2);
+  const strengths = allStrengths.slice(0, strengthCount);
 
-  // Generate contextual suggestions
+  // Dummy suggestions
   const imageSuggestions = [
     "Consider adding more brand logo visibility",
     "The background could be less cluttered for better focus",
     "Adding a clear call-to-action overlay would improve engagement",
-    "Consider using brand colors more prominently in the styling",
-    "The angle could be adjusted for better product showcase"
+    "Consider using brand colors more prominently in the styling"
   ];
 
   const videoSuggestions = [
     "Consider adding brand mention in the first 3 seconds",
     "The intro could be more engaging to hook viewers",
     "Adding captions would improve accessibility",
-    "Consider shorter duration for better retention",
-    "Background music volume could be adjusted"
+    "Consider shorter duration for better retention"
   ];
 
-  const suggestions = (contentType === 'video' ? videoSuggestions : imageSuggestions)
-    .sort(() => 0.5 - Math.random())
-    .slice(0, Math.floor(Math.random() * 2) + 1);
+  const allSuggestions = contentType === 'video' ? videoSuggestions : imageSuggestions;
+  const suggestionCount = overallScore < 85 ? 1 + Math.abs(fileHash % 2) : 0;
+  const suggestions = allSuggestions.slice(0, suggestionCount);
 
   const recommendation = overallScore >= 85 ? 'approved' : overallScore >= 70 ? 'revision' : 'rejected';
 
-  // Technical quality assessment
+  // Dummy technical quality
   const resolutions = ['1080p HD', '4K Ultra HD', '720p HD', '1440p QHD'];
   const compositions = ['Well-balanced', 'Good framing', 'Excellent', 'Professional'];
   const lightingTypes = ['Natural lighting', 'Professional setup', 'Good exposure', 'Optimal conditions'];
 
   const technicalQuality = {
-    resolution: resolutions[Math.floor(Math.random() * resolutions.length)],
-    composition: compositions[Math.floor(Math.random() * compositions.length)],
-    lighting: lightingTypes[Math.floor(Math.random() * lightingTypes.length)]
+    resolution: resolutions[Math.abs(fileHash) % resolutions.length],
+    composition: compositions[Math.abs(fileHash) % compositions.length],
+    lighting: lightingTypes[Math.abs(fileHash) % lightingTypes.length]
   };
 
   return {
@@ -138,7 +142,7 @@ const AIContentAnalysis: React.FC<AIContentAnalysisProps> = ({
     const analyzeContent = () => {
       setAnalyzing(true);
       setTimeout(() => {
-        const result = generateEnhancedAnalysis(filename, fileUrl);
+        const result = generateDummyAnalysis(filename, fileUrl);
         setAnalysis(result);
         setAnalyzing(false);
       }, 1500 + Math.random() * 1000); // 1.5-2.5 second delay
@@ -190,7 +194,7 @@ const AIContentAnalysis: React.FC<AIContentAnalysisProps> = ({
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Brain className="h-5 w-5 text-purple-600" />
-          AI Content Analysis
+          AI Content Analysis (Demo)
           <Zap className="h-4 w-4 text-yellow-500" />
           {analysis && getContentTypeIcon(analysis.contentType)}
         </CardTitle>
@@ -201,7 +205,7 @@ const AIContentAnalysis: React.FC<AIContentAnalysisProps> = ({
             <div className="text-center">
               <Zap className="h-8 w-8 text-purple-600 animate-pulse mx-auto mb-3" />
               <p className="text-gray-600">Analyzing content with AI...</p>
-              <p className="text-sm text-gray-500 mt-1">This may take a moment</p>
+              <p className="text-sm text-gray-500 mt-1">This is demo data for testing</p>
             </div>
           </div>
         ) : (
@@ -209,7 +213,7 @@ const AIContentAnalysis: React.FC<AIContentAnalysisProps> = ({
             {/* Overall Score */}
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-sm text-gray-600">Overall Score</p>
+                <p className="text-sm text-gray-600">Overall Score (Demo)</p>
                 <p className={`text-3xl font-bold ${getScoreColor(analysis.overallScore)}`}>
                   {analysis.overallScore}/100
                 </p>
@@ -293,7 +297,7 @@ const AIContentAnalysis: React.FC<AIContentAnalysisProps> = ({
             <div className="mt-4 p-3 bg-white/50 rounded-lg border">
               <p className="text-xs text-gray-500 flex items-center gap-1">
                 <Brain className="h-3 w-3" />
-                Analysis powered by Xfluence AI • {analysis.contentType.charAt(0).toUpperCase() + analysis.contentType.slice(1)} content detected • Generated in {(1.2 + Math.random() * 0.8).toFixed(1)}s
+                Demo AI Analysis • {analysis.contentType.charAt(0).toUpperCase() + analysis.contentType.slice(1)} content detected • This is test data for development
               </p>
             </div>
           </>
