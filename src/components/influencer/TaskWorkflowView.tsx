@@ -9,7 +9,7 @@ import { taskWorkflowService, WorkflowState } from '@/services/taskWorkflowServi
 import { useAuth } from '@/contexts/AuthContext';
 import ContentRequirementView from './ContentRequirementView';
 import ContentUploadPanel from './ContentUploadPanel';
-import PublishContentForm from './PublishContentForm';
+import PublishContentAndAnalytics from './PublishContentAndAnalytics';
 import TaskFeedbackSection from '../brand/TaskFeedbackSection';
 
 interface TaskWorkflowViewProps {
@@ -200,7 +200,7 @@ const TaskWorkflowView: React.FC<TaskWorkflowViewProps> = ({
               </TabsContent>
 
               <TabsContent value="publish_analytics" className="mt-6 space-y-6">
-                <PublishContentForm taskId={taskId} onPublishComplete={fetchData} />
+                <PublishContentAndAnalytics taskId={taskId} onComplete={fetchData} />
                 <TaskFeedbackSection
                   taskId={taskId}
                   phase="publish_analytics"
