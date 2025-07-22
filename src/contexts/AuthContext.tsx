@@ -148,8 +148,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const redirectToDashboard = (userType: UserType) => {
     // Only redirect if we're on the root path
-    if (location.pathname !== '/') {
-      console.log('Not redirecting - user is not on root path:', location.pathname);
+    if (window.location.pathname !== '/') {
+      console.log('Not redirecting - user is not on root path:', window.location.pathname);
       return;
     }
 
@@ -167,7 +167,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, 'Current path:', location.pathname);
+        console.log('Auth state changed:', event, 'Current path:', window.location.pathname);
         
         setSession(session);
         setUser(session?.user ?? null);
@@ -186,7 +186,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // ONLY redirect on actual sign-in events AND only from the root path
             // Never redirect on TOKEN_REFRESHED, session recovery, or when on other pages
             const isActualSignIn = event === 'SIGNED_IN';
-            const isOnRootPath = location.pathname === '/';
+            const isOnRootPath = window.location.pathname === '/';
             const shouldPerformRedirect = userProfile && 
                                         isActualSignIn && 
                                         isOnRootPath &&
@@ -219,7 +219,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Check for existing session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session check:', !!session, 'Current path:', location.pathname);
+      console.log('Initial session check:', !!session, 'Current path:', window.location.pathname);
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -236,7 +236,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
           
           // Only redirect if we're on the root path and this is the initial load
-          if (userProfile && location.pathname === '/') {
+          if (userProfile && window.location.pathname === '/') {
             console.log('Initial redirect for existing session:', userProfile.user_type);
             redirectToDashboard(userProfile.user_type);
           }

@@ -26,22 +26,31 @@ const AuthFlow = () => {
 
   // Handle redirect when user is authenticated - fixed logic
   useEffect(() => {
-    console.log('AuthFlow - Auth state changed:', { user: !!user, profile, loading });
+    // Skip if still loading
+    if (loading) return;
     
-    if (!loading && user && profile) {
-      console.log('AuthFlow - Redirecting user based on profile type:', profile.user_type);
-      
-      // Use setTimeout to ensure the toast is shown before navigation
-      setTimeout(() => {
-        if (profile.user_type === 'Influencer') {
-          console.log('AuthFlow - Navigating to /dashboard');
-          navigate('/dashboard', { replace: true });
-        } else {
-          console.log('AuthFlow - Navigating to /brand-dashboard');
-          navigate('/brand-dashboard', { replace: true });
-        }
-      }, 100);
+    // Skip if no user or profile
+    if (!user || !profile) return;
+    
+    // Only redirect if we're on the root path (where AuthFlow is rendered)
+    const currentPath = window.location.pathname;
+    if (currentPath !== '/') {
+      console.log('AuthFlow - Skipping redirect, not on root path:', currentPath);
+      return;
     }
+    
+    console.log('AuthFlow - Redirecting user based on profile type:', profile.user_type);
+    
+    // Use setTimeout to ensure the toast is shown before navigation
+    setTimeout(() => {
+      if (profile.user_type === 'Influencer') {
+        console.log('AuthFlow - Navigating to /dashboard');
+        navigate('/dashboard', { replace: true });
+      } else {
+        console.log('AuthFlow - Navigating to /brand-dashboard');
+        navigate('/brand-dashboard', { replace: true });
+      }
+    }, 100);
   }, [user, profile, loading, navigate]);
 
   const handleInputChange = (field: string, value: string) => {
