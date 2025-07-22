@@ -171,11 +171,14 @@ export const useTaskDetail = (taskId: string | null) => {
     try {
       console.log('Sending message:', { taskId, message });
       
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+      
       const { error } = await supabase
         .from('task_feedback')
         .insert({
           task_id: taskId,
-          sender_id: '46ec4c99-d347-4c75-a0bb-5c409ed6c8ab',
+          sender_id: user.id,
           sender_type: 'influencer',
           message
         });
@@ -195,12 +198,15 @@ export const useTaskDetail = (taskId: string | null) => {
     try {
       console.log('Uploading files:', { taskId, fileCount: files.length });
       
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+      
       const uploadPromises = Array.from(files).map(file => 
         supabase
           .from('task_uploads')
           .insert({
             task_id: taskId,
-            uploader_id: '46ec4c99-d347-4c75-a0bb-5c409ed6c8ab',
+            uploader_id: user.id,
             filename: file.name,
             file_url: `placeholder-url-${file.name}`,
             file_size: file.size,
