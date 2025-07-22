@@ -9,7 +9,7 @@ export const useSupabaseTypeCasts = () => {
   
   // Helper function to check if query result is valid (not an error)
   const isValidResult = (result: any): boolean => {
-    return result && typeof result === 'object' && !('error' in result);
+    return result && typeof result === 'object' && !('error' in result) && !('message' in result);
   };
   
   // Helper function to safely access properties from query results
@@ -20,10 +20,22 @@ export const useSupabaseTypeCasts = () => {
     return defaultValue;
   };
 
+  // Helper function to check if array result is valid
+  const isValidArrayResult = (result: any): result is any[] => {
+    return Array.isArray(result) && result.every(item => isValidResult(item));
+  };
+
+  // Helper function to safely filter valid results from arrays
+  const filterValidResults = (results: any[]): any[] => {
+    return results.filter(result => isValidResult(result));
+  };
+
   return {
     castToUuid,
     castForUpdate,
     isValidResult,
-    safeAccess
+    safeAccess,
+    isValidArrayResult,
+    filterValidResults
   };
 };
