@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { FileText, Eye, BarChart3, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { taskWorkflowService, WorkflowState } from '@/services/taskWorkflowService';
 import { useAuth } from '@/contexts/AuthContext';
+import ContentRequirementEditor from './ContentRequirementEditor';
 import ContentReviewPanel from './ContentReviewPanel';
 import PublishAnalyticsView from './PublishAnalyticsView';
 import TaskFeedbackSection from './TaskFeedbackSection';
@@ -199,7 +200,7 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({
             </TabsList>
 
             <TabsContent value="content_requirement" className="mt-6 space-y-6">
-              {getPhaseStatus('content_requirement') === 'completed' && (
+              {getPhaseStatus('content_requirement') === 'completed' ? (
                 <Card className="border-green-200 bg-green-50">
                   <CardContent className="flex items-center gap-3 p-4">
                     <CheckCircle2 className="h-5 w-5 text-green-600" />
@@ -211,6 +212,11 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({
                     </div>
                   </CardContent>
                 </Card>
+              ) : (
+                <ContentRequirementEditor
+                  taskId={taskId}
+                  onRequirementsShared={handleRefresh}
+                />
               )}
               
               <TaskFeedbackSection
