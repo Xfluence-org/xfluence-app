@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +14,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { taskWorkflowService, WorkflowState } from '@/services/taskWorkflowService';
 import TaskWorkflowModal from './TaskWorkflowModal';
+import { useSupabaseTypeCasts } from '@/hooks/useSupabaseTypeCasts';
 
 interface ManualInfluencerData {
   name: string;
@@ -68,6 +68,7 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
     taskTitle: string;
     workflowStates: WorkflowState[];
   } | null>(null);
+  const { castToUuid, isValidResult } = useSupabaseTypeCasts();
 
   const fetchAssignedInfluencers = async () => {
     try {
@@ -88,8 +89,8 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
             email
           )
         `)
-        .eq('campaign_id', campaignId as any)
-        .eq('status', 'accepted' as any);
+        .eq('campaign_id', castToUuid(campaignId))
+        .eq('status', 'accepted');
 
       if (participantError) {
         console.error('Error fetching participants:', participantError);
@@ -125,13 +126,13 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
                 progress,
                 task_type
               `)
-              .eq('campaign_id', campaignId as any)
-              .eq('influencer_id', participant.influencer_id as any);
+              .eq('campaign_id', castToUuid(campaignId))
+              .eq('influencer_id', castToUuid(participant.influencer_id));
 
             if (!taskError && taskData && Array.isArray(taskData)) {
               // Filter out any error objects and only process valid task data
               const validTasks = taskData.filter(task => 
-                task && typeof task === 'object' && 'id' in task && !('error' in task)
+                task && typeof task === 'object' && 'id' in task && !('error' in task) && isValidResult(task)
               );
               
               tasks = validTasks.map(task => ({

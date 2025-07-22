@@ -1,193 +1,209 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Clock, CheckCircle, Users, Eye } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
-import { formatPhaseName, getPhaseColor } from '@/utils/taskFormatters';
+import { supabase } from '@/integrations/supabase/client';
+import { Users, ChevronRight } from 'lucide-react';
+import { useSupabaseTypeCasts } from '@/hooks/useSupabaseTypeCasts';
 
-interface ActiveInfluencersSectionProps {
-  campaignId: string;
-  onViewTasks?: (participantId: string, influencerId: string) => void;
-}
-
-interface ActiveParticipant {
+interface ActiveInfluencer {
   id: string;
   influencer_id: string;
   current_stage: string;
   accepted_at: string;
+  status: string;
   influencer_name: string;
   influencer_handle: string;
   followers_count: number;
   engagement_rate: number;
-  task_progress: number;
-  tasks_completed: number;
-  total_tasks: number;
-  influencer_profile_url?: string;
+  task_count: number;
+  progress: number;
 }
 
-const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({ campaignId, onViewTasks }) => {
-  const navigate = useNavigate();
-  const { data: activeParticipants = [], isLoading, refetch } = useQuery({
-    queryKey: ['active-participants', campaignId],
-    staleTime: 0,
-    refetchOnMount: 'always',
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_campaign_active_influencers', {
-        campaign_id_param: campaignId
-      });
+interface ActiveInfluencersSectionProps {
+  campaignId: string;
+  onViewDetails?: (influencerId: string) => void;
+}
 
-      if (error) {
-        console.error('Error fetching active participants:', error);
-        return [];
+const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({
+  campaignId,
+  onViewDetails
+}) => {
+  const [activeInfluencers, setActiveInfluencers] = useState<ActiveInfluencer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { castToUuid } = useSupabaseTypeCasts();
+
+  useEffect(() => {
+    fetchActiveInfluencers();
+  }, [campaignId]);
+
+  const fetchActiveInfluencers = async () => {
+    try {
+      setLoading(true);
+      
+      // Get active influencers using the existing database function
+      const { data: influencers, error: influencersError } = await supabase
+        .rpc('get_campaign_active_influencers', { 
+          campaign_id_param: castToUuid(campaignId) 
+        });
+
+      if (influencersError) {
+        console.error('Error fetching active influencers:', influencersError);
+        return;
       }
 
-      // Ensure we have an array to work with
-      const participantsList = Array.isArray(data) ? data : [];
+      if (!influencers || influencers.length === 0) {
+        setActiveInfluencers([]);
+        return;
+      }
 
-      // Fetch tasks for progress calculation
-      const transformedData = await Promise.all(
-        participantsList.map(async (participant: any) => {
-          const { data: tasks } = await supabase
+      // Get task counts and progress for each influencer
+      const influencersWithTasks = await Promise.all(
+        influencers.map(async (influencer) => {
+          const { data: tasks, error: tasksError } = await supabase
             .from('campaign_tasks')
-            .select('id, status, progress')
-            .eq('campaign_id', campaignId)
-            .eq('influencer_id', participant.influencer_id);
-          
-          const tasksList = tasks || [];
-          const completedTasks = tasksList.filter((t: any) => t.status === 'completed').length;
-          const totalProgress = tasksList.reduce((sum: number, t: any) => sum + (t.progress || 0), 0);
-          const avgProgress = tasksList.length > 0 ? totalProgress / tasksList.length : 0;
+            .select('id, progress')
+            .eq('campaign_id', castToUuid(campaignId))
+            .eq('influencer_id', castToUuid(influencer.influencer_id));
+
+          const taskCount = tasks?.length || 0;
+          const avgProgress = tasks?.length > 0 
+            ? Math.round(tasks.reduce((sum, task) => sum + (task.progress || 0), 0) / tasks.length)
+            : 0;
 
           return {
-            id: participant.id,
-            influencer_id: participant.influencer_id,
-            current_stage: participant.current_stage,
-            accepted_at: participant.accepted_at,
-            influencer_name: participant.influencer_name,
-            influencer_handle: participant.influencer_handle,
-            followers_count: participant.followers_count,
-            engagement_rate: participant.engagement_rate,
-            task_progress: avgProgress,
-            tasks_completed: completedTasks,
-            total_tasks: tasksList.length,
-            influencer_profile_url: `https://i.pravatar.cc/150?u=${participant.influencer_handle}`
+            id: influencer.id,
+            influencer_id: influencer.influencer_id,
+            current_stage: influencer.current_stage,
+            accepted_at: influencer.accepted_at,
+            status: influencer.status,
+            influencer_name: influencer.influencer_name,
+            influencer_handle: influencer.influencer_handle,
+            followers_count: influencer.followers_count,
+            engagement_rate: influencer.engagement_rate,
+            task_count: taskCount,
+            progress: avgProgress
           };
         })
       );
-      
-      return transformedData;
-    }
-  });
 
-  const getStageDisplay = (stage: string) => {
-    return { 
-      label: formatPhaseName(stage), 
-      color: getPhaseColor(stage) 
-    };
+      setActiveInfluencers(influencersWithTasks);
+    } catch (error) {
+      console.error('Error in fetchActiveInfluencers:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (isLoading) {
+  const getProgressColor = (progress: number) => {
+    if (progress >= 80) return 'text-green-600';
+    if (progress >= 50) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  const getStageDisplay = (stage: string) => {
+    switch (stage) {
+      case 'content_creation': return 'Creating Content';
+      case 'content_review': return 'Under Review';
+      case 'publish_analytics': return 'Published';
+      default: return 'In Progress';
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">Loading active influencers...</p>
-      </div>
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1DDCD3] mx-auto"></div>
+            <p className="text-gray-500 mt-2">Loading active influencers...</p>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
-  if (activeParticipants.length === 0) {
-    return null; // Don't show section if no active participants
+  if (activeInfluencers.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Active Influencers
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <Users className="h-12 w-12 mx-auto text-gray-400 mb-2" />
+            <p className="text-gray-500">No active influencers yet</p>
+            <p className="text-gray-400 text-sm">Accept applications to see influencers here</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-[#1DDCD3]" />
-            Active Influencers ({activeParticipants.length})
-          </CardTitle>
-          <Button 
-            onClick={() => refetch()} 
-            size="sm" 
-            variant="outline"
-          >
-            Refresh
-          </Button>
-        </div>
+        <CardTitle className="flex items-center gap-2">
+          <Users className="h-5 w-5" />
+          Active Influencers ({activeInfluencers.length})
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-gray-600">
-          Influencers who have received their content requirements and are actively working on the campaign.
-        </p>
-        
-        <div className="grid grid-cols-1 gap-4">
-          {activeParticipants.map((participant) => {
-            const stageInfo = getStageDisplay(participant.current_stage);
+        {activeInfluencers.map((influencer) => (
+          <div key={influencer.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10">
+                <AvatarFallback className="bg-[#1DDCD3] text-white">
+                  {influencer.influencer_name?.charAt(0) || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h4 className="font-medium">{influencer.influencer_name}</h4>
+                <p className="text-sm text-gray-500">{influencer.influencer_handle}</p>
+                <div className="flex items-center gap-4 mt-1">
+                  <span className="text-xs text-gray-500">
+                    {influencer.followers_count?.toLocaleString()} followers
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {influencer.engagement_rate}% engagement
+                  </span>
+                </div>
+              </div>
+            </div>
             
-            return (
-              <Card key={participant.id} className="overflow-hidden">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4 flex-1">
-                      <div className="h-12 w-12 rounded-full overflow-hidden">
-                        <img 
-                          src={participant.influencer_profile_url || `https://i.pravatar.cc/150?u=${participant.influencer_handle}`} 
-                          alt={participant.influencer_name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-medium">{participant.influencer_name}</h4>
-                          <Badge variant="outline" className="text-xs">
-                            {participant.influencer_handle ? (participant.influencer_handle.startsWith('@') ? participant.influencer_handle : `@${participant.influencer_handle}`) : '@user'}
-                          </Badge>
-                          <Badge className={`text-xs ${stageInfo.color}`}>
-                            {stageInfo.label}
-                          </Badge>
-                        </div>
-                        
-                        <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
-                          <span>{(participant.followers_count || 0).toLocaleString()} followers</span>
-                          <span>{(participant.engagement_rate || 0).toFixed(1)}% engagement</span>
-                          <span className="flex items-center gap-1">
-                            <CheckCircle className="h-3 w-3" />
-                            {participant.tasks_completed || 0}/{participant.total_tasks || 0} tasks
-                          </span>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <Progress value={participant.task_progress || 0} className="h-2 flex-1" />
-                          <span className="text-xs text-gray-600">{(participant.task_progress || 0).toFixed(0)}%</span>
-                        </div>
-                      </div>
-                    </div>
+            <div className="text-right">
+              <Badge variant="outline" className="mb-2">
+                {getStageDisplay(influencer.current_stage)}
+              </Badge>
+              <div className="text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-600">Progress:</span>
+                  <span className={`font-medium ${getProgressColor(influencer.progress)}`}>
+                    {influencer.progress}%
+                  </span>
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  {influencer.task_count} {influencer.task_count === 1 ? 'task' : 'tasks'}
+                </div>
+              </div>
+            </div>
 
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => {
-                        // Navigate to tasks view
-                        if (onViewTasks) {
-                          onViewTasks(participant.id, participant.influencer_id);
-                        }
-                      }}
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      View Tasks
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+            {onViewDetails && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => onViewDetails(influencer.influencer_id)}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        ))}
       </CardContent>
     </Card>
   );
