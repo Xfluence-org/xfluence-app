@@ -100,45 +100,59 @@ export const useDashboardData = () => {
     }
   });
 
-  // For active campaigns
+  // For active campaigns - using get_influencer_campaigns function for better data
   const { data: activeCampaigns = [], isLoading: isLoadingActive } = useQuery({
     queryKey: ['dashboard-active-campaigns'],
     queryFn: async () => {
       const user = (await supabase.auth.getUser()).data.user;
       if (!user) return [];
 
-      const { data, error } = await supabase
-        .from('campaign_participants')
-        .select(`
-          id,
-          campaign_id,
-          current_stage,
-          accepted_at,
-          campaigns!inner(
+      // First try to get campaigns using the existing function
+      const { data, error } = await supabase.rpc('get_influencer_campaigns', {
+        status_filter: 'active'
+      });
+
+      if (error) {
+        console.error('Error fetching active campaigns:', error);
+        // Fallback to direct query
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('campaign_participants')
+          .select(`
             id,
-            title,
-            amount,
-            due_date,
-            brands!inner(
-              name
+            campaign_id,
+            current_stage,
+            accepted_at,
+            campaigns!inner(
+              id,
+              title,
+              amount,
+              due_date,
+              brands!inner(
+                name
+              )
             )
-          )
-        `)
-        .eq('influencer_id', user.id)
-        .eq('status', 'accepted')
-        .neq('current_stage', 'waiting_for_requirements');
+          `)
+          .eq('influencer_id', user.id)
+          .eq('status', 'accepted');
 
-      if (error) throw error;
+        if (fallbackError) throw fallbackError;
 
-      return (data || []).map((item: any) => ({
-        id: item.campaign_id,
-        title: item.campaigns.title,
-        brand: item.campaigns.brands.name,
-        amount: item.campaigns.amount,
-        dueDate: item.campaigns.due_date,
-        currentStage: item.current_stage,
-        acceptedAt: item.accepted_at
-      }));
+        return (fallbackData || []).map((item: any) => ({
+          campaign_id: item.campaign_id,
+          campaign_title: item.campaigns.title,
+          brand_name: item.campaigns.brands.name,
+          amount: item.campaigns.amount,
+          due_date: item.campaigns.due_date,
+          current_stage: item.current_stage,
+          accepted_at: item.accepted_at,
+          overall_progress: 0,
+          task_count: 0,
+          completed_tasks: 0,
+          tasks: []
+        }));
+      }
+
+      return data || [];
     }
   });
 

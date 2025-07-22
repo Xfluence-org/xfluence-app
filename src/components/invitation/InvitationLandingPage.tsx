@@ -135,17 +135,21 @@ const InvitationLandingPage: React.FC = () => {
     
     setClaiming(true);
     try {
-      // Update the campaign participant with the user's ID
+      // Update the campaign participant with the user's ID and set current_stage
       const { error: updateError } = await supabase
         .from('campaign_participants')
         .update({
           influencer_id: user.id,
           invitation_claimed_at: new Date().toISOString(),
-          status: 'accepted'
+          status: 'accepted',
+          current_stage: 'content_requirement'
         })
         .eq('id', invitationData.id);
 
       if (updateError) throw updateError;
+
+      // For now, just make sure the participant is linked properly
+      // Tasks will be created later when content requirements are shared by the brand
 
       // Update the invitation email record
       const { error: emailError } = await supabase
