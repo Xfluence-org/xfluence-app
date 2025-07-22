@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { FileText, Eye, BarChart3, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { taskWorkflowService, WorkflowState } from '@/services/taskWorkflowService';
 import { useAuth } from '@/contexts/AuthContext';
-import ContentRequirementEditor from './ContentRequirementEditor';
-import ContentReviewPanel from './ContentReviewPanel';
+import ContentRequirementEditorEnhanced from './ContentRequirementEditorEnhanced';
+import ContentReviewPanelEnhanced from './ContentReviewPanelEnhanced';
 import PublishAnalyticsView from './PublishAnalyticsView';
 import TaskFeedbackSection from './TaskFeedbackSection';
 
@@ -213,7 +213,7 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({
                   </CardContent>
                 </Card>
               ) : (
-                <ContentRequirementEditor
+                <ContentRequirementEditorEnhanced
                   taskId={taskId}
                   onRequirementsShared={handleRefresh}
                 />
@@ -227,7 +227,7 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({
             </TabsContent>
 
             <TabsContent value="content_review" className="mt-6 space-y-6">
-              <ContentReviewPanel
+              <ContentReviewPanelEnhanced
                 taskId={taskId}
                 onReviewComplete={handleRefresh}
               />
