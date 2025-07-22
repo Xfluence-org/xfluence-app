@@ -8,9 +8,10 @@ import { useBrandCampaignsData } from '@/hooks/useBrandCampaignsData';
 import BrandCampaignCard from '@/components/brand/BrandCampaignCard';
 import CampaignDetailModal from '@/components/brand/CampaignDetailModal';
 import CreateCampaignModal from '@/components/brand/CreateCampaignModal';
+import InvitationManagement from '@/components/brand/InvitationManagement';
 
 
-type CampaignView = 'published' | 'completed' | 'archived';
+type CampaignView = 'published' | 'completed' | 'archived' | 'invitations';
 
 const BrandCampaignsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -25,14 +26,14 @@ const BrandCampaignsPage: React.FC = () => {
     error, 
     archiveCampaign,
     updateCampaign 
-  } = useBrandCampaignsData(campaignTab);
+  } = useBrandCampaignsData(campaignTab === 'invitations' ? 'published' : campaignTab);
 
   // Handle URL parameters for tab and campaign view
   useEffect(() => {
     const campaignParam = searchParams.get('campaign') as CampaignView;
     const viewParam = searchParams.get('view');
     
-    if (campaignParam && ['published', 'completed', 'archived'].includes(campaignParam)) {
+    if (campaignParam && ['published', 'completed', 'archived', 'invitations'].includes(campaignParam)) {
       setCampaignTab(campaignParam);
     }
     
@@ -77,10 +78,11 @@ const BrandCampaignsPage: React.FC = () => {
   const renderCampaignContent = () => {
     return (
       <Tabs value={campaignTab} onValueChange={(value) => setCampaignTab(value as CampaignView)}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="published">Published</TabsTrigger>
           <TabsTrigger value="completed">Completed</TabsTrigger>
           <TabsTrigger value="archived">Archived</TabsTrigger>
+          <TabsTrigger value="invitations">Invitations</TabsTrigger>
         </TabsList>
 
         <TabsContent value="published" className="mt-6">
@@ -150,6 +152,10 @@ const BrandCampaignsPage: React.FC = () => {
               </div>
             )}
           </div>
+        </TabsContent>
+
+        <TabsContent value="invitations" className="mt-6">
+          <InvitationManagement />
         </TabsContent>
       </Tabs>
     );

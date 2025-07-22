@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-type CampaignView = 'published' | 'completed' | 'archived';
+type CampaignView = 'published' | 'completed' | 'archived' | 'invitations';
 
 export const useBrandCampaignsData = (view: CampaignView) => {
   const queryClient = useQueryClient();
@@ -23,6 +23,9 @@ export const useBrandCampaignsData = (view: CampaignView) => {
           break;
         case 'archived':
           brandFilter = 'archived';
+          break;
+        case 'invitations':
+          brandFilter = 'active'; // For invitations, we still fetch active campaigns
           break;
         default:
           brandFilter = 'active';
