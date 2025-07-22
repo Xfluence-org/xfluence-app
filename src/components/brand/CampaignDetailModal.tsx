@@ -23,6 +23,7 @@ import CampaignAnalyticsDashboard from '@/components/brand/CampaignAnalyticsDash
 import { Save, Edit, X } from 'lucide-react';
 import PublicCampaignToggle from '@/components/brand/PublicCampaignToggle';
 import ApplicationsManagementSection from '@/components/brand/ApplicationsManagementSection';
+import InvitationManagement from '@/components/brand/InvitationManagement';
 
 interface CampaignDetailModalProps {
   isOpen: boolean;
@@ -455,6 +456,12 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
             </TabsContent>
 
             <TabsContent value="influencers" className="space-y-6 mt-6">
+              {/* Invitation Management */}
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-[#1a1f2e] mb-4">Invitations</h3>
+                <InvitationManagement campaignId={campaignId} />
+              </div>
+              
               {/* Active Influencers Working on Content */}
               <ActiveInfluencersSection 
                 campaignId={campaignId} 

@@ -22,13 +22,17 @@ interface InvitationData {
   influencer_name?: string;
 }
 
-const InvitationManagement: React.FC = () => {
+interface InvitationManagementProps {
+  campaignId?: string;
+}
+
+const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId }) => {
   const [copiedTokens, setCopiedTokens] = useState<Set<string>>(new Set());
 
   const { data: invitations = [], isLoading } = useQuery({
-    queryKey: ['brand-invitations'],
+    queryKey: ['brand-invitations', campaignId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('invitation_emails')
         .select(`
           id,
@@ -52,6 +56,33 @@ const InvitationManagement: React.FC = () => {
           )
         `)
         .order('sent_at', { ascending: false });
+
+      // If campaignId is provided, filter by that campaign
+      if (campaignId) {
+        const { data, error } = await query;
+        if (error) throw error;
+        
+        // Filter results to only include invitations for the specific campaign
+        const filteredData = (data || []).filter((item: any) => 
+          item.campaign_participants.campaigns.id === campaignId
+        );
+        
+        return filteredData.map((item: any) => ({
+          id: item.id,
+          email: item.email,
+          sent_at: item.sent_at,
+          clicked_at: item.clicked_at,
+          participant_id: item.campaign_participants.id,
+          campaign_title: item.campaign_participants.campaigns.title,
+          campaign_id: item.campaign_participants.campaigns.id,
+          status: item.campaign_participants.status,
+          invitation_token: item.campaign_participants.invitation_token,
+          invitation_claimed_at: item.campaign_participants.invitation_claimed_at,
+          influencer_name: item.campaign_participants.profiles?.name
+        }));
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -140,9 +171,9 @@ const InvitationManagement: React.FC = () => {
                   <div>
                     <h4 className="font-medium">{invitation.email}</h4>
                     <p className="text-sm text-gray-600">
-                      {invitation.campaign_title}
+                      {!campaignId && invitation.campaign_title}
                       {invitation.influencer_name && (
-                        <span> • {invitation.influencer_name}</span>
+                        <span>{!campaignId ? ' • ' : ''}{invitation.influencer_name}</span>
                       )}
                     </p>
                     <p className="text-xs text-gray-500">

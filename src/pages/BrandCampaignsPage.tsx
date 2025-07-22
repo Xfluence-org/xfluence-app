@@ -8,7 +8,7 @@ import { useBrandCampaignsData } from '@/hooks/useBrandCampaignsData';
 import BrandCampaignCard from '@/components/brand/BrandCampaignCard';
 import CampaignDetailModal from '@/components/brand/CampaignDetailModal';
 import CreateCampaignModal from '@/components/brand/CreateCampaignModal';
-import InvitationManagement from '@/components/brand/InvitationManagement';
+
 
 type MainView = 'campaigns' | 'influencers';
 type CampaignView = 'published' | 'completed' | 'archived';
@@ -166,39 +166,10 @@ const BrandCampaignsPage: React.FC = () => {
 
   const renderInfluencerContent = () => {
     return (
-      <Tabs value={influencerTab} onValueChange={(value) => setInfluencerTab(value as InfluencerView)}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="invitations">Invitations</TabsTrigger>
-          <TabsTrigger value="active">Active</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="invitations" className="mt-6">
-          <div className="space-y-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Sent Invitations</h3>
-                <p className="text-gray-600 mt-1">Manage your sent invitations and copy invitation links</p>
-              </div>
-            </div>
-            <InvitationManagement />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="active" className="mt-6">
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">Active influencers coming soon</p>
-            <p className="text-gray-400 mt-2">View active influencers and their progress</p>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="performance" className="mt-6">
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">Performance analytics coming soon</p>
-            <p className="text-gray-400 mt-2">Track influencer performance metrics</p>
-          </div>
-        </TabsContent>
-      </Tabs>
+      <div className="text-center py-12">
+        <p className="text-gray-500 text-lg">Influencer management is available in individual campaigns</p>
+        <p className="text-gray-400 mt-2">Open a specific campaign to manage influencers and invitations</p>
+      </div>
     );
   };
 

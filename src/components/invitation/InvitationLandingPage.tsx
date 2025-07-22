@@ -162,7 +162,7 @@ const InvitationLandingPage: React.FC = () => {
         description: "You've successfully joined the campaign! Redirecting to your dashboard...",
       });
 
-      // Redirect to dashboard after a short delay
+      // Redirect to influencer dashboard after a short delay
       setTimeout(() => {
         navigate('/dashboard');
       }, 2000);
@@ -261,56 +261,13 @@ const InvitationLandingPage: React.FC = () => {
               )}
             </div>
             <CardTitle className="text-2xl font-bold text-gray-900">
-              You're Invited to Join a Campaign!
+              {invitationData.campaign.title}
             </CardTitle>
             <p className="text-gray-600 mt-2">
-              {invitationData.campaign.brand.name} has invited you to collaborate on their campaign
+              You're invited to join this campaign by {invitationData.campaign.brand.name}
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Campaign Details */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-semibold text-lg mb-2">{invitationData.campaign.title}</h3>
-              {invitationData.campaign.description && (
-                <p className="text-gray-600 mb-4">{invitationData.campaign.description}</p>
-              )}
-              
-              <div className="flex flex-wrap gap-2 mb-4">
-                <Badge variant="outline">{invitationData.assignmentData.category}</Badge>
-                <Badge className={getTierColor(invitationData.assignmentData.tier)}>
-                  {invitationData.assignmentData.tier.charAt(0).toUpperCase() + invitationData.assignmentData.tier.slice(1)} Tier
-                </Badge>
-                <Badge variant="secondary">{invitationData.assignmentData.contentType}</Badge>
-              </div>
-
-              <div className="flex items-center gap-4 text-sm text-gray-600">
-                {invitationData.campaign.amount > 0 && (
-                  <div className="flex items-center gap-1">
-                    <DollarSign className="h-4 w-4" />
-                    <span>${invitationData.campaign.amount}</span>
-                  </div>
-                )}
-                {invitationData.campaign.due_date && (
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    <span>Due: {new Date(invitationData.campaign.due_date).toLocaleDateString()}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Assignment Details */}
-            <div className="bg-blue-50 rounded-lg p-4">
-              <h4 className="font-medium text-blue-900 mb-2">Your Assignment Details</h4>
-              <div className="text-sm space-y-1">
-                <p><span className="font-medium">Content Type:</span> {invitationData.assignmentData.contentType}</p>
-                <p><span className="font-medium">Category:</span> {invitationData.assignmentData.category}</p>
-                <p><span className="font-medium">Tier:</span> {invitationData.assignmentData.tier}</p>
-                {invitationData.assignmentData.influencerDetails?.handle && (
-                  <p><span className="font-medium">Handle:</span> {invitationData.assignmentData.influencerDetails.handle}</p>
-                )}
-              </div>
-            </div>
 
             {/* Action Section */}
             {!user ? (
