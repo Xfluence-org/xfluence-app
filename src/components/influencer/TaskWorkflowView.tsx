@@ -22,7 +22,7 @@ const TaskWorkflowView: React.FC<TaskWorkflowViewProps> = ({
   taskTitle
 }) => {
   const [workflowStates, setWorkflowStates] = useState<WorkflowState[]>([]);
-  const [activeTab, setActiveTab] = useState('content_requirement');
+  const [activeTab, setActiveTab] = useState('content_review'); // Start with content_review since it's in progress
   const [loading, setLoading] = useState(true);
   const [phaseVisibility, setPhaseVisibility] = useState<Record<string, boolean>>({});
   const { user } = useAuth();
