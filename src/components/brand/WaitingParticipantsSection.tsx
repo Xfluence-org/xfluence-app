@@ -35,12 +35,28 @@ const WaitingParticipantsSection: React.FC<WaitingParticipantsSectionProps> = ({
     staleTime: 0,
     refetchOnMount: 'always',
     queryFn: async () => {
-      // For now, return empty array since this function doesn't exist
-      return [];
+      const { data, error } = await supabase.rpc('get_campaign_waiting_influencers', {
+        campaign_id_param: campaignId
+      });
 
-      // Transform data - placeholder for now
-      const transformed = [];
-      return transformed;
+      if (error) {
+        console.error('Error fetching waiting participants:', error);
+        return [];
+      }
+
+      // Ensure we have an array and transform data
+      const participantsList = Array.isArray(data) ? data : [];
+      
+      return participantsList.map((participant: any) => ({
+        id: participant.id,
+        influencer_id: participant.influencer_id,
+        accepted_at: participant.accepted_at,
+        influencer_name: participant.influencer_name,
+        influencer_handle: participant.influencer_handle,
+        followers_count: participant.followers_count,
+        engagement_rate: participant.engagement_rate,
+        influencer_profile_url: `https://i.pravatar.cc/150?u=${participant.influencer_handle}`
+      }));
     }
   });
 

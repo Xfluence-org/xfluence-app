@@ -45,8 +45,9 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
     queryFn: async () => {
       console.log('Fetching applications for campaign:', campaignId);
       
-      // Use existing get_brand_applications_all function and filter
-      const { data, error } = await supabase.rpc('get_brand_applications_all', {
+      // Use dedicated get_campaign_applications function
+      const { data, error } = await supabase.rpc('get_campaign_applications', {
+        campaign_id_param: campaignId,
         limit_count: 100
       });
 
@@ -57,11 +58,11 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
 
       console.log('Raw applications data:', data);
 
-      // Filter for this campaign and ensure we have an array
-      const campaignApps = Array.isArray(data) ? data.filter((app: any) => app.campaign_id === campaignId) : [];
+      // Ensure we have an array and transform data
+      const applicationsList = Array.isArray(data) ? data : [];
 
       // Transform data to match component expectations
-      return campaignApps.map((app: any) => ({
+      return applicationsList.map((app: any) => ({
         id: app.application_id,
         influencer_id: app.influencer_id,
         status: app.application_status,
@@ -74,7 +75,7 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
         engagement_rate: app.engagement_rate,
         platform: app.platform,
         niche: app.niche || [],
-        influencer_profile_url: `https://i.pravatar.cc/150?u=${app.influencer_handle}` // Fallback profile image
+        influencer_profile_url: `https://i.pravatar.cc/150?u=${app.influencer_handle}`
       }));
     }
   });

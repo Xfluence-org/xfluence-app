@@ -37,23 +37,20 @@ const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({ cam
     staleTime: 0,
     refetchOnMount: 'always',
     queryFn: async () => {
-      // Use direct database query instead of missing function
-      const { data: participants, error: participantsError } = await supabase
-        .from('campaign_participants')
-        .select('*')
-        .eq('campaign_id', campaignId)
-        .eq('status', 'accepted');
+      const { data, error } = await supabase.rpc('get_campaign_active_influencers', {
+        campaign_id_param: campaignId
+      });
 
-      if (participantsError) {
-        console.error('Error fetching active participants:', participantsError);
+      if (error) {
+        console.error('Error fetching active participants:', error);
         return [];
       }
 
       // Ensure we have an array to work with
-      const participantsList = Array.isArray(participants) ? participants : [];
+      const participantsList = Array.isArray(data) ? data : [];
 
-      // Fetch tasks separately for each participant
-      const data = await Promise.all(
+      // Fetch tasks for progress calculation
+      const transformedData = await Promise.all(
         participantsList.map(async (participant: any) => {
           const { data: tasks } = await supabase
             .from('campaign_tasks')
@@ -61,37 +58,29 @@ const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({ cam
             .eq('campaign_id', campaignId)
             .eq('influencer_id', participant.influencer_id);
           
+          const tasksList = tasks || [];
+          const completedTasks = tasksList.filter((t: any) => t.status === 'completed').length;
+          const totalProgress = tasksList.reduce((sum: number, t: any) => sum + (t.progress || 0), 0);
+          const avgProgress = tasksList.length > 0 ? totalProgress / tasksList.length : 0;
+
           return {
-            ...participant,
-            campaign_tasks: tasks || []
+            id: participant.id,
+            influencer_id: participant.influencer_id,
+            current_stage: participant.current_stage,
+            accepted_at: participant.accepted_at,
+            influencer_name: participant.influencer_name,
+            influencer_handle: participant.influencer_handle,
+            followers_count: participant.followers_count,
+            engagement_rate: participant.engagement_rate,
+            task_progress: avgProgress,
+            tasks_completed: completedTasks,
+            total_tasks: tasksList.length,
+            influencer_profile_url: `https://i.pravatar.cc/150?u=${participant.influencer_handle}`
           };
         })
       );
-
-      // Transform data
-      const transformed = data?.map((participant: any) => {
-        const tasks = participant.campaign_tasks || [];
-        const completedTasks = tasks.filter((t: any) => t.status === 'completed').length;
-        const totalProgress = tasks.reduce((sum: number, t: any) => sum + (t.progress || 0), 0);
-        const avgProgress = tasks.length > 0 ? totalProgress / tasks.length : 0;
-
-        return {
-          id: participant.id,
-          influencer_id: participant.influencer_id,
-          current_stage: participant.current_stage,
-          accepted_at: participant.accepted_at,
-          influencer_name: participant.influencer_name,
-          influencer_handle: participant.influencer_handle,
-          followers_count: participant.followers_count,
-          engagement_rate: participant.engagement_rate,
-          task_progress: avgProgress,
-          tasks_completed: completedTasks,
-          total_tasks: tasks.length,
-          influencer_profile_url: participant.influencer_profile_url
-        };
-      }) || [];
       
-      return transformed;
+      return transformedData;
     }
   });
 
