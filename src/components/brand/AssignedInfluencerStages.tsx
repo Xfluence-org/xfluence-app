@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -128,7 +129,12 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
               .eq('influencer_id', participant.influencer_id as any);
 
             if (!taskError && taskData && Array.isArray(taskData)) {
-              tasks = taskData.map(task => ({
+              // Filter out any error objects and only process valid task data
+              const validTasks = taskData.filter(task => 
+                task && typeof task === 'object' && 'id' in task && !('error' in task)
+              );
+              
+              tasks = validTasks.map(task => ({
                 id: task.id || '',
                 title: task.title || '',
                 description: task.description || '',

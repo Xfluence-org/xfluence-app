@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, X, User, Eye } from 'lucide-react';
+import { useSupabaseTypeCasts } from '@/hooks/useSupabaseTypeCasts';
 
 interface ApplicationsManagementSectionProps {
   campaignId: string;
@@ -38,6 +39,7 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
   const [activeTab, setActiveTab] = useState<ApplicationStatus>('pending');
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { castToUuid, castForUpdate } = useSupabaseTypeCasts();
 
   const { data: applications = [], isLoading } = useQuery({
     queryKey: ['campaign-applications', campaignId],
@@ -85,12 +87,12 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
       // Update the application status
       const { error: updateError } = await supabase
         .from('campaign_participants')
-        .update({ 
+        .update(castForUpdate({ 
           status: action === 'approved' ? 'accepted' : 'rejected',
           updated_at: new Date().toISOString(),
           accepted_at: action === 'approved' ? new Date().toISOString() : null
-        } as any)
-        .eq('id', applicationId as any);
+        }))
+        .eq('id', castToUuid(applicationId));
 
       if (updateError) {
         console.error('Error updating application:', updateError);
@@ -106,10 +108,10 @@ const ApplicationsManagementSection: React.FC<ApplicationsManagementSectionProps
       if (action === 'approved') {
         await supabase
           .from('campaign_participants')
-          .update({ 
+          .update(castForUpdate({ 
             current_stage: 'waiting_for_requirements'
-          } as any)
-          .eq('id', applicationId as any);
+          }))
+          .eq('id', castToUuid(applicationId));
       }
 
       toast({
