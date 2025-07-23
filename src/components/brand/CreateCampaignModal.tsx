@@ -22,7 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Loader2, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -142,7 +142,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
       const { data: existingBrand, error: brandCheckError } = await supabase
         .from('brands')
         .select('id')
-        .eq('name', data.brand_name)
+        .eq('name', data.brand_name as any)
         .single();
 
       if (brandCheckError && brandCheckError.code !== 'PGRST116') {
@@ -156,7 +156,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
       }
 
       if (existingBrand) {
-        brandId = existingBrand.id;
+        brandId = (existingBrand as any).id;
         console.log('Using existing brand:', brandId);
       } else {
         // Create new brand
@@ -164,7 +164,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
           .from('brands')
           .insert({
             name: data.brand_name
-          })
+          } as any)
           .select()
           .single();
 
@@ -178,7 +178,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
           return;
         }
 
-        brandId = newBrand.id;
+        brandId = (newBrand as any).id;
         console.log('Created new brand:', brandId);
       }
 
@@ -190,7 +190,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
           user_id: user.id, // Use user.id which corresponds to auth.uid()
           brand_id: brandId,
           role: 'admin'
-        }, {
+        } as any, {
           onConflict: 'user_id,brand_id', // Handle conflicts on the unique constraint
           ignoreDuplicates: false // Update existing records if they exist
         });

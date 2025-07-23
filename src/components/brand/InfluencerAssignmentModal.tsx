@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UserPlus, Instagram, X, Copy, Check } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -127,7 +127,7 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
             status: 'invited',
             current_stage: 'waiting_for_requirements',
             application_message: JSON.stringify(assignmentData)
-          })
+          } as any)
           .select('id, invitation_token')
           .single();
 
@@ -137,22 +137,22 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
         const { error: emailError } = await supabase
           .from('invitation_emails')
           .insert({
-            campaign_participant_id: participantData.id,
+            campaign_participant_id: (participantData as any).id,
             email: manualInfluencer.email
-          });
+          } as any);
 
         if (emailError) throw emailError;
 
         // Generate invitation link
-        const invitationLink = `${window.location.origin}/invite/${participantData.invitation_token}`;
+        const invitationLink = `${window.location.origin}/invite/${(participantData as any).invitation_token}`;
         
         invitations.push({
-          id: participantData.id,
+          id: (participantData as any).id,
           email: manualInfluencer.email,
           handle: manualInfluencer.handle,
           category: manualInfluencer.category,
           invitationLink,
-          token: participantData.invitation_token
+          token: (participantData as any).invitation_token
         });
       }
 
