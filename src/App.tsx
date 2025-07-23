@@ -8,6 +8,7 @@ import React from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AuthErrorBoundary from "@/components/AuthErrorBoundary";
+import "@/utils/debugAuth";
 import Index from "./pages/Index";
 import InfluencerDashboard from "./pages/InfluencerDashboard";
 import OpportunitiesPage from "./pages/OpportunitiesPage";
