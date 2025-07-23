@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -40,8 +40,8 @@ const ContentTypeActiveSection: React.FC<ContentTypeActiveSectionProps> = ({
       const { data: participants, error: participantsError } = await supabase
         .from('campaign_participants')
         .select('*')
-        .eq('campaign_id', campaignId as any)
-        .eq('status', 'accepted' as any);
+        .eq('campaign_id', campaignId)
+        .eq('status', 'accepted');
 
       if (participantsError) {
         console.error('Error fetching active participants:', participantsError);
@@ -54,11 +54,11 @@ const ContentTypeActiveSection: React.FC<ContentTypeActiveSectionProps> = ({
           const { data: tasks } = await supabase
             .from('campaign_tasks')
             .select('id, status, progress, task_type')
-            .eq('campaign_id', campaignId as any)
-            .eq('influencer_id', (participant as any).influencer_id);
+            .eq('campaign_id', campaignId)
+            .eq('influencer_id', participant.influencer_id);
           
           return {
-            ...(participant as any),
+            ...participant,
             campaign_tasks: tasks || []
           };
         })

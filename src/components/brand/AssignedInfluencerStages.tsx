@@ -102,19 +102,12 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
         return;
       }
 
-      // Filter valid participants first
-      const validParticipantResults = filterValidResults(participants);
-      if (validParticipantResults.length === 0) {
-        setAssignedInfluencers([]);
-        return;
-      }
-
       // For participants that have moved past waiting stage, fetch their tasks
       const participantsWithTasks = await Promise.all(
-        validParticipantResults.map(async (participant) => {
-          // At this point, participant is guaranteed to be valid since we filtered above
-          if (!participant.current_stage || !participant.influencer_id) {
-            console.error('Missing required participant fields:', participant);
+        participants.map(async (participant) => {
+          // Type guard to ensure we have the expected data structure
+          if (!isValidResult(participant)) {
+            console.error('Invalid participant data:', participant);
             return null;
           }
 
@@ -162,8 +155,7 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
 
           // Type guard for profiles
           const profiles = Array.isArray(participant.profiles) ? participant.profiles : [];
-          const validProfiles = filterValidResults(profiles);
-          const profile = validProfiles.length > 0 ? validProfiles[0] : null;
+          const profile = profiles.length > 0 ? profiles[0] : null;
 
           return {
             id: participant.id,
@@ -180,11 +172,11 @@ const AssignedInfluencerStages: React.FC<AssignedInfluencerStagesProps> = ({
       );
 
       // Filter out null results and only show non-waiting participants
-      const finalValidParticipants = participantsWithTasks.filter((p: AssignedInfluencer | null): p is AssignedInfluencer => 
+      const validParticipants = participantsWithTasks.filter((p): p is AssignedInfluencer => 
         p !== null && !p.isWaitingForRequirements
       );
       
-      setAssignedInfluencers(finalValidParticipants);
+      setAssignedInfluencers(validParticipants);
 
     } catch (error) {
       console.error('Error fetching assigned influencers:', error);

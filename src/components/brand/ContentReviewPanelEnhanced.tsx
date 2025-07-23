@@ -79,7 +79,7 @@ const ContentReviewPanelEnhanced: React.FC<ContentReviewPanelEnhancedProps> = ({
       const { data: uploadsData, error: uploadsError } = await supabase
         .from('task_uploads')
         .select('*')
-        .eq('task_id', taskId as any)
+        .eq('task_id', taskId)
         .order('created_at', { ascending: false });
 
       if (uploadsError) {
@@ -93,7 +93,7 @@ const ContentReviewPanelEnhanced: React.FC<ContentReviewPanelEnhancedProps> = ({
       const { data: reviewsData, error: reviewsError } = await supabase
         .from('task_content_reviews')
         .select('*')
-        .eq('task_id', taskId as any);
+        .eq('task_id', taskId);
 
       if (reviewsError) {
         console.error('Reviews fetch error:', reviewsError);
@@ -102,8 +102,8 @@ const ContentReviewPanelEnhanced: React.FC<ContentReviewPanelEnhancedProps> = ({
 
       console.log('Reviews fetched:', reviewsData);
 
-      setUploads((uploadsData as any) || []);
-      setReviews((reviewsData as any) || []);
+      setUploads(uploadsData || []);
+      setReviews(reviewsData || []);
     } catch (error) {
       console.error('Error fetching uploads and reviews:', error);
       toast({

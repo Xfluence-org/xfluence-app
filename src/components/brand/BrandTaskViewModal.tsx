@@ -86,8 +86,8 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
               email
             )
           `)
-          .eq('id', participantId as any)
-          .maybeSingle();
+          .eq('id', participantId)
+          .single();
 
         if (participantError) {
           // console.error('Error fetching participant:', participantError);
@@ -133,8 +133,8 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
               uploader_id
             )
           `)
-          .eq('campaign_id', campaignId as any)
-          .eq('influencer_id', influencerId as any);
+          .eq('campaign_id', campaignId)
+          .eq('influencer_id', influencerId);
 
         if (tasksError) {
           // console.error('Error fetching tasks:', tasksError);
@@ -236,9 +236,9 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
-              <span className="text-[#1a1f2e]">{(participant as any)?.profiles?.[0]?.name || 'Influencer'} - Task Progress</span>
+              <span className="text-[#1a1f2e]">{participant?.profiles?.name || 'Influencer'} - Task Progress</span>
               <Badge className="bg-[#1DDCD3]/10 text-[#1DDCD3] border-[#1DDCD3]/20">
-                {(participant as any)?.current_stage?.replace(/_/g, ' ') || 'Unknown Stage'}
+                {participant?.current_stage?.replace(/_/g, ' ') || 'Unknown Stage'}
               </Badge>
             </DialogTitle>
             <DialogDescription className="text-gray-600">
@@ -262,17 +262,17 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-600">Status</p>
-                      <p className="font-medium">{(participant as any)?.status || 'Unknown'}</p>
+                      <p className="font-medium">{participant?.status}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">Current Stage</p>
-                      <p className="font-medium">{(participant as any)?.current_stage?.replace('_', ' ') || 'Unknown'}</p>
+                      <p className="font-medium">{participant?.current_stage?.replace('_', ' ')}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">Accepted Date</p>
                       <p className="font-medium">
-                        {(participant as any)?.accepted_at 
-                          ? new Date((participant as any).accepted_at).toLocaleDateString()
+                        {participant?.accepted_at 
+                          ? new Date(participant.accepted_at).toLocaleDateString()
                           : 'N/A'}
                       </p>
                     </div>

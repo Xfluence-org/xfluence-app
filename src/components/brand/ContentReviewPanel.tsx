@@ -46,11 +46,11 @@ const ContentReviewPanel: React.FC<ContentReviewPanelProps> = ({
       const { data, error } = await supabase
         .from('task_uploads')
         .select('*')
-        .eq('task_id', taskId as any)
+        .eq('task_id', taskId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setUploads((data as any) || []);
+      setUploads(data || []);
     } catch (error) {
       console.error('Error fetching uploads:', error);
     }

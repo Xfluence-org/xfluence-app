@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -42,9 +42,9 @@ const ContentTypeWaitingSection: React.FC<ContentTypeWaitingSectionProps> = ({
       const { data, error } = await supabase
         .from('campaign_participants')
         .select('*')
-        .eq('campaign_id', campaignId as any)
-        .eq('status', 'accepted' as any)
-        .eq('current_stage', 'waiting_for_requirements' as any);
+        .eq('campaign_id', campaignId)
+        .eq('status', 'accepted')
+        .eq('current_stage', 'waiting_for_requirements');
 
       if (error) {
         console.error('Error fetching waiting participants:', error);
