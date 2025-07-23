@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { Users, ChevronRight, Eye } from 'lucide-react';
+import { Users, ChevronRight } from 'lucide-react';
 import { useSupabaseTypeCasts } from '@/hooks/useSupabaseTypeCasts';
 
 interface ActiveInfluencer {
@@ -24,13 +24,11 @@ interface ActiveInfluencer {
 interface ActiveInfluencersSectionProps {
   campaignId: string;
   onViewDetails?: (influencerId: string) => void;
-  onViewTasks?: (participantId: string, influencerId: string) => void;
 }
 
 const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({
   campaignId,
-  onViewDetails,
-  onViewTasks
+  onViewDetails
 }) => {
   const [activeInfluencers, setActiveInfluencers] = useState<ActiveInfluencer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -114,8 +112,8 @@ const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({
 
   const getProgressColor = (progress: number) => {
     if (progress >= 80) return 'text-green-600';
-    if (progress >= 50) return 'text-yellow-600';
-    return 'text-red-600';
+    if (progress >= 50) return 'text-amber-600';
+    return 'text-red-500';
   };
 
   const getStageDisplay = (stage: string) => {
@@ -132,8 +130,8 @@ const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({
       <Card>
         <CardContent className="p-6">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1DDCD3] mx-auto"></div>
-            <p className="text-gray-500 mt-2">Loading active influencers...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="text-muted-foreground mt-2">Loading active influencers...</p>
           </div>
         </CardContent>
       </Card>
@@ -142,18 +140,18 @@ const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({
 
   if (activeInfluencers.length === 0) {
     return (
-      <Card>
+      <Card className="card-elevated border-0">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-xl font-semibold">
+            <Users className="h-6 w-6 text-primary" />
             Active Influencers
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">
-            <Users className="h-12 w-12 mx-auto text-gray-400 mb-2" />
-            <p className="text-gray-500">No active influencers yet</p>
-            <p className="text-gray-400 text-sm">Accept applications to see influencers here</p>
+          <div className="text-center py-12">
+            <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground text-lg mb-2">No active influencers yet</p>
+            <p className="text-muted-foreground/70 text-sm">Accept applications to see influencers here</p>
           </div>
         </CardContent>
       </Card>
@@ -161,69 +159,60 @@ const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5" />
+    <Card className="card-elevated border-0">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2 text-xl font-semibold">
+          <Users className="h-6 w-6 text-primary" />
           Active Influencers ({activeInfluencers.length})
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3">
         {activeInfluencers.map((influencer) => (
-          <div key={influencer.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10">
-                <AvatarFallback className="bg-[#1DDCD3] text-white">
+          <div key={influencer.id} className="flex items-center justify-between p-4 border border-border rounded-xl hover:bg-muted/50 transition-all duration-200 hover:shadow-md">
+            <div className="flex items-center gap-4">
+              <Avatar className="h-12 w-12">
+                <AvatarFallback className="bg-gradient-to-br from-primary to-primary-glow text-primary-foreground font-semibold">
                   {influencer.influencer_name?.charAt(0) || 'U'}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h4 className="font-medium">{influencer.influencer_name}</h4>
-                <p className="text-sm text-gray-500">{influencer.influencer_handle}</p>
-                <div className="flex items-center gap-4 mt-1">
-                  <span className="text-xs text-gray-500">
+                <h4 className="font-semibold text-lg">{influencer.influencer_name}</h4>
+                <p className="text-sm text-muted-foreground font-medium">{influencer.influencer_handle}</p>
+                <div className="flex items-center gap-4 mt-2">
+                  <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-md">
                     {influencer.followers_count?.toLocaleString()} followers
                   </span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-md">
                     {influencer.engagement_rate}% engagement
                   </span>
                 </div>
               </div>
             </div>
             
-            <div className="text-right">
-              <Badge variant="outline" className="mb-2">
+            <div className="flex flex-col items-end gap-3">
+              <Badge variant="outline" className="border-primary/20 text-primary bg-primary/5 px-3 py-1">
                 {getStageDisplay(influencer.current_stage)}
               </Badge>
-              <div className="text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-600">Progress:</span>
-                  <span className={`font-medium ${getProgressColor(influencer.progress)}`}>
+              <div className="text-right">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm text-muted-foreground">Progress:</span>
+                  <span className={`font-semibold text-lg ${getProgressColor(influencer.progress)}`}>
                     {influencer.progress}%
                   </span>
                 </div>
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-md">
                   {influencer.task_count} {influencer.task_count === 1 ? 'task' : 'tasks'}
                 </div>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              {onViewTasks && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => onViewTasks(influencer.id, influencer.influencer_id)}
-                  title="View Tasks"
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-              )}
               {onViewDetails && (
                 <Button 
                   variant="outline" 
                   size="sm"
                   onClick={() => onViewDetails(influencer.influencer_id)}
+                  className="hover:bg-primary hover:text-primary-foreground transition-colors"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
