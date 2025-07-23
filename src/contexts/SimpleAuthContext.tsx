@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 type UserType = 'Agency' | 'Brand' | 'Influencer';
 
@@ -39,7 +39,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     let isMounted = true;
@@ -94,6 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setProfile(null);
         setSession(null);
       } else if (event === 'SIGNED_IN' && newSession) {
+        // Only handle actual sign-in, not token refresh or tab switches
         setUser(newSession.user);
         setSession(newSession);
         
@@ -106,15 +106,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .then(({ data }) => {
             if (data && isMounted) {
               setProfile(data);
-              // Redirect after successful profile fetch
-              if (location.pathname === '/' && data.user_type) {
-                navigate(data.user_type === 'Influencer' ? '/dashboard' : '/brand-dashboard');
+              // Only redirect on actual sign-in from login page
+              const currentPath = window.location.pathname;
+              if (currentPath === '/' && data.user_type) {
+                console.log('Redirecting after sign-in, user type:', data.user_type);
+                // Small delay to ensure state is updated
+                setTimeout(() => {
+                  navigate(data.user_type === 'Influencer' ? '/dashboard' : '/brand-dashboard');
+                }, 100);
               }
             }
           })
           .catch(error => {
             console.error('Profile fetch error:', error);
           });
+      } else if ((event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && newSession) {
+        // For token refresh or user updates, just update the session
+        // Don't redirect or refetch profile
+        setSession(newSession);
+        setUser(newSession.user);
       }
     });
 
