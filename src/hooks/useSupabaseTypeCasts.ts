@@ -7,6 +7,12 @@ export const useSupabaseTypeCasts = () => {
   // Helper function to cast objects for update operations
   const castForUpdate = <T>(obj: T) => obj as any;
   
+  // Helper function to cast for insert operations
+  const castForInsert = <T>(obj: T) => obj as any;
+  
+  // Helper function to cast query parameters
+  const castQueryParam = (value: any) => value as any;
+  
   // Helper function to check if query result is valid (not an error)
   const isValidResult = (result: any): boolean => {
     return result && typeof result === 'object' && !('error' in result) && !('message' in result);
@@ -30,9 +36,15 @@ export const useSupabaseTypeCasts = () => {
     return results.filter(result => isValidResult(result));
   };
 
+  // Helper function to safely cast query results
+  const castQueryResult = (result: any) => result as any;
+
   return {
     castToUuid,
     castForUpdate,
+    castForInsert,
+    castQueryParam,
+    castQueryResult,
     isValidResult,
     safeAccess,
     isValidArrayResult,

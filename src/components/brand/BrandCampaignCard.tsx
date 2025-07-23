@@ -93,8 +93,8 @@ const BrandCampaignCard: React.FC<BrandCampaignCardProps> = ({
     try {
       const { error } = await supabase
         .from('campaigns')
-        .update({ is_public: newValue })
-        .eq('id', campaign.campaign_id);
+        .update({ is_public: newValue } as any)
+        .eq('id', campaign.campaign_id as any);
 
       if (error) {
         throw error;

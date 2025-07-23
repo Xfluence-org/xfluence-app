@@ -466,7 +466,6 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
               <ActiveInfluencersSection 
                 campaignId={campaignId} 
                 key={`active-${refreshKey}`}
-                onViewTasks={handleViewTasks}
               />
               
               {/* Participants Waiting for Requirements */}

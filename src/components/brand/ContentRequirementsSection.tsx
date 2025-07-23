@@ -110,15 +110,15 @@ const ContentRequirementsSection: React.FC<ContentRequirementsSectionProps> = ({
       const { data: participants } = await supabase
         .from('campaign_participants')
         .select('influencer_id')
-        .eq('campaign_id', campaignId)
-        .eq('status', 'accepted');
+        .eq('campaign_id', campaignId as any)
+        .eq('status', 'accepted' as any);
 
       if (participants) {
         // Delete existing tasks
         await supabase
           .from('campaign_tasks')
           .delete()
-          .eq('campaign_id', campaignId);
+          .eq('campaign_id', campaignId as any);
 
         // Create new tasks for each participant
         const tasks = [];
@@ -126,7 +126,7 @@ const ContentRequirementsSection: React.FC<ContentRequirementsSectionProps> = ({
           for (const requirement of requirements) {
             tasks.push({
               campaign_id: campaignId,
-              influencer_id: participant.influencer_id,
+              influencer_id: (participant as any).influencer_id,
               title: `Create ${requirement.count} ${requirement.type}`,
               description: requirement.description,
               task_type: requirement.type,

@@ -61,21 +61,21 @@ const ContentReviewSimplified: React.FC<ContentReviewSimplifiedProps> = ({
       const { data: uploadsData, error: uploadsError } = await supabase
         .from('task_uploads')
         .select('*')
-        .eq('task_id', taskId)
+        .eq('task_id', taskId as any)
         .order('created_at', { ascending: false });
 
       if (uploadsError) throw uploadsError;
-      setUploads(uploadsData || []);
+      setUploads((uploadsData as any) || []);
 
       // Fetch reviews
       const { data: reviewsData, error: reviewsError } = await supabase
         .from('task_content_reviews')
         .select('*')
-        .eq('task_id', taskId)
+        .eq('task_id', taskId as any)
         .order('created_at', { ascending: false });
 
       if (reviewsError) throw reviewsError;
-      const typedReviews = (reviewsData || []).map(item => ({
+      const typedReviews = ((reviewsData as any) || []).map((item: any) => ({
         ...item,
         status: item.status as 'pending' | 'approved' | 'rejected'
       }));
@@ -85,11 +85,11 @@ const ContentReviewSimplified: React.FC<ContentReviewSimplifiedProps> = ({
       const { data: publishedData, error: publishedError } = await supabase
         .from('task_published_content')
         .select('*')
-        .eq('task_id', taskId)
+        .eq('task_id', taskId as any)
         .order('created_at', { ascending: false });
 
       if (publishedError) throw publishedError;
-      setPublishedContent(publishedData || []);
+      setPublishedContent((publishedData as any) || []);
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -110,7 +110,7 @@ const ContentReviewSimplified: React.FC<ContentReviewSimplifiedProps> = ({
           feedback: feedback[uploadId] || '',
           reviewed_by: user.id,
           reviewed_at: new Date().toISOString()
-        }, {
+        } as any, {
           onConflict: 'upload_id'
         });
 
