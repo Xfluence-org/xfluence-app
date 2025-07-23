@@ -220,6 +220,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let isInitialized = false;
     let authStateHandled = false;
+    let authStateProcessing = false;
+    let loadingTimeout: NodeJS.Timeout;
     
     const handleAuthStateChange = async (event: string, session: Session | null) => {
       console.log('Auth state changed:', event, 'Session:', !!session);
@@ -228,6 +230,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Mark that we've handled an auth state change
       authStateHandled = true;
+      authStateProcessing = true;
       
       // Handle different auth events
       switch (event) {
@@ -283,6 +286,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.log('Performing redirect for user type:', userProfile.user_type);
                 redirectToDashboard(userProfile.user_type);
               }
+              
+              // Ensure loading is set to false after successful profile fetch
+              setLoading(false);
             } catch (error) {
               console.error('Error handling auth state change:', error);
               console.error('Error details:', error);
@@ -320,10 +326,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.log('Unhandled auth event:', event);
           setLoading(false);
       }
+      
+      // Mark auth state processing as complete
+      authStateProcessing = false;
     };
 
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
+
+    // Set a timeout to ensure loading eventually gets set to false
+    loadingTimeout = setTimeout(() => {
+      if (isMountedRef.current && loading) {
+        console.warn('Loading timeout reached, forcing loading to false');
+        setLoading(false);
+      }
+    }, 10000); // 10 second timeout
 
     // Check for existing session on mount
     const initializeAuth = async () => {
@@ -332,9 +349,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Wait a bit to see if auth state change fires first
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      // If auth state change already handled the session, skip initialization
+      // If auth state change already handled the session, wait for it to complete
       if (authStateHandled) {
-        console.log('Auth state already handled, skipping initialization');
+        console.log('Auth state already handled, waiting for completion...');
+        
+        // Wait for auth state processing to complete (max 5 seconds)
+        let waitTime = 0;
+        while (authStateProcessing && waitTime < 5000) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          waitTime += 100;
+        }
+        
+        // Ensure loading is false after auth state processing
+        if (isMountedRef.current) {
+          setLoading(false);
+        }
         return;
       }
       
@@ -394,6 +423,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => {
       subscription.unsubscribe();
+      if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+      }
     };
   }, [fetchUserProfile, claimPendingInvitations, redirectToDashboard]);
 

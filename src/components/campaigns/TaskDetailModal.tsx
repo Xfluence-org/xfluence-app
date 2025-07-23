@@ -9,7 +9,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import TaskPhaseIndicator from '@/components/influencer/TaskPhaseIndicator';
 import ContentRequirementView from '@/components/influencer/ContentRequirementView';
 import ContentUploadPanel from '@/components/influencer/ContentUploadPanel';
-import EnhancedContentUploadPanel from '@/components/influencer/EnhancedContentUploadPanel';
 import PublishContentForm from '@/components/influencer/PublishContentForm';
 import PublishAnalyticsPanel from '@/components/influencer/PublishAnalyticsPanel';
 import TaskWorkflowManager from '@/components/brand/TaskWorkflowManager';
@@ -193,7 +192,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                       </p>
                     </div>
                   ) : (
-                    <EnhancedContentUploadPanel 
+                    <ContentUploadPanel 
                       taskId={taskDetail.id} 
                       onUploadComplete={handleUploadComplete}
                     />

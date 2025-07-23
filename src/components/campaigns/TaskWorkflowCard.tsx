@@ -13,6 +13,7 @@ import {
   MessageSquare,
   ChevronRight
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Campaign } from '@/types/campaigns';
 import { formatTaskType, formatPhaseName, formatStatus } from '@/utils/taskFormatters';
 
@@ -33,6 +34,7 @@ const TaskWorkflowCard: React.FC<TaskWorkflowCardProps> = ({
   campaign, 
   onViewTaskDetails 
 }) => {
+  const navigate = useNavigate();
   // Get the current workflow phase based on task status
   const getWorkflowPhases = (task: any): WorkflowPhase[] => {
     const phases: WorkflowPhase[] = [
@@ -147,7 +149,7 @@ const TaskWorkflowCard: React.FC<TaskWorkflowCardProps> = ({
               <div 
                 key={task.id} 
                 className="bg-gray-50 rounded-lg p-4 space-y-3 cursor-pointer hover:bg-gray-100 transition-colors"
-                onClick={() => onViewTaskDetails(task.id)}
+                onClick={() => navigate(`/campaigns?tab=Active&task=${task.id}`)}
               >
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium text-sm">{formatTaskType(task.title || task.task_type)}</h4>
@@ -212,7 +214,7 @@ const TaskWorkflowCard: React.FC<TaskWorkflowCardProps> = ({
             e.stopPropagation();
             console.log('View Task Details clicked', { campaign, taskId: campaign.tasks[0]?.id });
             if (campaign.tasks[0]) {
-              onViewTaskDetails(campaign.tasks[0].id);
+              navigate(`/campaigns?tab=Active&task=${campaign.tasks[0].id}`);
             } else {
               console.error('No tasks found in campaign:', campaign);
             }

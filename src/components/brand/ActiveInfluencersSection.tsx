@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { Users, ChevronRight } from 'lucide-react';
+import { Users, ChevronRight, Eye } from 'lucide-react';
 import { useSupabaseTypeCasts } from '@/hooks/useSupabaseTypeCasts';
 
 interface ActiveInfluencer {
@@ -24,11 +24,13 @@ interface ActiveInfluencer {
 interface ActiveInfluencersSectionProps {
   campaignId: string;
   onViewDetails?: (influencerId: string) => void;
+  onViewTasks?: (participantId: string, influencerId: string) => void;
 }
 
 const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({
   campaignId,
-  onViewDetails
+  onViewDetails,
+  onViewTasks
 }) => {
   const [activeInfluencers, setActiveInfluencers] = useState<ActiveInfluencer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -206,15 +208,27 @@ const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({
               </div>
             </div>
 
-            {onViewDetails && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => onViewDetails(influencer.influencer_id)}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {onViewTasks && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => onViewTasks(influencer.id, influencer.influencer_id)}
+                  title="View Tasks"
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              )}
+              {onViewDetails && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => onViewDetails(influencer.influencer_id)}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
         ))}
       </CardContent>

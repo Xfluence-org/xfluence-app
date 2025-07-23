@@ -61,7 +61,8 @@ const InfluencerDashboard = () => {
 
   const handleViewTaskDetails = (taskId: string) => {
     console.log('handleViewTaskDetails called with taskId:', taskId);
-    navigate(`/task-workflow/${taskId}`);
+    // Navigate to campaigns page with task parameter to open the modal
+    navigate(`/campaigns?tab=Active&task=${taskId}`);
   };
 
 
