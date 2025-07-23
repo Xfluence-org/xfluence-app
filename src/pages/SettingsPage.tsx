@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import Sidebar from '@/components/dashboard/Sidebar';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import { Save, User, Mail, Instagram, Youtube, Key } from 'lucide-react';
 
 const SettingsPage = () => {

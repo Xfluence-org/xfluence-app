@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BrandSidebar from '@/components/brand/BrandSidebar';
 import ContentStrategySection from '@/components/brand/ContentStrategySection';
 import InfluencerAllocationSection from '@/components/brand/InfluencerAllocationSection';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, Save, Eye, Target, Users, Hash, Globe, Loader2 } from 'lucide-react';

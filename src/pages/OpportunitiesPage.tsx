@@ -5,7 +5,7 @@ import Sidebar from '@/components/dashboard/Sidebar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import OpportunityApplicationModal from '@/components/influencer/OpportunityApplicationModal';
 import {
   Select,

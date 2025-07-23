@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { MessageSquare, Send, User, Building, RefreshCw } from 'lucide-react';
 import { taskWorkflowService, TaskFeedback, ContentDraft } from '@/services/taskWorkflowService';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
 

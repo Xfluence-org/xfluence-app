@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import BrandSidebar from '@/components/brand/BrandSidebar';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import { Save, User, Mail, Building, Key } from 'lucide-react';
 
 const BrandSettingsPage = () => {

@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import BrandSidebar from '@/components/brand/BrandSidebar';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import { Bot, Send, Sparkles, User } from 'lucide-react';
+import { aiAssistantService } from '@/services/aiAssistant';
+import { useToast } from '@/components/ui/use-toast';
 
 interface Message {
   id: string;
@@ -18,6 +20,7 @@ interface Message {
 
 const BrandAIAssistantPage = () => {
   const { user, profile, loading } = useAuth();
+  const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -28,6 +31,7 @@ const BrandAIAssistantPage = () => {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [currentCampaignId, setCurrentCampaignId] = useState<string | undefined>();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
   // Auto-scroll to bottom when new messages arrive
@@ -193,7 +197,7 @@ const BrandAIAssistantPage = () => {
               
               <div className="border-t p-4 bg-gray-50 flex-shrink-0">
                 <form
-                  onSubmit={(e) => {
+                  onSubmit={async (e) => {
                     e.preventDefault();
                     if (inputMessage.trim()) {
                       const newMessage: Message = {
@@ -202,95 +206,56 @@ const BrandAIAssistantPage = () => {
                         sender: 'user',
                         timestamp: new Date()
                       };
-                      setMessages([...messages, newMessage]);
-                      setInputMessage('');
                       
-                      // Simulate AI typing with realistic delay
+                      // Add user message to UI
+                      setMessages(prev => [...prev, newMessage]);
+                      setInputMessage('');
                       setIsTyping(true);
                       
-                      // Add a 20 second delay to simulate thinking
-                      const thinkingTime = 20000; // 20 seconds
-                      
-                      setTimeout(() => {
-                        setIsTyping(false);
+                      try {
+                        // Format conversation history for the API
+                        const conversationHistory = aiAssistantService.formatConversationHistory(
+                          [...messages.slice(1), newMessage] // Skip the initial greeting
+                        );
+                        
+                        // Call the AI assistant
+                        const response = await aiAssistantService.sendMessage(
+                          conversationHistory,
+                          currentCampaignId
+                        );
+                        
+                        if (response.error) {
+                          throw new Error(response.error);
+                        }
+                        
+                        // Add AI response to messages
                         const aiResponse: Message = {
                           id: (Date.now() + 1).toString(),
-                          content: `Predicting the reach and results of your campaign requires assessing metrics from the video and influencer profile alongside broader campaign factors. Here's an analysis and prediction:
-
----
-
-### **Influencer Metrics (Based on Provided Data)**
-
-1. **Reach:** ~2,890 unique accounts per post.
-2. **Engagement Rate:** ~7.16%.
-3. **Impressions-to-Reach Ratio:** ~1.18 (indicates good visibility beyond the initial audience).
-
----
-
-### **Video-Specific Predictions**
-
-1. **Predicted Reach (per reel/post):**
-
-   * Instagram reels typically outperform posts due to algorithm preferences.
-   * With a well-optimized reel:
-
-     * **Baseline Reach:** ~3,000–4,500 accounts.
-     * **Viral Potential:** ~6,000–8,000 accounts if boosted by engagement or trending sounds.
-
-2. **Engagement Predictions:**
-
-   * **Reel:** Higher engagement due to dynamic content, ~8–12% engagement rate.
-   * **Post:** Moderate engagement, ~6–9% engagement rate.
-   * **Engagement Volume:** ~250–500 likes/comments/shares combined.
-
-3. **Conversion Potential:**
-
-   * Average conversion rates for influencer campaigns in skincare: ~2–4%.
-   * Expected conversions: ~60–120 actions (clicks, purchases, etc.), depending on CTA clarity and audience relevance.
-
----
-
-### **Campaign-Level Predictions**
-
-1. **Total Campaign Reach:**
-
-   * If 5 influencers post reels, with an average reach of ~4,000:
-     $5 \times 4,000 = 20,000$ unique accounts.
-   * Adjust for overlap (~10% audience overlap):
-     Final Reach: ~18,000 unique accounts.
-
-2. **Total Engagement Volume:**
-
-   * ~10% engagement rate average across reels/posts.
-     $18,000 \times 10\% = 1,800$ likes/comments/shares.
-
-3. **Conversions:**
-
-   * ~3% average conversion rate:
-     $1,800 \times 3\% = 54$ purchases or clicks.
-
----
-
-### **Factors Affecting Results**
-
-1. **Boosting Strategy:** Paid promotions can increase reach by 2–3x.
-2. **Relevance of Influencer Audience:** High audience-product fit may yield better engagement and conversions.
-3. **Seasonality:** Campaign timing (e.g., holidays) can boost engagement and purchasing intent.
-
----
-
-### **Predicted Campaign Results**
-
-* **Reach:** ~18,000–24,000 unique accounts.
-* **Engagement:** ~1,800–2,400 likes/comments/shares.
-* **Conversions:** ~50–100 actions (clicks or purchases).
-
-Would you like suggestions for optimizing reach or engagement further?`,
+                          content: response.message,
                           sender: 'assistant',
                           timestamp: new Date()
                         };
+                        
                         setMessages(prev => [...prev, aiResponse]);
-                      }, thinkingTime);
+                      } catch (error) {
+                        console.error('Error getting AI response:', error);
+                        toast({
+                          title: "Error",
+                          description: error instanceof Error ? error.message : "Failed to get AI response",
+                          variant: "destructive"
+                        });
+                        
+                        // Add error message to chat
+                        const errorMessage: Message = {
+                          id: (Date.now() + 1).toString(),
+                          content: "I'm sorry, I encountered an error. Please try again.",
+                          sender: 'assistant',
+                          timestamp: new Date()
+                        };
+                        setMessages(prev => [...prev, errorMessage]);
+                      } finally {
+                        setIsTyping(false);
+                      }
                     }
                   }}
                   className="flex gap-3"

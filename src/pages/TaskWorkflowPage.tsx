@@ -3,7 +3,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import Sidebar from '@/components/dashboard/Sidebar';
 import BrandSidebar from '@/components/brand/BrandSidebar';
 import TaskWorkflowView from '@/components/influencer/TaskWorkflowView';

@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import React from "react";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/SimpleAuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AuthErrorBoundary from "@/components/AuthErrorBoundary";
 import "@/utils/debugAuth";

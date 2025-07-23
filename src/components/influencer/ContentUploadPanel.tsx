@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Upload, File, X, Check, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import { useToast } from '@/hooks/use-toast';
 import AIContentAnalysis from '@/components/shared/AIContentAnalysis';
 import PublishLinkForm from '@/components/influencer/PublishLinkForm';

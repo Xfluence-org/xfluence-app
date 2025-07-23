@@ -38,18 +38,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [hasInitialized, setHasInitialized] = useState(false);
   const [hasRedirectedOnce, setHasRedirectedOnce] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   const fetchUserProfile = async (userId: string) => {
+    console.log('fetchUserProfile called for userId:', userId);
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
+
+      console.log('Profile query result:', { data, error });
 
       if (error) {
         console.error('Error fetching profile:', error);
@@ -58,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return data;
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('Error in fetchUserProfile catch:', error);
       return null;
     }
   };
@@ -90,55 +94,112 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    let mounted = true;
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
+        
         console.log('Auth state changed:', event, session);
+        
+        // Don't process if we're still initializing
+        if (isInitializing && event !== 'SIGNED_IN' && event !== 'SIGNED_OUT') {
+          return;
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Fetch user profile after authentication
-          const userProfile = await fetchUserProfile(session.user.id);
-          setProfile(userProfile);
-          
-          // Only redirect on actual SIGNED_IN event (not TOKEN_REFRESHED, etc.)
-          // and only if we're on the login page
-          if (userProfile && 
-              event === 'SIGNED_IN' && 
-              location.pathname === '/') {
-            redirectToDashboard(userProfile.user_type);
+          try {
+            console.log('Fetching profile for user in auth state change:', session.user.id);
+            // Fetch user profile after authentication
+            const userProfile = await fetchUserProfile(session.user.id);
+            if (!mounted) return;
+            
+            console.log('Profile fetched in auth state change:', userProfile);
+            setProfile(userProfile);
+            
+            // Only redirect on actual SIGNED_IN event (not TOKEN_REFRESHED, etc.)
+            // and only if we're on the login page
+            if (userProfile && 
+                event === 'SIGNED_IN' && 
+                location.pathname === '/') {
+              redirectToDashboard(userProfile.user_type);
+            }
+          } catch (error) {
+            console.error('Error in auth state change:', error);
+            setProfile(null);
+          } finally {
+            // Always set loading to false after processing
+            if (mounted) {
+              console.log('Setting loading to false in auth state change');
+              setLoading(false);
+            }
           }
         } else {
           setProfile(null);
+          if (mounted) {
+            setLoading(false);
+          }
         }
-
-        setLoading(false);
       }
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserProfile(session.user.id).then((userProfile) => {
+    const initializeAuth = async () => {
+      console.log('Initializing auth...');
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+        
+        console.log('Initial session check:', !!session);
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          console.log('Fetching profile for initial session:', session.user.id);
+          const userProfile = await fetchUserProfile(session.user.id);
+          if (!mounted) return;
+          
+          console.log('Initial profile fetched:', userProfile);
           setProfile(userProfile);
-          setLoading(false);
           
           // Only redirect on initial load if we're on the login page
           if (userProfile && location.pathname === '/') {
             redirectToDashboard(userProfile.user_type);
           }
-        });
-      } else {
-        setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+      } finally {
+        if (mounted) {
+          console.log('Setting loading to false in initializeAuth');
+          setLoading(false);
+          setIsInitializing(false);
+        }
       }
-    });
+    };
 
-    return () => subscription.unsubscribe();
-  }, [location.pathname]);
+    // Add a timeout to ensure loading eventually gets set to false
+    const loadingTimeout = setTimeout(() => {
+      if (mounted && loading) {
+        console.warn('Loading timeout reached, forcing loading to false');
+        setLoading(false);
+        setIsInitializing(false);
+      }
+    }, 5000); // 5 second timeout
+
+    initializeAuth();
+
+    return () => {
+      mounted = false;
+      clearTimeout(loadingTimeout);
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const signUp = async (email: string, password: string, userType: UserType, name: string) => {
     try {

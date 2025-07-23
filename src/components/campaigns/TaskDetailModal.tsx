@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Upload, ExternalLink, Lock } from 'lucide-react';
 import { TaskDetail } from '@/types/taskDetail';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import TaskPhaseIndicator from '@/components/influencer/TaskPhaseIndicator';
 import ContentRequirementView from '@/components/influencer/ContentRequirementView';
 import ContentUploadPanel from '@/components/influencer/ContentUploadPanel';

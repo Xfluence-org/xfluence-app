@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Eye, Check, X, MessageSquare } from 'lucide-react';
 import { taskWorkflowService, ContentReview } from '@/services/taskWorkflowService';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 

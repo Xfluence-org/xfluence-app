@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { FileText } from 'lucide-react';
 import { taskWorkflowService } from '@/services/taskWorkflowService';
 import { useToast } from '@/components/ui/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 
 interface ContentRequirementEditorProps {
   taskId: string;

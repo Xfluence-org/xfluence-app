@@ -2,7 +2,7 @@
 import React from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import Sidebar from '@/components/dashboard/Sidebar';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import CampaignCard from '@/components/dashboard/CampaignCard';
 import InvitationCard from '@/components/dashboard/InvitationCard';

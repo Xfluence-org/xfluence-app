@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import TaskProgressTracker from '@/components/shared/TaskProgressTracker';
 import BrandSidebar from '@/components/brand/BrandSidebar';
 

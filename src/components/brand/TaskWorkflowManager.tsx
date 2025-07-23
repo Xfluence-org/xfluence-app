@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, Eye, BarChart3, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { taskWorkflowService, WorkflowState } from '@/services/taskWorkflowService';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import ContentRequirementEditorEnhanced from './ContentRequirementEditorEnhanced';
 import ContentReviewPanelEnhanced from './ContentReviewPanelEnhanced';
 import PublishAnalyticsView from './PublishAnalyticsView';
