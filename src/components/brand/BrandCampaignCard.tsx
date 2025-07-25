@@ -15,7 +15,7 @@ import {
 import { Eye, Archive, Calendar, Users, DollarSign, Globe, Lock } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase-override';
 
 interface BrandCampaign {
   campaign_id: string;
@@ -93,8 +93,8 @@ const BrandCampaignCard: React.FC<BrandCampaignCardProps> = ({
     try {
       const { error } = await supabase
         .from('campaigns')
-        .update({ is_public: newValue })
-        .eq('id', campaign.campaign_id);
+        .update({ is_public: newValue } as any)
+        .eq('id' as any, campaign.campaign_id as any);
 
       if (error) {
         throw error;
