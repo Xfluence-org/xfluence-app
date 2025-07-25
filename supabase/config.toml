@@ -1,1 +1,4 @@
 project_id = "xospglrpmoqubokupgvw"
+
+[functions.scrape-influencer-data]
+verify_jwt = false

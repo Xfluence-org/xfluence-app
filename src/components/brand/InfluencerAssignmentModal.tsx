@@ -146,6 +146,24 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
         // Generate invitation link
         const invitationLink = `${window.location.origin}/invite/${participantData.invitation_token}`;
         
+        // Trigger background scraping for influencer data
+        try {
+          supabase.functions.invoke('scrape-influencer-data', {
+            body: { 
+              handle: manualInfluencer.handle,
+              participantId: participantData.id
+            }
+          }).then(response => {
+            if (response.error) {
+              console.error('Background scraping failed:', response.error);
+            } else {
+              console.log('Background scraping initiated for:', manualInfluencer.handle);
+            }
+          });
+        } catch (error) {
+          console.error('Failed to initiate background scraping:', error);
+        }
+        
         invitations.push({
           id: participantData.id,
           email: manualInfluencer.email,
