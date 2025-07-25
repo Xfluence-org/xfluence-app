@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase-override';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -33,7 +33,7 @@ const CampaignDebugger: React.FC = () => {
       if (fetchError) {
         setError(fetchError.message);
       } else {
-        setCampaigns((data as any) || []);
+        setCampaigns(data || []);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -52,14 +52,14 @@ const CampaignDebugger: React.FC = () => {
       const { data: campaignInfo, error: infoError } = await supabase
         .from('campaigns')
         .select('*')
-        .eq('id' as any, campaignId as any)
+        .eq('id', campaignId)
         .single();
       
       // Check llm_interactions table
       const { data: interactions, error: intError } = await supabase
         .from('llm_interactions')
         .select('id, created_at, call_type, raw_output')
-        .eq('campaign_id' as any, campaignId as any)
+        .eq('campaign_id', campaignId)
         .order('created_at', { ascending: false })
         .limit(10);
       
@@ -67,8 +67,8 @@ const CampaignDebugger: React.FC = () => {
       const { data: plannerEntries, error: plannerError } = await supabase
         .from('llm_interactions')
         .select('id, created_at, raw_output')
-        .eq('campaign_id' as any, campaignId as any)
-        .eq('call_type' as any, 'campaign_planner' as any)
+        .eq('campaign_id', campaignId)
+        .eq('call_type', 'campaign_planner')
         .order('created_at', { ascending: false })
         .limit(1);
       
@@ -97,7 +97,7 @@ const CampaignDebugger: React.FC = () => {
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id' as any, user.id as any)
+          .eq('id', user.id)
           .single();
         
         setUserProfile({ 

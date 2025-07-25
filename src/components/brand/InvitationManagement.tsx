@@ -28,7 +28,6 @@ interface InvitationManagementProps {
 
 const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId }) => {
   const [copiedTokens, setCopiedTokens] = useState<Set<string>>(new Set());
-  const [showAll, setShowAll] = useState(false);
 
   const { data: invitations = [], isLoading } = useQuery({
     queryKey: ['brand-invitations', campaignId],
@@ -162,7 +161,7 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
           </div>
         ) : (
           <div className="space-y-4">
-            {(showAll ? invitations : invitations.slice(0, 3)).map((invitation) => (
+            {invitations.map((invitation) => (
               <div
                 key={invitation.id}
                 className="flex items-center justify-between p-4 border rounded-lg"
@@ -213,17 +212,6 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
                 </div>
               </div>
             ))}
-            {invitations.length > 3 && (
-              <div className="pt-4 border-t">
-                <Button 
-                  variant="ghost" 
-                  onClick={() => setShowAll(!showAll)}
-                  className="w-full"
-                >
-                  {showAll ? 'Show Less' : `Show All ${invitations.length} Invitations`}
-                </Button>
-              </div>
-            )}
           </div>
         )}
       </CardContent>

@@ -11,7 +11,7 @@ import {
   Users,
   Instagram
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase-override';
+import { supabase } from '@/integrations/supabase/client';
 import { taskWorkflowService, WorkflowState } from '@/services/taskWorkflowService';
 import TaskWorkflowModal from './TaskWorkflowModal';
 import { useSupabaseTypeCasts } from '@/hooks/useSupabaseTypeCasts';
