@@ -362,7 +362,7 @@ export type Database = {
           profile_picture: string | null
           reach: number | null
           updated_at: string | null
-          user_id: string
+          user_id: string | null
           username: string
         }
         Insert: {
@@ -380,7 +380,7 @@ export type Database = {
           profile_picture?: string | null
           reach?: number | null
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
           username: string
         }
         Update: {
@@ -398,7 +398,7 @@ export type Database = {
           profile_picture?: string | null
           reach?: number | null
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
           username?: string
         }
         Relationships: []
