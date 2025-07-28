@@ -6,6 +6,21 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Function to proxy Instagram images to avoid CORS issues
+const proxyInstagramImage = async (imageUrl: string): Promise<string> => {
+  try {
+    const response = await fetch(imageUrl);
+    if (!response.ok) return imageUrl; // Return original URL if proxy fails
+    
+    const imageBuffer = await response.arrayBuffer();
+    const imageBase64 = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+    return `data:image/jpeg;base64,${imageBase64}`;
+  } catch (error) {
+    console.log('Failed to proxy image:', error);
+    return imageUrl; // Return original URL if proxy fails
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -108,11 +123,15 @@ serve(async (req) => {
     const userProfile = apiData
     
     // Extract data following the implementation guide with correct field mapping
+    const profilePictureUrl = userProfile.profile_pic_url_hd || userProfile.profile_pic_url;
+    const proxiedProfilePicture = profilePictureUrl ? await proxyInstagramImage(profilePictureUrl) : null;
+    
     const extractedData = {
-      profile_picture: userProfile.profile_pic_url_hd || userProfile.profile_pic_url,
+      profile_picture: proxiedProfilePicture,
       followers_count: userProfile.edge_followed_by?.count || 0,
       following: userProfile.edge_follow?.count || 0,
-      media_count: userProfile.edge_owner_to_timeline_media?.count || 0
+      media_count: userProfile.edge_owner_to_timeline_media?.count || 0,
+      username: userProfile.username
     };
     
     console.log('Extracted Instagram data:', extractedData);

@@ -147,6 +147,38 @@ const BrandDashboard: React.FC = () => {
           </section>
 
 
+          {/* Recent Applications */}
+          <section className="mb-12">
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-[#1a1f2e]">Recent Applications</h2>
+                <button 
+                  onClick={() => navigate('/brand/applications')}
+                  className="text-gray-600 hover:text-[#1DDCD3] font-medium transition-colors duration-200"
+                >
+                  View all →
+                </button>
+              </div>
+              {recentApplications.length > 0 ? (
+                <div className="space-y-4">
+                  {recentApplications.slice(0, 3).map((application) => (
+                    <ApplicationCard
+                      key={application.id}
+                      application={application}
+                      onApprove={handleApproveApplication}
+                      onReject={handleRejectApplication}
+                      onViewProfile={handleViewProfile}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No recent applications. Influencers will appear here when they apply!</p>
+                </div>
+              )}
+            </div>
+          </section>
+
           {/* Published Campaigns */}
           <section className="mb-12">
             <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
