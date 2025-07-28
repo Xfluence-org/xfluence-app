@@ -962,17 +962,18 @@ export type Database = {
           application_id: string
           campaign_id: string
           campaign_title: string
+          influencer_id: string
           influencer_name: string
           influencer_handle: string
           followers_count: number
           platform: string
+          influencer_profile_url: string
           applied_at: string
           application_status: string
           engagement_rate: number
           average_views: number
-          niche: string[]
+          niche: string
           ai_score: number
-          application_message: string
         }[]
       }
       get_brand_applications_all: {
