@@ -352,12 +352,14 @@ export type Database = {
           created_at: string | null
           engagement_rate: number | null
           followers_count: number | null
+          following: number | null
           following_count: number | null
           id: string
           impressions: number | null
           instagram_user_id: string
           last_synced_at: string | null
           media_count: number | null
+          profile_picture: string | null
           reach: number | null
           updated_at: string | null
           user_id: string
@@ -368,12 +370,14 @@ export type Database = {
           created_at?: string | null
           engagement_rate?: number | null
           followers_count?: number | null
+          following?: number | null
           following_count?: number | null
           id?: string
           impressions?: number | null
           instagram_user_id: string
           last_synced_at?: string | null
           media_count?: number | null
+          profile_picture?: string | null
           reach?: number | null
           updated_at?: string | null
           user_id: string
@@ -384,12 +388,14 @@ export type Database = {
           created_at?: string | null
           engagement_rate?: number | null
           followers_count?: number | null
+          following?: number | null
           following_count?: number | null
           id?: string
           impressions?: number | null
           instagram_user_id?: string
           last_synced_at?: string | null
           media_count?: number | null
+          profile_picture?: string | null
           reach?: number | null
           updated_at?: string | null
           user_id?: string
@@ -1039,7 +1045,15 @@ export type Database = {
           application_message: string
         }[]
       }
+      get_campaign_details: {
+        Args: { campaign_id_param: string }
+        Returns: Json
+      }
       get_campaign_llm_data: {
+        Args: { campaign_id_param: string }
+        Returns: Json
+      }
+      get_campaign_strategy: {
         Args: { campaign_id_param: string }
         Returns: Json
       }

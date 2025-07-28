@@ -68,7 +68,8 @@ serve(async (req) => {
 
     console.log(`Fetching fresh Instagram data for ${cleanHandle}`)
     
-    const apiUrl = `https://instagram-looter2.p.rapidapi.com/search?query=${encodeURIComponent(cleanHandle)}`
+    // Use profile endpoint as specified in the implementation guide
+    const apiUrl = `https://instagram-looter2.p.rapidapi.com/profile?username=${encodeURIComponent(cleanHandle)}`
     console.log('API URL:', apiUrl)
     
     const apiResponse = await fetch(apiUrl, {
@@ -94,7 +95,9 @@ serve(async (req) => {
     const apiData = await apiResponse.json()
     console.log('API Response data:', JSON.stringify(apiData, null, 2))
     
-    if (!apiData.data?.user) {
+    // Updated data extraction logic following the implementation guide
+    // Check for direct response structure (not nested under data.user)
+    if (!apiData || (!apiData.username && !apiData.data?.user)) {
       console.error('No user data found in API response')
       return new Response(
         JSON.stringify({ success: false, error: 'Instagram profile not found' }),
@@ -102,16 +105,30 @@ serve(async (req) => {
       )
     }
 
-    const userProfile = apiData.data.user
+    // Handle both possible response structures
+    const userProfile = apiData.data?.user || apiData
     
-    // Prepare data for instagram_accounts table
+    // Extract data following the implementation guide
+    const extractInstagramData = (profile) => {
+      return {
+        profile_picture: profile.profile_pic_url_hd || profile.profile_pic_url,
+        followers_count: profile.edge_followed_by?.count || profile.follower_count || 0,
+        following: profile.edge_follow?.count || profile.following_count || 0
+      };
+    };
+
+    const extractedData = extractInstagramData(userProfile);
+    console.log('Extracted Instagram data:', extractedData);
+    
+    // Prepare data for instagram_accounts table with the correct field mapping
     const accountData = {
       user_id: userId || null,
       username: cleanHandle,
-      instagram_user_id: userProfile.pk || cleanHandle,
-      followers_count: userProfile.follower_count || 0,
-      following_count: userProfile.following_count || 0,
-      media_count: userProfile.media_count || 0,
+      instagram_user_id: userProfile.pk || userProfile.id || cleanHandle,
+      followers_count: extractedData.followers_count,
+      following: extractedData.following,
+      media_count: userProfile.edge_owner_to_timeline_media?.count || userProfile.media_count || 0,
+      profile_picture: extractedData.profile_picture,
       engagement_rate: userProfile.engagement_rate || null,
       reach: userProfile.reach || null,
       impressions: userProfile.impressions || null,
