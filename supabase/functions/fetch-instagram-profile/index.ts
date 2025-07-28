@@ -95,9 +95,8 @@ serve(async (req) => {
     const apiData = await apiResponse.json()
     console.log('API Response data:', JSON.stringify(apiData, null, 2))
     
-    // Updated data extraction logic following the implementation guide
-    // Check for direct response structure (not nested under data.user)
-    if (!apiData || (!apiData.username && !apiData.data?.user)) {
+    // Handle the direct response structure (data is at root level, not nested)
+    if (!apiData || !apiData.username) {
       console.error('No user data found in API response')
       return new Response(
         JSON.stringify({ success: false, error: 'Instagram profile not found' }),
@@ -105,29 +104,27 @@ serve(async (req) => {
       )
     }
 
-    // Handle both possible response structures
-    const userProfile = apiData.data?.user || apiData
+    // The data is directly in apiData, not nested under data.user
+    const userProfile = apiData
     
-    // Extract data following the implementation guide
-    const extractInstagramData = (profile) => {
-      return {
-        profile_picture: profile.profile_pic_url_hd || profile.profile_pic_url,
-        followers_count: profile.edge_followed_by?.count || profile.follower_count || 0,
-        following: profile.edge_follow?.count || profile.following_count || 0
-      };
+    // Extract data following the implementation guide with correct field mapping
+    const extractedData = {
+      profile_picture: userProfile.profile_pic_url_hd || userProfile.profile_pic_url,
+      followers_count: userProfile.edge_followed_by?.count || 0,
+      following: userProfile.edge_follow?.count || 0,
+      media_count: userProfile.edge_owner_to_timeline_media?.count || 0
     };
-
-    const extractedData = extractInstagramData(userProfile);
+    
     console.log('Extracted Instagram data:', extractedData);
     
     // Prepare data for instagram_accounts table with the correct field mapping
     const accountData = {
       user_id: userId || null,
       username: cleanHandle,
-      instagram_user_id: userProfile.pk || userProfile.id || cleanHandle,
+      instagram_user_id: userProfile.id || cleanHandle,
       followers_count: extractedData.followers_count,
       following: extractedData.following,
-      media_count: userProfile.edge_owner_to_timeline_media?.count || userProfile.media_count || 0,
+      media_count: extractedData.media_count,
       profile_picture: extractedData.profile_picture,
       engagement_rate: userProfile.engagement_rate || null,
       reach: userProfile.reach || null,
