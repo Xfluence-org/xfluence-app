@@ -24,6 +24,13 @@ interface InvitationData {
   influencer_name?: string;
 }
 
+interface InfluencerProfile {
+  username: string;
+  followers_count: number;
+  engagement_rate: number;
+  profile_picture: string;
+}
+
 interface InvitationManagementProps {
   campaignId?: string;
 }
@@ -33,6 +40,8 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
   const [expandedInvitations, setExpandedInvitations] = useState<Set<string>>(new Set());
   const [showMore, setShowMore] = useState(false);
   const [selectedInfluencer, setSelectedInfluencer] = useState<InvitationData | null>(null);
+  const [influencerProfile, setInfluencerProfile] = useState<InfluencerProfile | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
 
   const { data: invitations = [], isLoading } = useQuery({
     queryKey: ['brand-invitations', campaignId],
@@ -158,6 +167,51 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
 
   const displayedInvitations = showMore ? invitations : invitations.slice(0, 3);
 
+  const fetchInfluencerProfile = async (influencerId: string, email: string) => {
+    if (!influencerId) return;
+    
+    setLoadingProfile(true);
+    try {
+      const { data, error } = await supabase
+        .from('instagram_accounts')
+        .select('username, followers_count, engagement_rate, profile_picture')
+        .eq('user_id', influencerId)
+        .single();
+      
+      if (!error && data) {
+        setInfluencerProfile(data);
+      } else {
+        // Try to fetch from Instagram API
+        const response = await supabase.functions.invoke('fetch-instagram-profile', {
+          body: { handle: email.split('@')[0] }
+        });
+        
+        if (response.data && !response.error) {
+          setInfluencerProfile({
+            username: response.data.username || email.split('@')[0],
+            followers_count: response.data.followers_count || 0,
+            engagement_rate: response.data.engagement_rate || 0,
+            profile_picture: response.data.profile_picture || ''
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching influencer profile:', error);
+    } finally {
+      setLoadingProfile(false);
+    }
+  };
+
+  const handlePreviewClick = (invitation: InvitationData) => {
+    setSelectedInfluencer(invitation);
+    setInfluencerProfile(null);
+    if (invitation.influencer_name) {
+      // Try to extract influencer ID from invitation
+      const influencerId = invitation.participant_id; // This might need adjustment based on data structure
+      fetchInfluencerProfile(influencerId, invitation.email);
+    }
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -209,30 +263,71 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
                     {invitation.influencer_name && (
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handlePreviewClick(invitation)}
+                          >
                             <Eye className="h-3 w-3 mr-1" />
                             Preview
                           </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="max-w-md">
                           <DialogHeader>
                             <DialogTitle>Influencer Profile</DialogTitle>
                           </DialogHeader>
-                          <div className="flex items-center gap-4 p-4">
-                            <Avatar className="h-16 w-16">
-                              <AvatarImage src="" />
-                              <AvatarFallback>
-                                {invitation.influencer_name?.charAt(0) || invitation.email.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <h3 className="font-semibold">{invitation.influencer_name}</h3>
-                              <p className="text-sm text-gray-600">{invitation.email}</p>
-                              <p className="text-xs text-gray-500">
-                                Status: {invitation.status}
-                              </p>
+                          {loadingProfile ? (
+                            <div className="flex items-center justify-center p-8">
+                              <div className="text-center">Loading profile...</div>
                             </div>
-                          </div>
+                          ) : (
+                            <div className="space-y-4">
+                              <div className="flex items-center gap-4 p-4">
+                                <Avatar className="h-16 w-16">
+                                  {influencerProfile?.profile_picture ? (
+                                    <AvatarImage 
+                                      src={influencerProfile.profile_picture} 
+                                      alt={invitation.influencer_name}
+                                    />
+                                  ) : (
+                                    <AvatarFallback>
+                                      {invitation.influencer_name?.charAt(0) || invitation.email.charAt(0)}
+                                    </AvatarFallback>
+                                  )}
+                                </Avatar>
+                                <div className="flex-1">
+                                  <h3 className="font-semibold text-lg">{invitation.influencer_name}</h3>
+                                  <p className="text-sm text-gray-600">@{influencerProfile?.username || invitation.email.split('@')[0]}</p>
+                                  <p className="text-xs text-gray-500">{invitation.email}</p>
+                                </div>
+                              </div>
+                              {influencerProfile && (
+                                <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                                  <div className="text-center">
+                                    <div className="font-semibold text-lg">{influencerProfile.followers_count.toLocaleString()}</div>
+                                    <div className="text-xs text-gray-600">Followers</div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="font-semibold text-lg">{influencerProfile.engagement_rate.toFixed(1)}%</div>
+                                    <div className="text-xs text-gray-600">Engagement</div>
+                                  </div>
+                                </div>
+                              )}
+                              <div className="p-4 bg-blue-50 rounded-lg">
+                                <div className="text-sm">
+                                  <span className="font-medium">Status:</span> {invitation.status}
+                                </div>
+                                <div className="text-sm">
+                                  <span className="font-medium">Campaign:</span> {invitation.campaign_title}
+                                </div>
+                                {invitation.clicked_at && (
+                                  <div className="text-sm">
+                                    <span className="font-medium">Last Activity:</span> {new Date(invitation.clicked_at).toLocaleDateString()}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </DialogContent>
                       </Dialog>
                     )}
