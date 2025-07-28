@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -374,10 +373,34 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
                         )}
                       </p>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleExpanded(invitation.id)}
+                      className="ml-2"
+                    >
+                      {expandedInvitations.has(invitation.id) ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </Button>
                   </div>
                   <div className="flex items-center gap-2">
                     {getStatusBadge(invitation)}
-                    {invitation.influencer_name && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard(invitation.invitation_token)}
+                    >
+                      {copiedTokens.has(invitation.invitation_token) ? (
+                        <Check className="h-3 w-3 mr-1" />
+                      ) : (
+                        <Copy className="h-3 w-3 mr-1" />
+                      )}
+                      {copiedTokens.has(invitation.invitation_token) ? 'Copied!' : 'Copy Link'}
+                    </Button>
+                    {(invitation.influencer_name || invitation.profile_picture || invitation.followers_count) && (
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button 
@@ -437,68 +460,55 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
                                 <div className="text-sm">
                                   <span className="font-medium">Campaign:</span> {invitation.campaign_title}
                                 </div>
-                                {invitation.clicked_at && (
-                                  <div className="text-sm">
-                                    <span className="font-medium">Last Activity:</span> {new Date(invitation.clicked_at).toLocaleDateString()}
-                                  </div>
-                                )}
+                                <div className="text-sm">
+                                  <span className="font-medium">Token:</span> {invitation.invitation_token}
+                                </div>
                               </div>
                             </div>
                           )}
                         </DialogContent>
                       </Dialog>
                     )}
-                    {!invitation.invitation_claimed_at && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => copyToClipboard(invitation.invitation_token)}
-                        className="flex items-center gap-1"
-                      >
-                        {copiedTokens.has(invitation.invitation_token) ? (
-                          <>
-                            <Check className="h-3 w-3" />
-                            Copied
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="h-3 w-3" />
-                            Copy Link
-                          </>
-                        )}
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleExpanded(invitation.id)}
-                    >
-                      {expandedInvitations.has(invitation.id) ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4" />
-                      )}
-                    </Button>
                   </div>
                 </div>
                 {expandedInvitations.has(invitation.id) && (
-                  <div className="border-t bg-gray-50 p-4">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
+                  <div className="px-4 pb-4 border-t bg-muted/20">
+                    <div className="pt-4 space-y-2">
+                      <div className="text-sm">
                         <span className="font-medium">Campaign:</span> {invitation.campaign_title}
                       </div>
-                      <div>
+                      <div className="text-sm">
                         <span className="font-medium">Status:</span> {invitation.status}
                       </div>
-                      <div>
-                        <span className="font-medium">Invitation Token:</span>
-                        <code className="ml-2 text-xs bg-white px-2 py-1 rounded">
-                          {invitation.invitation_token}
-                        </code>
+                      <div className="text-sm">
+                        <span className="font-medium">Token:</span> {invitation.invitation_token}
                       </div>
-                      {invitation.clicked_at && (
-                        <div>
-                          <span className="font-medium">Clicked At:</span> {new Date(invitation.clicked_at).toLocaleString()}
+                      {/* Show Instagram profile preview if available */}
+                      {(invitation.profile_picture || invitation.username || invitation.followers_count) && (
+                        <div className="mt-3 p-3 bg-background rounded-lg border">
+                          <div className="text-sm font-medium mb-2">Instagram Profile Preview</div>
+                          <div className="flex items-center gap-3">
+                            {invitation.profile_picture && (
+                              <img 
+                                src={invitation.profile_picture}
+                                alt="Instagram profile"
+                                className="w-12 h-12 rounded-full object-cover"
+                              />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-sm">
+                                @{invitation.username || invitation.email.split('@')[0]}
+                              </div>
+                              {invitation.followers_count && (
+                                <div className="text-xs text-muted-foreground">
+                                  {invitation.followers_count.toLocaleString()} followers
+                                  {invitation.engagement_rate && 
+                                    ` • ${invitation.engagement_rate.toFixed(1)}% engagement`
+                                  }
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -507,14 +517,12 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
               </div>
             ))}
             {invitations.length > 3 && (
-              <div className="text-center">
+              <div className="text-center pt-4">
                 <Button
                   variant="outline"
                   onClick={() => setShowMore(!showMore)}
-                  className="flex items-center gap-2"
                 >
-                  {showMore ? 'Show Less' : `Show More (${invitations.length - 3} more)`}
-                  {showMore ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  {showMore ? 'Show Less' : `Show ${invitations.length - 3} More`}
                 </Button>
               </div>
             )}
