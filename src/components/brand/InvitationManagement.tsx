@@ -68,15 +68,6 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
             campaigns!inner(
               id,
               title
-            ),
-            profiles(
-              name
-            ),
-            instagram_accounts(
-              username,
-              profile_picture,
-              followers_count,
-              engagement_rate
             )
           )
         `)
@@ -92,7 +83,8 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
           item.campaign_participants.campaigns.id === campaignId
         );
         
-        return filteredData.map((item: any) => ({
+        // Get the basic invitation data first
+        const invitationData = filteredData.map((item: any) => ({
           id: item.id,
           email: item.email,
           sent_at: item.sent_at,
@@ -103,20 +95,59 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
           status: item.campaign_participants.status,
           invitation_token: item.campaign_participants.invitation_token,
           invitation_claimed_at: item.campaign_participants.invitation_claimed_at,
-          influencer_name: item.campaign_participants.profiles?.name,
+          influencer_name: null,
           influencer_id: item.campaign_participants.influencer_id,
-          profile_picture: item.campaign_participants.instagram_accounts?.profile_picture,
-          username: item.campaign_participants.instagram_accounts?.username,
-          followers_count: item.campaign_participants.instagram_accounts?.followers_count,
-          engagement_rate: item.campaign_participants.instagram_accounts?.engagement_rate
+          profile_picture: undefined,
+          username: undefined,
+          followers_count: undefined,
+          engagement_rate: undefined
         }));
+
+        // Fetch Instagram data for users who have joined (have influencer_id)
+        const joinedUsers = invitationData.filter(inv => inv.influencer_id);
+        if (joinedUsers.length > 0) {
+          const userIds = joinedUsers.map(inv => inv.influencer_id);
+          
+          // Get profiles data
+          const { data: profilesData } = await supabase
+            .from('profiles')
+            .select('id, name')
+            .in('id', userIds);
+
+          // Get Instagram data
+          const { data: instagramData } = await supabase
+            .from('instagram_accounts')
+            .select('user_id, username, profile_picture, followers_count, engagement_rate')
+            .in('user_id', userIds);
+
+          // Merge the data
+          invitationData.forEach(invitation => {
+            if (invitation.influencer_id) {
+              const profile = profilesData?.find(p => p.id === invitation.influencer_id);
+              const instagram = instagramData?.find(ig => ig.user_id === invitation.influencer_id);
+              
+              if (profile) {
+                invitation.influencer_name = profile.name;
+              }
+              if (instagram) {
+                invitation.profile_picture = instagram.profile_picture;
+                invitation.username = instagram.username;
+                invitation.followers_count = instagram.followers_count;
+                invitation.engagement_rate = instagram.engagement_rate;
+              }
+            }
+          });
+        }
+
+        return invitationData;
       }
 
       const { data, error } = await query;
 
       if (error) throw error;
 
-      return (data || []).map((item: any) => ({
+      // For general query, just return basic data
+      const invitationData = (data || []).map((item: any) => ({
         id: item.id,
         email: item.email,
         sent_at: item.sent_at,
@@ -127,13 +158,51 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
         status: item.campaign_participants.status,
         invitation_token: item.campaign_participants.invitation_token,
         invitation_claimed_at: item.campaign_participants.invitation_claimed_at,
-        influencer_name: item.campaign_participants.profiles?.name,
+        influencer_name: null,
         influencer_id: item.campaign_participants.influencer_id,
-        profile_picture: item.campaign_participants.instagram_accounts?.profile_picture,
-        username: item.campaign_participants.instagram_accounts?.username,
-        followers_count: item.campaign_participants.instagram_accounts?.followers_count,
-        engagement_rate: item.campaign_participants.instagram_accounts?.engagement_rate
+        profile_picture: undefined,
+        username: undefined,
+        followers_count: undefined,
+        engagement_rate: undefined
       }));
+
+      // For general view, we can fetch Instagram data for all joined users
+      const joinedUsers = invitationData.filter(inv => inv.influencer_id);
+      if (joinedUsers.length > 0) {
+        const userIds = joinedUsers.map(inv => inv.influencer_id);
+        
+        // Get profiles data
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, name')
+          .in('id', userIds);
+
+        // Get Instagram data
+        const { data: instagramData } = await supabase
+          .from('instagram_accounts')
+          .select('user_id, username, profile_picture, followers_count, engagement_rate')
+          .in('user_id', userIds);
+
+        // Merge the data
+        invitationData.forEach(invitation => {
+          if (invitation.influencer_id) {
+            const profile = profilesData?.find(p => p.id === invitation.influencer_id);
+            const instagram = instagramData?.find(ig => ig.user_id === invitation.influencer_id);
+            
+            if (profile) {
+              invitation.influencer_name = profile.name;
+            }
+            if (instagram) {
+              invitation.profile_picture = instagram.profile_picture;
+              invitation.username = instagram.username;
+              invitation.followers_count = instagram.followers_count;
+              invitation.engagement_rate = instagram.engagement_rate;
+            }
+          }
+        });
+      }
+
+      return invitationData;
     }
   });
 
