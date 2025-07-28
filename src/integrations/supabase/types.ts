@@ -972,7 +972,7 @@ export type Database = {
           application_status: string
           engagement_rate: number
           average_views: number
-          niche: string
+          niche: string[]
           ai_score: number
         }[]
       }
