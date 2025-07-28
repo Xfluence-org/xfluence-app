@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useInstagramProfile } from '@/hooks/useInstagramProfile';
 import { useSupabaseTypeCasts } from '@/hooks/useSupabaseTypeCasts';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AssignmentRequest {
   contentType: string;
@@ -69,6 +70,7 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
   const queryClient = useQueryClient();
   const { fetchProfile, loading: profileLoading, error: profileError } = useInstagramProfile();
   const { castForUpdate, isValidResult } = useSupabaseTypeCasts();
+  const { user } = useAuth();
 
   const handleFetchInstagramProfile = async () => {
     if (!newInfluencer.handle.trim()) {
@@ -80,33 +82,35 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
       return;
     }
 
+    console.log('Fetching profile for handle:', newInfluencer.handle);
     setFetchingProfile(true);
+    setInstagramProfile(null);
+    
     try {
       const profile = await fetchProfile(newInfluencer.handle.replace('@', ''));
+      console.log('Profile fetch result:', profile);
+      
       if (profile) {
         setInstagramProfile(profile);
         toast({
           title: "Success",
-          description: `Found Instagram profile for @${profile.username}`,
-        });
-      } else if (profileError) {
-        toast({
-          title: "Error",
-          description: profileError,
-          variant: "destructive"
+          description: `Found Instagram profile for @${profile.username} with ${profile.followers_count?.toLocaleString() || 0} followers`,
         });
       } else {
+        const errorMsg = profileError || "Profile not found. You can still add the influencer manually.";
+        console.log('Profile fetch failed:', errorMsg);
         toast({
-          title: "Warning",
-          description: "Profile not found. You can still add the influencer manually.",
+          title: profileError ? "Error" : "Warning",
+          description: errorMsg,
           variant: "destructive"
         });
       }
     } catch (error) {
       console.error('Error fetching Instagram profile:', error);
+      const errorMsg = profileError || (error instanceof Error ? error.message : "Failed to fetch Instagram profile. You can still add the influencer manually.");
       toast({
         title: "Error", 
-        description: profileError || "Failed to fetch Instagram profile. You can still add the influencer manually.",
+        description: errorMsg,
         variant: "destructive"
       });
     } finally {
