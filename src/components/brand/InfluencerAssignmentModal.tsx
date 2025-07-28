@@ -12,7 +12,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useInstagramProfile } from '@/hooks/useInstagramProfile';
 import { useSupabaseTypeCasts } from '@/hooks/useSupabaseTypeCasts';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface AssignmentRequest {
   contentType: string;
@@ -70,7 +69,6 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
   const queryClient = useQueryClient();
   const { fetchProfile, loading: profileLoading, error: profileError } = useInstagramProfile();
   const { castForUpdate, isValidResult } = useSupabaseTypeCasts();
-  const { user } = useAuth();
 
   const handleFetchInstagramProfile = async () => {
     if (!newInfluencer.handle.trim()) {
