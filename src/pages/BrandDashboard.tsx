@@ -2,10 +2,7 @@
 import React from 'react';
 import BrandSidebar from '@/components/brand/BrandSidebar';
 import MetricsCard from '@/components/brand/MetricsCard';
-import ApplicationCard from '@/components/brand/ApplicationCard';
-import { InfluencerApplication } from '@/types/brandDashboard';
 import { useBrandDashboardData } from '@/hooks/useBrandDashboardData';
-import { useBrandApplications } from '@/hooks/useBrandApplications';
 import { usePublishedCampaigns } from '@/hooks/usePublishedCampaigns';
 import PublishedCampaignCard from '@/components/brand/PublishedCampaignCard';
 import { useNavigate } from 'react-router-dom';
@@ -13,7 +10,6 @@ import { useNavigate } from 'react-router-dom';
 const BrandDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { metrics: dashboardMetrics, loading, error } = useBrandDashboardData();
-  const { data: applicationsData = [], isLoading: applicationsLoading, error: applicationsError } = useBrandApplications(10);
   const { data: publishedCampaigns = [], isLoading: publishedLoading } = usePublishedCampaigns(10);
 
   console.log('Published campaigns in dashboard:', publishedCampaigns);
@@ -31,44 +27,8 @@ const BrandDashboard: React.FC = () => {
       : 0
   };
 
-  // Transform applications data to match component expectations
-  const recentApplications: InfluencerApplication[] = applicationsData.map((app: any) => ({
-    id: app.application_id,
-    campaignId: app.campaign_id,
-    campaignTitle: app.campaign_title,
-    influencer: {
-      id: app.influencer_id,
-      name: app.influencer_name,
-      handle: app.influencer_handle,
-      followers: app.followers_count,
-      platform: app.platform,
-      profileImage: app.influencer_profile_url
-    },
-    appliedAt: app.applied_at,
-    status: app.application_status as 'pending' | 'approved' | 'rejected',
-    engagementRate: app.engagement_rate ? parseFloat(app.engagement_rate.toString()) : 0,
-    averageViews: app.average_views,
-    niche: app.niche,
-    aiScore: app.ai_score
-  }));
 
-
-  const handleApproveApplication = (applicationId: string) => {
-    console.log('Approve application:', applicationId);
-    // Handle application approval
-  };
-
-  const handleRejectApplication = (applicationId: string) => {
-    console.log('Reject application:', applicationId);
-    // Handle application rejection
-  };
-
-  const handleViewProfile = (applicationId: string) => {
-    console.log('View influencer profile:', applicationId);
-    // Navigate to influencer profile
-  };
-
-  if (loading || applicationsLoading || publishedLoading) {
+  if (loading || publishedLoading) {
     return (
       <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <BrandSidebar userName="Brand Team" />
@@ -83,7 +43,7 @@ const BrandDashboard: React.FC = () => {
     );
   }
 
-  if (error || applicationsError) {
+  if (error) {
     return (
       <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <BrandSidebar userName="Brand Team" />
@@ -91,7 +51,7 @@ const BrandDashboard: React.FC = () => {
           <div className="p-8">
             <div className="text-center py-12">
               <p className="text-red-500 text-lg">Error loading dashboard</p>
-              <p className="text-gray-500 mt-2">{error || applicationsError?.message}</p>
+              <p className="text-gray-500 mt-2">{error}</p>
             </div>
           </div>
         </main>
@@ -147,37 +107,6 @@ const BrandDashboard: React.FC = () => {
           </section>
 
 
-          {/* Recent Applications */}
-          <section className="mb-12">
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-[#1a1f2e]">Recent Applications</h2>
-                <button 
-                  onClick={() => navigate('/brand/applications')}
-                  className="text-gray-600 hover:text-[#1DDCD3] font-medium transition-colors duration-200"
-                >
-                  View all →
-                </button>
-              </div>
-              {recentApplications.length > 0 ? (
-                <div className="space-y-4">
-                  {recentApplications.slice(0, 3).map((application) => (
-                    <ApplicationCard
-                      key={application.id}
-                      application={application}
-                      onApprove={handleApproveApplication}
-                      onReject={handleRejectApplication}
-                      onViewProfile={handleViewProfile}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No recent applications. Influencers will appear here when they apply!</p>
-                </div>
-              )}
-            </div>
-          </section>
 
           {/* Published Campaigns */}
           <section className="mb-12">

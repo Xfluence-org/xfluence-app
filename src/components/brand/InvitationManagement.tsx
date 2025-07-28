@@ -22,6 +22,11 @@ interface InvitationData {
   invitation_token: string;
   invitation_claimed_at?: string;
   influencer_name?: string;
+  influencer_id?: string;
+  profile_picture?: string;
+  username?: string;
+  followers_count?: number;
+  engagement_rate?: number;
 }
 
 interface InfluencerProfile {
@@ -66,6 +71,12 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
             ),
             profiles(
               name
+            ),
+            instagram_accounts(
+              username,
+              profile_picture,
+              followers_count,
+              engagement_rate
             )
           )
         `)
@@ -92,7 +103,12 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
           status: item.campaign_participants.status,
           invitation_token: item.campaign_participants.invitation_token,
           invitation_claimed_at: item.campaign_participants.invitation_claimed_at,
-          influencer_name: item.campaign_participants.profiles?.name
+          influencer_name: item.campaign_participants.profiles?.name,
+          influencer_id: item.campaign_participants.influencer_id,
+          profile_picture: item.campaign_participants.instagram_accounts?.profile_picture,
+          username: item.campaign_participants.instagram_accounts?.username,
+          followers_count: item.campaign_participants.instagram_accounts?.followers_count,
+          engagement_rate: item.campaign_participants.instagram_accounts?.engagement_rate
         }));
       }
 
@@ -111,7 +127,12 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
         status: item.campaign_participants.status,
         invitation_token: item.campaign_participants.invitation_token,
         invitation_claimed_at: item.campaign_participants.invitation_claimed_at,
-        influencer_name: item.campaign_participants.profiles?.name
+        influencer_name: item.campaign_participants.profiles?.name,
+        influencer_id: item.campaign_participants.influencer_id,
+        profile_picture: item.campaign_participants.instagram_accounts?.profile_picture,
+        username: item.campaign_participants.instagram_accounts?.username,
+        followers_count: item.campaign_participants.instagram_accounts?.followers_count,
+        engagement_rate: item.campaign_participants.instagram_accounts?.engagement_rate
       }));
     }
   });
@@ -204,11 +225,17 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
 
   const handlePreviewClick = (invitation: InvitationData) => {
     setSelectedInfluencer(invitation);
-    setInfluencerProfile(null);
-    if (invitation.influencer_name) {
-      // Try to extract influencer ID from invitation
-      const influencerId = invitation.participant_id; // This might need adjustment based on data structure
-      fetchInfluencerProfile(influencerId, invitation.email);
+    // Use the data we already have from the invitation
+    if (invitation.profile_picture || invitation.username || invitation.followers_count) {
+      setInfluencerProfile({
+        username: invitation.username || invitation.email.split('@')[0],
+        followers_count: invitation.followers_count || 0,
+        engagement_rate: invitation.engagement_rate || 0,
+        profile_picture: invitation.profile_picture || ''
+      });
+    } else if (invitation.influencer_id) {
+      // Fallback to fetching if we don't have the data
+      fetchInfluencerProfile(invitation.influencer_id, invitation.email);
     }
   };
 
@@ -238,6 +265,18 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
               <div key={invitation.id} className="border rounded-lg overflow-hidden">
                 <div className="flex items-center justify-between p-4">
                   <div className="flex items-center gap-3 flex-1">
+                    <Avatar className="h-10 w-10">
+                      {invitation.profile_picture ? (
+                        <AvatarImage 
+                          src={invitation.profile_picture} 
+                          alt={invitation.influencer_name || invitation.email}
+                        />
+                      ) : (
+                        <AvatarFallback>
+                          {invitation.influencer_name?.charAt(0) || invitation.email.charAt(0)}
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
                     {getStatusIcon(invitation)}
                     <div className="flex-1">
                       <h4 className="font-medium">{invitation.email}</h4>
@@ -246,7 +285,16 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
                         {invitation.influencer_name && (
                           <span>{!campaignId ? ' • ' : ''}{invitation.influencer_name}</span>
                         )}
+                        {invitation.username && (
+                          <span> • @{invitation.username}</span>
+                        )}
                       </p>
+                      {invitation.followers_count && (
+                        <p className="text-xs text-gray-500">
+                          {invitation.followers_count.toLocaleString()} followers
+                          {invitation.engagement_rate && ` • ${invitation.engagement_rate.toFixed(1)}% engagement`}
+                        </p>
+                      )}
                       <p className="text-xs text-gray-500">
                         Sent: {new Date(invitation.sent_at).toLocaleDateString()}
                         {invitation.clicked_at && (
