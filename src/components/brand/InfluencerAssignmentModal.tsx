@@ -67,7 +67,7 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
   const [instagramProfile, setInstagramProfile] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { fetchProfile, loading: profileLoading } = useInstagramProfile();
+  const { fetchProfile, loading: profileLoading, error: profileError } = useInstagramProfile();
   const { castForUpdate, isValidResult } = useSupabaseTypeCasts();
 
   const handleFetchInstagramProfile = async () => {
@@ -89,12 +89,24 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
           title: "Success",
           description: `Found Instagram profile for @${profile.username}`,
         });
+      } else if (profileError) {
+        toast({
+          title: "Error",
+          description: profileError,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Warning",
+          description: "Profile not found. You can still add the influencer manually.",
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error('Error fetching Instagram profile:', error);
       toast({
-        title: "Error",
-        description: "Failed to fetch Instagram profile. You can still add the influencer manually.",
+        title: "Error", 
+        description: profileError || "Failed to fetch Instagram profile. You can still add the influencer manually.",
         variant: "destructive"
       });
     } finally {

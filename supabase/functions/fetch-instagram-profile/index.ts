@@ -14,6 +14,8 @@ serve(async (req) => {
   try {
     const { handle, userId } = await req.json()
     
+    console.log('Fetching Instagram profile for handle:', handle)
+    
     if (!handle) {
       return new Response(
         JSON.stringify({ error: 'Instagram handle is required' }),
@@ -45,7 +47,9 @@ serve(async (req) => {
 
     // Fetch from Instagram API
     const rapidApiKey = Deno.env.get('RAPIDAPI_KEY')
+    console.log('RAPIDAPI_KEY available:', !!rapidApiKey)
     if (!rapidApiKey) {
+      console.error('RAPIDAPI_KEY environment variable not set')
       throw new Error('RAPIDAPI_KEY not configured')
     }
 
