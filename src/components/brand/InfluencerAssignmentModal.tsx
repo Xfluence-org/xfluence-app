@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UserPlus, Instagram, X, Copy, Check, Loader2 } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { UserPlus, Instagram, X, Copy, Check, Loader2, ChevronDown, Eye, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -35,6 +36,7 @@ interface ManualInfluencer {
   handle: string;
   email: string;
   platform: string;
+  instagramProfile?: any;
 }
 
 interface GeneratedInvitation {
@@ -44,6 +46,7 @@ interface GeneratedInvitation {
   category: string;
   invitationLink: string;
   token: string;
+  instagramProfile?: any;
 }
 
 const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
@@ -65,6 +68,8 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
   });
   const [fetchingProfile, setFetchingProfile] = useState(false);
   const [instagramProfile, setInstagramProfile] = useState<any>(null);
+  const [showInvitations, setShowInvitations] = useState(false);
+  const [previewProfile, setPreviewProfile] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { fetchProfile, loading: profileLoading, error: profileError } = useInstagramProfile();
@@ -123,7 +128,8 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
         category: newInfluencer.category,
         handle: newInfluencer.handle.startsWith('@') ? newInfluencer.handle : `@${newInfluencer.handle}`,
         email: newInfluencer.email,
-        platform: 'Instagram'
+        platform: 'Instagram',
+        instagramProfile: instagramProfile
       };
       
       setManualInfluencers(prev => [...prev, influencer]);
@@ -208,12 +214,14 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
             handle: manualInfluencer.handle,
             category: manualInfluencer.category,
             invitationLink,
-            token: validParticipantData.invitation_token
+            token: validParticipantData.invitation_token,
+            instagramProfile: manualInfluencer.instagramProfile
           });
         }
       }
 
       setGeneratedInvitations(invitations);
+      setShowInvitations(true);
 
       toast({
         title: "Success",
@@ -281,51 +289,94 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
         <div className="space-y-6">
           {/* Generated Invitations */}
           {generatedInvitations.length > 0 && (
-            <div className="bg-green-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4 text-green-800">
-                🎉 Invitation Links Generated ({generatedInvitations.length})
-              </h3>
-              <p className="text-sm text-green-700 mb-4">
-                Copy these links and send them to your influencers. They can use these to sign up and automatically join your campaign.
-              </p>
-              <div className="space-y-3">
-                {generatedInvitations.map((invitation) => (
-                  <Card key={invitation.id} className="border-green-200">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium text-green-800">{invitation.handle}</h4>
-                          <p className="text-sm text-green-600">{invitation.email} • {invitation.category}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="bg-white rounded px-3 py-1 text-xs font-mono border border-green-200 max-w-xs truncate">
-                            {invitation.invitationLink}
+            <Collapsible open={showInvitations} onOpenChange={setShowInvitations}>
+              <div className="bg-green-50 rounded-lg p-6">
+                <CollapsibleTrigger asChild>
+                  <div className="flex items-center justify-between cursor-pointer">
+                    <h3 className="text-lg font-semibold text-green-800">
+                      🎉 Invitation Links Generated ({generatedInvitations.length})
+                    </h3>
+                    <Button variant="ghost" size="sm" className="text-green-700">
+                      <ChevronDown className={`h-4 w-4 transition-transform ${showInvitations ? 'rotate-180' : ''}`} />
+                    </Button>
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <p className="text-sm text-green-700 mb-4 mt-4">
+                    Copy these links and send them to your influencers. They can use these to sign up and automatically join your campaign.
+                  </p>
+                  <div className="space-y-3">
+                    {generatedInvitations.map((invitation) => (
+                      <Card key={invitation.id} className="border-green-200">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              {invitation.instagramProfile?.profile_picture ? (
+                                <img 
+                                  src={invitation.instagramProfile.profile_picture} 
+                                  alt={invitation.handle}
+                                  className="h-10 w-10 rounded-full object-cover border-2 border-green-200"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                  }}
+                                />
+                              ) : null}
+                              <div className={`h-10 w-10 rounded-full bg-green-100 flex items-center justify-center ${invitation.instagramProfile?.profile_picture ? 'hidden' : ''}`}>
+                                <Instagram className="h-5 w-5 text-green-600" />
+                              </div>
+                              <div>
+                                <h4 className="font-medium text-green-800">{invitation.handle}</h4>
+                                <p className="text-sm text-green-600">{invitation.email} • {invitation.category}</p>
+                                {invitation.instagramProfile && (
+                                  <p className="text-xs text-green-500">
+                                    {invitation.instagramProfile.followers_count?.toLocaleString()} followers
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {invitation.instagramProfile && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setPreviewProfile(invitation.instagramProfile)}
+                                  className="flex items-center gap-1"
+                                >
+                                  <Eye className="h-3 w-3" />
+                                  Preview
+                                </Button>
+                              )}
+                              <div className="bg-white rounded px-3 py-1 text-xs font-mono border border-green-200 max-w-xs truncate">
+                                {invitation.invitationLink}
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => copyToClipboard(invitation.invitationLink, invitation.token)}
+                                className="flex items-center gap-1"
+                              >
+                                {copiedTokens.has(invitation.token) ? (
+                                  <>
+                                    <Check className="h-3 w-3" />
+                                    Copied
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="h-3 w-3" />
+                                    Copy
+                                  </>
+                                )}
+                              </Button>
+                            </div>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => copyToClipboard(invitation.invitationLink, invitation.token)}
-                            className="flex items-center gap-1"
-                          >
-                            {copiedTokens.has(invitation.token) ? (
-                              <>
-                                <Check className="h-3 w-3" />
-                                Copied
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="h-3 w-3" />
-                                Copy
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </CollapsibleContent>
               </div>
-            </div>
+            </Collapsible>
           )}
 
           {/* Add Manual Influencer Form */}
@@ -394,17 +445,21 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
                   {instagramProfile && (
                     <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                       <div className="flex items-start gap-3">
-                        {instagramProfile.profile_picture ? (
+                         {instagramProfile.profile_picture ? (
                           <img 
                             src={instagramProfile.profile_picture} 
                             alt={`@${instagramProfile.username}`}
                             className="h-12 w-12 rounded-full object-cover border-2 border-green-200"
+                            onError={(e) => {
+                              console.log('Profile picture failed to load:', instagramProfile.profile_picture);
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                            }}
                           />
-                        ) : (
-                          <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                            <Instagram className="h-6 w-6 text-green-600" />
-                          </div>
-                        )}
+                        ) : null}
+                        <div className={`h-12 w-12 rounded-full bg-green-100 flex items-center justify-center ${instagramProfile.profile_picture ? 'hidden' : ''}`}>
+                          <Instagram className="h-6 w-6 text-green-600" />
+                        </div>
                         <div className="flex-1">
                           <p className="font-medium text-green-800">@{instagramProfile.username}</p>
                           <div className="text-sm text-green-600 space-y-1">
@@ -463,9 +518,20 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
                 {manualInfluencers.map((influencer) => (
                   <Card key={influencer.id}>
                     <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
+                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <div className="h-10 w-10 rounded-full bg-[#1DDCD3] flex items-center justify-center">
+                          {influencer.instagramProfile?.profile_picture ? (
+                            <img 
+                              src={influencer.instagramProfile.profile_picture} 
+                              alt={influencer.handle}
+                              className="h-10 w-10 rounded-full object-cover border-2 border-[#1DDCD3]"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                              }}
+                            />
+                          ) : null}
+                          <div className={`h-10 w-10 rounded-full bg-[#1DDCD3] flex items-center justify-center ${influencer.instagramProfile?.profile_picture ? 'hidden' : ''}`}>
                             <Instagram className="h-5 w-5 text-white" />
                           </div>
                           <div>
@@ -475,16 +541,34 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
                               <span>•</span>
                               <span>{influencer.email}</span>
                             </div>
+                            {influencer.instagramProfile && (
+                              <p className="text-xs text-gray-500">
+                                {influencer.instagramProfile.followers_count?.toLocaleString()} followers
+                              </p>
+                            )}
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveInfluencer(influencer.id)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          {influencer.instagramProfile && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setPreviewProfile(influencer.instagramProfile)}
+                              className="flex items-center gap-1"
+                            >
+                              <Eye className="h-3 w-3" />
+                              Preview
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveInfluencer(influencer.id)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -508,6 +592,74 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
               </Button>
             )}
           </div>
+
+          {/* Profile Preview Modal */}
+          {previewProfile && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Instagram Profile Preview</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setPreviewProfile(null)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    {previewProfile.profile_picture ? (
+                      <img 
+                        src={previewProfile.profile_picture} 
+                        alt={`@${previewProfile.username}`}
+                        className="h-16 w-16 rounded-full object-cover border-2 border-gray-200"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                    ) : null}
+                    <div className={`h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center ${previewProfile.profile_picture ? 'hidden' : ''}`}>
+                      <User className="h-8 w-8 text-gray-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium">@{previewProfile.username}</h4>
+                      <p className="text-sm text-gray-600">Instagram Profile</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="text-center p-3 bg-gray-50 rounded-lg">
+                      <div className="font-semibold text-lg">
+                        {previewProfile.followers_count?.toLocaleString() || 'N/A'}
+                      </div>
+                      <div className="text-gray-600">Followers</div>
+                    </div>
+                    <div className="text-center p-3 bg-gray-50 rounded-lg">
+                      <div className="font-semibold text-lg">
+                        {previewProfile.following?.toLocaleString() || 'N/A'}
+                      </div>
+                      <div className="text-gray-600">Following</div>
+                    </div>
+                    <div className="text-center p-3 bg-gray-50 rounded-lg">
+                      <div className="font-semibold text-lg">
+                        {previewProfile.media_count?.toLocaleString() || 'N/A'}
+                      </div>
+                      <div className="text-gray-600">Posts</div>
+                    </div>
+                    {previewProfile.engagement_rate && (
+                      <div className="text-center p-3 bg-gray-50 rounded-lg">
+                        <div className="font-semibold text-lg">
+                          {previewProfile.engagement_rate}%
+                        </div>
+                        <div className="text-gray-600">Engagement</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
