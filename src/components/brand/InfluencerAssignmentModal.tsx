@@ -6,10 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UserPlus, Instagram, X, Copy, Check } from 'lucide-react';
+import { UserPlus, Instagram, X, Copy, Check, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { useInstagramProfile } from '@/hooks/useInstagramProfile';
 
 interface AssignmentRequest {
   contentType: string;
@@ -61,8 +62,43 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
     handle: '',
     email: ''
   });
+  const [fetchingProfile, setFetchingProfile] = useState(false);
+  const [instagramProfile, setInstagramProfile] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { fetchProfile, loading: profileLoading } = useInstagramProfile();
+
+  const handleFetchInstagramProfile = async () => {
+    if (!newInfluencer.handle.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter an Instagram handle first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setFetchingProfile(true);
+    try {
+      const profile = await fetchProfile(newInfluencer.handle.replace('@', ''));
+      if (profile) {
+        setInstagramProfile(profile);
+        toast({
+          title: "Success",
+          description: `Found Instagram profile for @${profile.username}`,
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching Instagram profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch Instagram profile. You can still add the influencer manually.",
+        variant: "destructive"
+      });
+    } finally {
+      setFetchingProfile(false);
+    }
+  };
 
   const handleAddManualInfluencer = () => {
     if (newInfluencer.category && newInfluencer.handle && newInfluencer.email) {
@@ -76,6 +112,7 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
       
       setManualInfluencers(prev => [...prev, influencer]);
       setNewInfluencer({ category: '', handle: '', email: '' });
+      setInstagramProfile(null);
     }
   };
 
@@ -109,13 +146,14 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
         const assignmentData = {
           tier: assignmentRequest.tier,
           category: assignmentRequest.category,
-          contentType: assignmentRequest.contentType,
-          influencerDetails: {
-            category: manualInfluencer.category,
-            handle: manualInfluencer.handle,
-            email: manualInfluencer.email,
-            platform: manualInfluencer.platform
-          }
+            contentType: assignmentRequest.contentType,
+            influencerDetails: {
+              category: manualInfluencer.category,
+              handle: manualInfluencer.handle,
+              email: manualInfluencer.email,
+              platform: manualInfluencer.platform
+            },
+            instagramData: instagramProfile
         };
         
         // Create invitation record
@@ -189,6 +227,8 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
     setManualInfluencers([]);
     setGeneratedInvitations([]);
     setCopiedTokens(new Set());
+    setInstagramProfile(null);
+    setNewInfluencer({ category: '', handle: '', email: '' });
     onClose();
   };
 
@@ -302,14 +342,51 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Instagram Handle *
                 </label>
-                <div className="relative">
-                  <Instagram className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    value={newInfluencer.handle}
-                    onChange={(e) => setNewInfluencer(prev => ({ ...prev, handle: e.target.value }))}
-                    placeholder="username (without @)"
-                    className="pl-10"
-                  />
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Instagram className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      value={newInfluencer.handle}
+                      onChange={(e) => setNewInfluencer(prev => ({ ...prev, handle: e.target.value }))}
+                      placeholder="username (without @)"
+                      className="pl-10"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleFetchInstagramProfile}
+                    disabled={!newInfluencer.handle.trim() || fetchingProfile}
+                    className="w-full"
+                  >
+                    {fetchingProfile ? (
+                      <>
+                        <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                        Fetching Profile...
+                      </>
+                    ) : (
+                      <>
+                        <Instagram className="h-3 w-3 mr-2" />
+                        Fetch Instagram Profile
+                      </>
+                    )}
+                  </Button>
+                  {instagramProfile && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                          <Instagram className="h-4 w-4 text-green-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-green-800">@{instagramProfile.username}</p>
+                          <p className="text-sm text-green-600">
+                            {instagramProfile.followers_count?.toLocaleString()} followers
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               

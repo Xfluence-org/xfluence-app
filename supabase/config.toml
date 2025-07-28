@@ -1,1 +1,4 @@
 project_id = "xospglrpmoqubokupgvw"
+
+[functions.fetch-instagram-profile]
+verify_jwt = false
