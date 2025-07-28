@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Send, User } from 'lucide-react';
 import ShareContentRequirementsModal from './ShareContentRequirementsModal';
+import { useSupabaseTypeCasts } from '@/hooks/useSupabaseTypeCasts';
 
 interface ContentTypeWaitingSectionProps {
   campaignId: string;
@@ -28,6 +29,7 @@ const ContentTypeWaitingSection: React.FC<ContentTypeWaitingSectionProps> = ({
   campaignId, 
   contentType 
 }) => {
+  const { castToUuid } = useSupabaseTypeCasts();
   const [selectedParticipant, setSelectedParticipant] = useState<{
     id: string;
     name: string;
@@ -42,9 +44,9 @@ const ContentTypeWaitingSection: React.FC<ContentTypeWaitingSectionProps> = ({
       const { data, error } = await supabase
         .from('campaign_participants')
         .select('*')
-        .eq('campaign_id', campaignId)
-        .eq('status', 'accepted')
-        .eq('current_stage', 'waiting_for_requirements');
+        .eq('campaign_id', castToUuid(campaignId))
+        .eq('status', 'accepted' as any)
+        .eq('current_stage', 'waiting_for_requirements' as any);
 
       if (error) {
         console.error('Error fetching waiting participants:', error);

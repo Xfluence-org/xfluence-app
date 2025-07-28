@@ -9,6 +9,7 @@ import ContentTypeWaitingSection from './ContentTypeWaitingSection';
 import ContentTypeActiveSection from './ContentTypeActiveSection';
 import { supabase } from '@/integrations/supabase/client';
 import { useCampaignDetail } from '@/hooks/useCampaignDetail';
+import { useSupabaseTypeCasts } from '@/hooks/useSupabaseTypeCasts';
 
 interface InfluencerAssignmentSectionProps {
   campaignId: string;
@@ -46,6 +47,7 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
   llmInteractions,
   onViewTasks 
 }) => {
+  const { castToUuid, isValidResult } = useSupabaseTypeCasts();
   const [activeContentType, setActiveContentType] = useState<string>('');
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [currentAssignmentRequest, setCurrentAssignmentRequest] = useState<AssignmentRequest | null>(null);
@@ -120,8 +122,8 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
       const { data, error } = await supabase
         .from('campaign_participants')
         .select('id, influencer_id, application_message')
-        .eq('campaign_id', campaignId)
-        .eq('status', 'accepted');
+        .eq('campaign_id', castToUuid(campaignId))
+        .eq('status', 'accepted' as any);
 
       if (error) {
         console.error('Error fetching participant counts:', error);
@@ -133,7 +135,7 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
       // Parse assignment info from participants
       const tierCategoryCounts = new Map<string, number>();
       
-      data?.forEach(participant => {
+      data?.filter(isValidResult).forEach((participant: any) => {
         const message = participant.application_message || '';
         // Look for [TIER:category:tier] pattern
         const tierMatch = message.match(/\[TIER:([^:]+):([^\]]+)\]/);

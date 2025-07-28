@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Eye } from 'lucide-react';
+import { useSupabaseTypeCasts } from '@/hooks/useSupabaseTypeCasts';
 
 interface ContentTypeActiveSectionProps {
   campaignId: string;
@@ -31,6 +32,7 @@ const ContentTypeActiveSection: React.FC<ContentTypeActiveSectionProps> = ({
   contentType,
   onViewTasks 
 }) => {
+  const { castToUuid, isValidResult } = useSupabaseTypeCasts();
   const { data: activeParticipants = [], isLoading } = useQuery({
     queryKey: ['content-type-active-participants', campaignId, contentType],
     staleTime: 0,
@@ -40,8 +42,8 @@ const ContentTypeActiveSection: React.FC<ContentTypeActiveSectionProps> = ({
       const { data: participants, error: participantsError } = await supabase
         .from('campaign_participants')
         .select('*')
-        .eq('campaign_id', campaignId)
-        .eq('status', 'accepted');
+        .eq('campaign_id', castToUuid(campaignId))
+        .eq('status', 'accepted' as any);
 
       if (participantsError) {
         console.error('Error fetching active participants:', participantsError);
@@ -50,12 +52,12 @@ const ContentTypeActiveSection: React.FC<ContentTypeActiveSectionProps> = ({
 
       // Fetch tasks separately for each participant
       const participantsWithTasks = await Promise.all(
-        (participants || []).map(async (participant) => {
+        (participants || []).filter(isValidResult).map(async (participant: any) => {
           const { data: tasks } = await supabase
             .from('campaign_tasks')
             .select('id, status, progress, task_type')
-            .eq('campaign_id', campaignId)
-            .eq('influencer_id', participant.influencer_id);
+            .eq('campaign_id', castToUuid(campaignId))
+            .eq('influencer_id', castToUuid(participant.influencer_id));
           
           return {
             ...participant,

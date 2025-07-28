@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useInstagramProfile } from '@/hooks/useInstagramProfile';
+import { useSupabaseTypeCasts } from '@/hooks/useSupabaseTypeCasts';
 
 interface AssignmentRequest {
   contentType: string;
@@ -67,6 +68,7 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { fetchProfile, loading: profileLoading } = useInstagramProfile();
+  const { castForUpdate, isValidResult } = useSupabaseTypeCasts();
 
   const handleFetchInstagramProfile = async () => {
     if (!newInfluencer.handle.trim()) {
@@ -159,13 +161,13 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
         // Create invitation record
         const { data: participantData, error: participantError } = await supabase
           .from('campaign_participants')
-          .insert({
+          .insert(castForUpdate({
             campaign_id: campaignId,
             influencer_id: null, // Will be set when influencer claims invitation
             status: 'invited',
             current_stage: 'waiting_for_requirements',
             application_message: JSON.stringify(assignmentData)
-          })
+          }))
           .select('id, invitation_token')
           .single();
 
@@ -174,24 +176,27 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
         // Create invitation email tracking record
         const { error: emailError } = await supabase
           .from('invitation_emails')
-          .insert({
-            campaign_participant_id: participantData.id,
+          .insert(castForUpdate({
+            campaign_participant_id: isValidResult(participantData) ? (participantData as any).id : null,
             email: manualInfluencer.email
-          });
+          }));
 
         if (emailError) throw emailError;
 
         // Generate invitation link
-        const invitationLink = `${window.location.origin}/invite/${participantData.invitation_token}`;
-        
-        invitations.push({
-          id: participantData.id,
-          email: manualInfluencer.email,
-          handle: manualInfluencer.handle,
-          category: manualInfluencer.category,
-          invitationLink,
-          token: participantData.invitation_token
-        });
+        const validParticipantData = isValidResult(participantData) ? (participantData as any) : null;
+        if (validParticipantData) {
+          const invitationLink = `${window.location.origin}/invite/${validParticipantData.invitation_token}`;
+          
+          invitations.push({
+            id: validParticipantData.id,
+            email: manualInfluencer.email,
+            handle: manualInfluencer.handle,
+            category: manualInfluencer.category,
+            invitationLink,
+            token: validParticipantData.invitation_token
+          });
+        }
       }
 
       setGeneratedInvitations(invitations);

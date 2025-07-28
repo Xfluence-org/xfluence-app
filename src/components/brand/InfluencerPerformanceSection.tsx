@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useSupabaseTypeCasts } from '@/hooks/useSupabaseTypeCasts';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -38,6 +39,7 @@ interface InfluencerPerformanceSectionProps {
 const InfluencerPerformanceSection: React.FC<InfluencerPerformanceSectionProps> = ({
   campaignId
 }) => {
+  const { castToUuid } = useSupabaseTypeCasts();
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [editingTask, setEditingTask] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
@@ -55,8 +57,8 @@ const InfluencerPerformanceSection: React.FC<InfluencerPerformanceSectionProps> 
           status,
           profiles(name)
         `)
-        .eq('campaign_id', campaignId)
-        .in('status', ['accepted', 'active']);
+        .eq('campaign_id', castToUuid(campaignId))
+        .in('status', ['accepted', 'active'] as any);
 
       if (influencersError) {
         console.error('Error fetching accepted influencers:', influencersError);
@@ -79,7 +81,7 @@ const InfluencerPerformanceSection: React.FC<InfluencerPerformanceSectionProps> 
             name
           )
         `)
-        .eq('campaign_id', campaignId);
+        .eq('campaign_id', castToUuid(campaignId));
 
       if (tasksError) {
         console.error('Error fetching campaign tasks:', tasksError);
