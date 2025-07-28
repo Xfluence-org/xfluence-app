@@ -4,7 +4,9 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Copy, Check, Mail, Clock, CheckCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Copy, Check, Mail, Clock, CheckCircle, Eye, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useState } from 'react';
 
@@ -28,6 +30,9 @@ interface InvitationManagementProps {
 
 const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId }) => {
   const [copiedTokens, setCopiedTokens] = useState<Set<string>>(new Set());
+  const [expandedInvitations, setExpandedInvitations] = useState<Set<string>>(new Set());
+  const [showMore, setShowMore] = useState(false);
+  const [selectedInfluencer, setSelectedInfluencer] = useState<InvitationData | null>(null);
 
   const { data: invitations = [], isLoading } = useQuery({
     queryKey: ['brand-invitations', campaignId],
@@ -139,6 +144,20 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
     return <Clock className="h-4 w-4 text-gray-400" />;
   };
 
+  const toggleExpanded = (invitationId: string) => {
+    setExpandedInvitations(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(invitationId)) {
+        newSet.delete(invitationId);
+      } else {
+        newSet.add(invitationId);
+      }
+      return newSet;
+    });
+  };
+
+  const displayedInvitations = showMore ? invitations : invitations.slice(0, 3);
+
   if (isLoading) {
     return (
       <Card>
@@ -161,57 +180,132 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
           </div>
         ) : (
           <div className="space-y-4">
-            {invitations.map((invitation) => (
-              <div
-                key={invitation.id}
-                className="flex items-center justify-between p-4 border rounded-lg"
-              >
-                <div className="flex items-center gap-3">
-                  {getStatusIcon(invitation)}
-                  <div>
-                    <h4 className="font-medium">{invitation.email}</h4>
-                    <p className="text-sm text-gray-600">
-                      {!campaignId && invitation.campaign_title}
-                      {invitation.influencer_name && (
-                        <span>{!campaignId ? ' • ' : ''}{invitation.influencer_name}</span>
-                      )}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Sent: {new Date(invitation.sent_at).toLocaleDateString()}
-                      {invitation.clicked_at && (
-                        <span> • Clicked: {new Date(invitation.clicked_at).toLocaleDateString()}</span>
-                      )}
-                      {invitation.invitation_claimed_at && (
-                        <span> • Joined: {new Date(invitation.invitation_claimed_at).toLocaleDateString()}</span>
-                      )}
-                    </p>
+            {displayedInvitations.map((invitation) => (
+              <div key={invitation.id} className="border rounded-lg overflow-hidden">
+                <div className="flex items-center justify-between p-4">
+                  <div className="flex items-center gap-3 flex-1">
+                    {getStatusIcon(invitation)}
+                    <div className="flex-1">
+                      <h4 className="font-medium">{invitation.email}</h4>
+                      <p className="text-sm text-gray-600">
+                        {!campaignId && invitation.campaign_title}
+                        {invitation.influencer_name && (
+                          <span>{!campaignId ? ' • ' : ''}{invitation.influencer_name}</span>
+                        )}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Sent: {new Date(invitation.sent_at).toLocaleDateString()}
+                        {invitation.clicked_at && (
+                          <span> • Clicked: {new Date(invitation.clicked_at).toLocaleDateString()}</span>
+                        )}
+                        {invitation.invitation_claimed_at && (
+                          <span> • Joined: {new Date(invitation.invitation_claimed_at).toLocaleDateString()}</span>
+                        )}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {getStatusBadge(invitation)}
-                  {!invitation.invitation_claimed_at && (
+                  <div className="flex items-center gap-2">
+                    {getStatusBadge(invitation)}
+                    {invitation.influencer_name && (
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Eye className="h-3 w-3 mr-1" />
+                            Preview
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Influencer Profile</DialogTitle>
+                          </DialogHeader>
+                          <div className="flex items-center gap-4 p-4">
+                            <Avatar className="h-16 w-16">
+                              <AvatarImage src="" />
+                              <AvatarFallback>
+                                {invitation.influencer_name?.charAt(0) || invitation.email.charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <h3 className="font-semibold">{invitation.influencer_name}</h3>
+                              <p className="text-sm text-gray-600">{invitation.email}</p>
+                              <p className="text-xs text-gray-500">
+                                Status: {invitation.status}
+                              </p>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    )}
+                    {!invitation.invitation_claimed_at && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyToClipboard(invitation.invitation_token)}
+                        className="flex items-center gap-1"
+                      >
+                        {copiedTokens.has(invitation.invitation_token) ? (
+                          <>
+                            <Check className="h-3 w-3" />
+                            Copied
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-3 w-3" />
+                            Copy Link
+                          </>
+                        )}
+                      </Button>
+                    )}
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      onClick={() => copyToClipboard(invitation.invitation_token)}
-                      className="flex items-center gap-1"
+                      onClick={() => toggleExpanded(invitation.id)}
                     >
-                      {copiedTokens.has(invitation.invitation_token) ? (
-                        <>
-                          <Check className="h-3 w-3" />
-                          Copied
-                        </>
+                      {expandedInvitations.has(invitation.id) ? (
+                        <ChevronUp className="h-4 w-4" />
                       ) : (
-                        <>
-                          <Copy className="h-3 w-3" />
-                          Copy Link
-                        </>
+                        <ChevronDown className="h-4 w-4" />
                       )}
                     </Button>
-                  )}
+                  </div>
                 </div>
+                {expandedInvitations.has(invitation.id) && (
+                  <div className="border-t bg-gray-50 p-4">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="font-medium">Campaign:</span> {invitation.campaign_title}
+                      </div>
+                      <div>
+                        <span className="font-medium">Status:</span> {invitation.status}
+                      </div>
+                      <div>
+                        <span className="font-medium">Invitation Token:</span>
+                        <code className="ml-2 text-xs bg-white px-2 py-1 rounded">
+                          {invitation.invitation_token}
+                        </code>
+                      </div>
+                      {invitation.clicked_at && (
+                        <div>
+                          <span className="font-medium">Clicked At:</span> {new Date(invitation.clicked_at).toLocaleString()}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
+            {invitations.length > 3 && (
+              <div className="text-center">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowMore(!showMore)}
+                  className="flex items-center gap-2"
+                >
+                  {showMore ? 'Show Less' : `Show More (${invitations.length - 3} more)`}
+                  {showMore ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </CardContent>
