@@ -57,7 +57,16 @@ const InvitationLandingPage: React.FC = () => {
   }, [token]);
 
   useEffect(() => {
+    console.log('Invitation useEffect triggered:', { 
+      user: !!user, 
+      invitationData: !!invitationData, 
+      claimedAt: invitationData?.invitation_claimed_at,
+      userId: user?.id,
+      invitationId: invitationData?.id
+    });
+    
     if (user && invitationData && !invitationData.invitation_claimed_at) {
+      console.log('Attempting to claim invitation...');
       handleClaimInvitation();
     }
   }, [user, invitationData]);
@@ -130,8 +139,12 @@ const InvitationLandingPage: React.FC = () => {
   };
 
   const handleClaimInvitation = async () => {
-    if (!user || !invitationData) return;
+    if (!user || !invitationData) {
+      console.log('Cannot claim invitation - missing user or invitation data:', { user: !!user, invitationData: !!invitationData });
+      return;
+    }
     
+    console.log('Starting invitation claim process for:', { userId: user.id, invitationId: invitationData.id });
     setClaiming(true);
     try {
       // Update the campaign participant with the user's ID and set current_stage
@@ -145,7 +158,12 @@ const InvitationLandingPage: React.FC = () => {
         })
         .eq('id', invitationData.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Error updating campaign participant:', updateError);
+        throw updateError;
+      }
+      
+      console.log('Successfully updated campaign participant');
 
       // Extract and store Instagram profile data if available in application_message
       let instagramData = null;
