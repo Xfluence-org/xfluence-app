@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { Users, ChevronRight, Eye } from 'lucide-react';
@@ -15,6 +15,7 @@ interface ActiveInfluencer {
   status: string;
   influencer_name: string;
   influencer_handle: string;
+  profile_pic_url?: string;
   followers_count: number;
   engagement_rate: number;
   task_count: number;
@@ -61,12 +62,26 @@ const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({
         return;
       }
 
-      // Get task counts and progress for each influencer
+      // Get task counts, progress and profile data for each influencer
       const influencersWithTasks = await Promise.all(
         influencers.map(async (influencer) => {
           if (!isValidResult(influencer)) {
             return null;
           }
+
+          // Fetch Instagram profile data for proper name and avatar
+          const { data: profile } = await supabase
+            .from('instagram_accounts')
+            .select('username, profile_picture, followers_count, engagement_rate')
+            .eq('user_id', castToUuid(influencer.influencer_id))
+            .single();
+
+          // Fetch basic profile name
+          const { data: basicProfile } = await supabase
+            .from('profiles')
+            .select('name')
+            .eq('id', castToUuid(influencer.influencer_id))
+            .single();
 
           const { data: tasks, error: tasksError } = await supabase
             .from('campaign_tasks')
@@ -92,10 +107,12 @@ const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({
             current_stage: influencer.current_stage,
             accepted_at: influencer.accepted_at,
             status: influencer.status,
-            influencer_name: influencer.influencer_name,
-            influencer_handle: influencer.influencer_handle,
-            followers_count: influencer.followers_count,
-            engagement_rate: influencer.engagement_rate,
+            // Use profile data if available, fallback to basic data
+            influencer_name: basicProfile?.name || influencer.influencer_name,
+            influencer_handle: profile?.username || influencer.influencer_handle,
+            profile_pic_url: profile?.profile_picture,
+            followers_count: profile?.followers_count || influencer.followers_count,
+            engagement_rate: profile?.engagement_rate || influencer.engagement_rate,
             task_count: taskCount,
             progress: avgProgress
           };
@@ -103,7 +120,7 @@ const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({
       );
 
       // Filter out null results
-      const validInfluencers = influencersWithTasks.filter((inf): inf is ActiveInfluencer => inf !== null);
+      const validInfluencers = influencersWithTasks.filter(inf => inf !== null) as ActiveInfluencer[];
       setActiveInfluencers(validInfluencers);
     } catch (error) {
       console.error('Error in fetchActiveInfluencers:', error);
@@ -173,6 +190,12 @@ const ActiveInfluencersSection: React.FC<ActiveInfluencersSectionProps> = ({
           <div key={influencer.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
             <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10">
+                {influencer.profile_pic_url && (
+                  <AvatarImage 
+                    src={influencer.profile_pic_url} 
+                    alt={influencer.influencer_name}
+                  />
+                )}
                 <AvatarFallback className="bg-[#1DDCD3] text-white">
                   {influencer.influencer_name?.charAt(0) || 'U'}
                 </AvatarFallback>

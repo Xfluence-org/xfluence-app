@@ -222,31 +222,46 @@ export const taskWorkflowService = {
     if (error) throw error;
 
     if (status === 'approved') {
-      // Complete content review phase and start publish analytics
-      await supabase
-        .from('task_workflow_states')
-        .update({ status: 'completed' })
-        .eq('task_id', taskId)
-        .eq('phase', 'content_review');
+      // Check if all uploads have been approved
+      const { data: allUploads } = await supabase
+        .from('task_uploads')
+        .select('id')
+        .eq('task_id', taskId);
 
-      await supabase
-        .from('task_workflow_states')
-        .update({ status: 'in_progress' })
+      const { data: approvedReviews } = await supabase
+        .from('task_content_reviews')
+        .select('upload_id')
         .eq('task_id', taskId)
-        .eq('phase', 'publish_analytics');
+        .eq('status', 'approved');
 
-      // Update visibility for final phase
-      await supabase
-        .from('campaign_tasks')
-        .update({ 
-          current_phase: 'publish_analytics',
-          phase_visibility: {
-            content_requirement: true,
-            content_review: true,
-            publish_analytics: true // Both can see all phases now
-          }
-        })
-        .eq('id', taskId);
+      // If all uploads are approved, move to next phase
+      if (allUploads && approvedReviews && allUploads.length === approvedReviews.length) {
+        // Complete content review phase and start publish analytics
+        await supabase
+          .from('task_workflow_states')
+          .update({ status: 'completed', updated_at: new Date().toISOString() })
+          .eq('task_id', taskId)
+          .eq('phase', 'content_review');
+
+        await supabase
+          .from('task_workflow_states')
+          .update({ status: 'in_progress', updated_at: new Date().toISOString() })
+          .eq('task_id', taskId)
+          .eq('phase', 'publish_analytics');
+
+        // Update visibility for final phase
+        await supabase
+          .from('campaign_tasks')
+          .update({ 
+            current_phase: 'publish_analytics',
+            phase_visibility: {
+              content_requirement: true,
+              content_review: true,
+              publish_analytics: true // Both can see all phases now
+            }
+          })
+          .eq('id', taskId);
+      }
     }
     // If rejected, keep in content_review phase for re-upload
   },
