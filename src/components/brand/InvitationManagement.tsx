@@ -20,6 +20,7 @@ interface InvitationData {
   status: string;
   invitation_token: string;
   invitation_claimed_at?: string;
+  application_message?: string;
   influencer_name?: string;
   influencer_id?: string;
   profile_picture?: string;
@@ -63,6 +64,7 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
             status,
             invitation_token,
             invitation_claimed_at,
+            application_message,
             influencer_id,
             campaigns!inner(
               id,
@@ -94,6 +96,7 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
           status: item.campaign_participants.status,
           invitation_token: item.campaign_participants.invitation_token,
           invitation_claimed_at: item.campaign_participants.invitation_claimed_at,
+          application_message: item.campaign_participants.application_message,
           influencer_name: null,
           influencer_id: item.campaign_participants.influencer_id,
           profile_picture: undefined,
@@ -157,6 +160,7 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
         status: item.campaign_participants.status,
         invitation_token: item.campaign_participants.invitation_token,
         invitation_claimed_at: item.campaign_participants.invitation_claimed_at,
+        application_message: item.campaign_participants.application_message,
         influencer_name: null,
         influencer_id: item.campaign_participants.influencer_id,
         profile_picture: undefined,
@@ -182,9 +186,10 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
           .select('user_id, username, profile_picture, followers_count, engagement_rate')
           .in('user_id', userIds);
 
-        // Merge the data
+        // Merge the data and handle pending invitations
         invitationData.forEach(invitation => {
           if (invitation.influencer_id) {
+            // For accepted invitations with linked user accounts
             const profile = profilesData?.find(p => p.id === invitation.influencer_id);
             const instagram = instagramData?.find(ig => ig.user_id === invitation.influencer_id);
             
@@ -196,6 +201,22 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
               invitation.username = instagram.username;
               invitation.followers_count = instagram.followers_count;
               invitation.engagement_rate = instagram.engagement_rate;
+            }
+          } else {
+            // For pending invitations, extract data from application_message
+            try {
+              if (invitation.application_message) {
+                const parsedMessage = JSON.parse(invitation.application_message);
+                if (parsedMessage.instagramData) {
+                  invitation.profile_picture = parsedMessage.instagramData.profile_picture;
+                  invitation.username = parsedMessage.instagramData.username;
+                  invitation.followers_count = parsedMessage.instagramData.followers_count;
+                  invitation.engagement_rate = parsedMessage.instagramData.engagement_rate;
+                  invitation.influencer_name = parsedMessage.instagramData.username;
+                }
+              }
+            } catch (e) {
+              console.log('Could not parse application message for invitation', invitation.id);
             }
           }
         });

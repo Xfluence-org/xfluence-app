@@ -164,18 +164,19 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
       const invitations: GeneratedInvitation[] = [];
       
       for (const manualInfluencer of manualInfluencers) {
-        // Create campaign participant with invitation data
+        // Create campaign participant with invitation data including Instagram profile
         const assignmentData = {
           tier: assignmentRequest.tier,
           category: assignmentRequest.category,
-            contentType: assignmentRequest.contentType,
-            influencerDetails: {
-              category: manualInfluencer.category,
-              handle: manualInfluencer.handle,
-              email: manualInfluencer.email,
-              platform: manualInfluencer.platform
-            },
-            instagramData: instagramProfile
+          contentType: assignmentRequest.contentType,
+          influencerDetails: {
+            category: manualInfluencer.category,
+            handle: manualInfluencer.handle,
+            email: manualInfluencer.email,
+            platform: manualInfluencer.platform
+          },
+          // Store the fetched Instagram profile data if available
+          instagramData: manualInfluencer.instagramProfile || instagramProfile
         };
         
         // Create invitation record

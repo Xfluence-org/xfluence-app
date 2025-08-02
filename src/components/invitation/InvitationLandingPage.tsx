@@ -147,6 +147,40 @@ const InvitationLandingPage: React.FC = () => {
 
       if (updateError) throw updateError;
 
+      // Extract and store Instagram profile data if available in application_message
+      let instagramData = null;
+      try {
+        if (invitationData.application_message) {
+          const parsedMessage = JSON.parse(invitationData.application_message);
+          instagramData = parsedMessage.instagramData;
+        }
+      } catch (e) {
+        console.log('No Instagram data found in invitation');
+      }
+
+      // If we have Instagram data, store it in the instagram_accounts table
+      if (instagramData && user.id) {
+        console.log('Storing Instagram data for user:', user.id, instagramData);
+        
+        const { error: instagramError } = await supabase
+          .from('instagram_accounts')
+          .upsert({
+            user_id: user.id,
+            username: instagramData.username,
+            profile_picture: instagramData.profile_picture,
+            followers_count: instagramData.followers_count || 0,
+            engagement_rate: instagramData.engagement_rate || 0,
+            media_count: instagramData.media_count || 0,
+            instagram_user_id: instagramData.username || 'unknown' // Using username as fallback
+          }, {
+            onConflict: 'user_id'
+          });
+
+        if (instagramError) {
+          console.error('Error storing Instagram account data:', instagramError);
+        }
+      }
+
       // For now, just make sure the participant is linked properly
       // Tasks will be created later when content requirements are shared by the brand
 

@@ -130,7 +130,8 @@ const ContentReviewPanelEnhanced: React.FC<ContentReviewPanelEnhancedProps> = ({
         uploadId,
         status,
         feedback: currentFeedback.trim() || undefined,
-        reviewedBy: 'brand'
+        // Use the actual brand user ID instead of the string "brand"
+        reviewedBy: undefined // Let the backend handle this
       });
 
       toast({

@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Send, User } from 'lucide-react';
 import ShareContentRequirementsModal from './ShareContentRequirementsModal';
@@ -47,16 +47,32 @@ const WaitingParticipantsSection: React.FC<WaitingParticipantsSectionProps> = ({
       // Ensure we have an array and transform data
       const participantsList = Array.isArray(data) ? data : [];
       
-      return participantsList.map((participant: any) => ({
-        id: participant.id,
-        influencer_id: participant.influencer_id,
-        accepted_at: participant.accepted_at,
-        influencer_name: participant.influencer_name,
-        influencer_handle: participant.influencer_handle,
-        followers_count: participant.followers_count,
-        engagement_rate: participant.engagement_rate,
-        influencer_profile_url: `https://i.pravatar.cc/150?u=${participant.influencer_handle}`
-      }));
+      // Get additional profile data including Instagram accounts
+      const participantIds = participantsList.map(p => p.influencer_id).filter(Boolean);
+      
+      let instagramData: any[] = [];
+      if (participantIds.length > 0) {
+        const { data: igData } = await supabase
+          .from('instagram_accounts')
+          .select('user_id, username, profile_picture, followers_count, engagement_rate')
+          .in('user_id', participantIds);
+        instagramData = igData || [];
+      }
+      
+      return participantsList.map((participant: any) => {
+        const instagram = instagramData.find(ig => ig.user_id === participant.influencer_id);
+        
+        return {
+          id: participant.id,
+          influencer_id: participant.influencer_id,
+          accepted_at: participant.accepted_at,
+          influencer_name: instagram?.username || participant.influencer_name,
+          influencer_handle: instagram?.username ? `@${instagram.username}` : participant.influencer_handle,
+          followers_count: instagram?.followers_count || participant.followers_count,
+          engagement_rate: instagram?.engagement_rate || participant.engagement_rate,
+          influencer_profile_url: instagram?.profile_picture
+        };
+      });
     }
   });
 
@@ -108,13 +124,17 @@ const WaitingParticipantsSection: React.FC<WaitingParticipantsSectionProps> = ({
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  <div className="h-12 w-12 rounded-full overflow-hidden">
-                    <img 
-                      src={participant.influencer_profile_url || `https://i.pravatar.cc/150?u=${participant.influencer_handle}`} 
-                      alt={participant.influencer_name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+                  <Avatar className="h-12 w-12">
+                    {participant.influencer_profile_url && (
+                      <AvatarImage 
+                        src={participant.influencer_profile_url} 
+                        alt={participant.influencer_name}
+                      />
+                    )}
+                    <AvatarFallback className="bg-[#1DDCD3] text-white">
+                      {participant.influencer_name?.charAt(0) || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
                   
                   <div>
                     <div className="flex items-center gap-2 mb-1">
