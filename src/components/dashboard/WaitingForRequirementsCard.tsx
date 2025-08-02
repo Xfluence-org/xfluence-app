@@ -41,7 +41,10 @@ const WaitingForRequirementsCard: React.FC<WaitingForRequirementsCardProps> = ({
       </div>
       
       <div className="text-xs text-gray-500 mt-4">
-        Accepted on: {new Date(acceptedDate).toLocaleDateString()}
+        Accepted on: {acceptedDate && acceptedDate !== 'Invalid Date' 
+          ? new Date(acceptedDate).toLocaleDateString() 
+          : 'Recently'
+        }
       </div>
     </div>
   );

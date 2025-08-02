@@ -34,6 +34,9 @@ export const useDashboardData = () => {
 
       return (data || []).map((item: any) => ({
         id: item.campaign_id,
+        campaignTitle: item.campaigns.title,
+        brandName: item.campaigns.brands.name,
+        acceptedDate: item.accepted_at,
         title: item.campaigns.title,
         brand: item.campaigns.brands.name,
         amount: item.campaigns.amount,
