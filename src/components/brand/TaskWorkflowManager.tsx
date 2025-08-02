@@ -32,6 +32,16 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({
     if (taskId) {
       initializeAndFetchData();
     }
+
+    // Listen for refresh events
+    const handleRefresh = (event: CustomEvent) => {
+      if (event.detail?.taskId === taskId) {
+        initializeAndFetchData();
+      }
+    };
+
+    window.addEventListener('refreshTaskData', handleRefresh as EventListener);
+    return () => window.removeEventListener('refreshTaskData', handleRefresh as EventListener);
   }, [taskId]);
 
   const initializeAndFetchData = async () => {

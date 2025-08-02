@@ -960,6 +960,10 @@ export type Database = {
         Args: { campaign_id_param: string; section_name: string }
         Returns: Json
       }
+      fix_stuck_workflow_states: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_brand_applications: {
         Args: { limit_count?: number }
         Returns: {
