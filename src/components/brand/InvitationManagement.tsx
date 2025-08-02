@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Copy, Check, Mail, Clock, CheckCircle, Eye, ChevronDown, ChevronUp } from 'lucide-react';
+import { Copy, Check, Mail, Clock, CheckCircle, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useState } from 'react';
 
@@ -42,7 +42,6 @@ interface InvitationManagementProps {
 
 const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId }) => {
   const [copiedTokens, setCopiedTokens] = useState<Set<string>>(new Set());
-  const [expandedInvitations, setExpandedInvitations] = useState<Set<string>>(new Set());
   const [showMore, setShowMore] = useState(false);
   const [selectedInfluencer, setSelectedInfluencer] = useState<InvitationData | null>(null);
   const [influencerProfile, setInfluencerProfile] = useState<InfluencerProfile | null>(null);
@@ -186,10 +185,43 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
           .select('user_id, username, profile_picture, followers_count, engagement_rate')
           .in('user_id', userIds);
 
-        // Merge the data and handle pending invitations
+        // Merge the data and handle all invitations
         invitationData.forEach(invitation => {
+          // First, try to extract handle from application_message for ALL invitations
+          try {
+            if (invitation.application_message) {
+              const parsedMessage = JSON.parse(invitation.application_message);
+              
+              // Debug: Log what we're getting
+              console.log('Parsed application_message for invitation:', {
+                email: invitation.email,
+                parsedMessage,
+                hasInfluencerDetails: !!parsedMessage.influencerDetails,
+                handle: parsedMessage.influencerDetails?.handle
+              });
+              
+              // Extract handle from influencerDetails (this is what brand entered)
+              if (parsedMessage.influencerDetails?.handle) {
+                invitation.username = parsedMessage.influencerDetails.handle.replace('@', '');
+              }
+              
+              // If we have instagramData, it might have more accurate info
+              if (parsedMessage.instagramData?.username) {
+                invitation.username = parsedMessage.instagramData.username;
+                invitation.profile_picture = parsedMessage.instagramData.profile_picture;
+                invitation.followers_count = parsedMessage.instagramData.followers_count;
+                invitation.engagement_rate = parsedMessage.instagramData.engagement_rate;
+                if (!invitation.influencer_name) {
+                  invitation.influencer_name = parsedMessage.instagramData.username;
+                }
+              }
+            }
+          } catch (e) {
+            console.error('Error parsing application_message:', e, invitation.application_message);
+          }
+          
+          // Then, if user has joined, overlay with real profile data
           if (invitation.influencer_id) {
-            // For accepted invitations with linked user accounts
             const profile = profilesData?.find(p => p.id === invitation.influencer_id);
             const instagram = instagramData?.find(ig => ig.user_id === invitation.influencer_id);
             
@@ -201,22 +233,6 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
               invitation.username = instagram.username;
               invitation.followers_count = instagram.followers_count;
               invitation.engagement_rate = instagram.engagement_rate;
-            }
-          } else {
-            // For pending invitations, extract data from application_message
-            try {
-              if (invitation.application_message) {
-                const parsedMessage = JSON.parse(invitation.application_message);
-                if (parsedMessage.instagramData) {
-                  invitation.profile_picture = parsedMessage.instagramData.profile_picture;
-                  invitation.username = parsedMessage.instagramData.username;
-                  invitation.followers_count = parsedMessage.instagramData.followers_count;
-                  invitation.engagement_rate = parsedMessage.instagramData.engagement_rate;
-                  invitation.influencer_name = parsedMessage.instagramData.username;
-                }
-              }
-            } catch (e) {
-              console.log('Could not parse application message for invitation', invitation.id);
             }
           }
         });
@@ -263,17 +279,6 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
     return <Clock className="h-4 w-4 text-gray-400" />;
   };
 
-  const toggleExpanded = (invitationId: string) => {
-    setExpandedInvitations(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(invitationId)) {
-        newSet.delete(invitationId);
-      } else {
-        newSet.add(invitationId);
-      }
-      return newSet;
-    });
-  };
 
   const displayedInvitations = showMore ? invitations : invitations.slice(0, 3);
 
@@ -368,14 +373,14 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
                     </Avatar>
                     {getStatusIcon(invitation)}
                     <div className="flex-1">
-                      <h4 className="font-medium">{invitation.email}</h4>
+                      <h4 className="font-medium">{invitation.username ? `@${invitation.username}` : invitation.email}</h4>
                       <p className="text-sm text-gray-600">
                         {!campaignId && invitation.campaign_title}
                         {invitation.influencer_name && (
                           <span>{!campaignId ? ' • ' : ''}{invitation.influencer_name}</span>
                         )}
-                        {invitation.username && (
-                          <span> • @{invitation.username}</span>
+                        {invitation.email && invitation.username && (
+                          <span> • {invitation.email}</span>
                         )}
                       </p>
                       {invitation.followers_count && (
@@ -394,18 +399,6 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
                         )}
                       </p>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleExpanded(invitation.id)}
-                      className="ml-2"
-                    >
-                      {expandedInvitations.has(invitation.id) ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4" />
-                      )}
-                    </Button>
                   </div>
                   <div className="flex items-center gap-2">
                     {getStatusBadge(invitation)}
@@ -492,49 +485,6 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
                     )}
                   </div>
                 </div>
-                {expandedInvitations.has(invitation.id) && (
-                  <div className="px-4 pb-4 border-t bg-muted/20">
-                    <div className="pt-4 space-y-2">
-                      <div className="text-sm">
-                        <span className="font-medium">Campaign:</span> {invitation.campaign_title}
-                      </div>
-                      <div className="text-sm">
-                        <span className="font-medium">Status:</span> {invitation.status}
-                      </div>
-                      <div className="text-sm">
-                        <span className="font-medium">Token:</span> {invitation.invitation_token}
-                      </div>
-                      {/* Show Instagram profile preview if available */}
-                      {(invitation.profile_picture || invitation.username || invitation.followers_count) && (
-                        <div className="mt-3 p-3 bg-background rounded-lg border">
-                          <div className="text-sm font-medium mb-2">Instagram Profile Preview</div>
-                          <div className="flex items-center gap-3">
-                            {invitation.profile_picture && (
-                              <img 
-                                src={invitation.profile_picture}
-                                alt="Instagram profile"
-                                className="w-12 h-12 rounded-full object-cover"
-                              />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-sm">
-                                @{invitation.username || invitation.email.split('@')[0]}
-                              </div>
-                              {invitation.followers_count && (
-                                <div className="text-xs text-muted-foreground">
-                                  {invitation.followers_count.toLocaleString()} followers
-                                  {invitation.engagement_rate && 
-                                    ` • ${invitation.engagement_rate.toFixed(1)}% engagement`
-                                  }
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
             ))}
             {invitations.length > 3 && (

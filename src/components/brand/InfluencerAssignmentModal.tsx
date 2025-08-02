@@ -163,7 +163,100 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
     try {
       const invitations: GeneratedInvitation[] = [];
       
-      for (const manualInfluencer of manualInfluencers) {
+      // First, check for existing participants (both by email and existing users)
+      const emails = manualInfluencers.map(inf => inf.email);
+      
+      // Check for existing invitations by email
+      const { data: existingInvitations, error: checkError } = await supabase
+        .from('invitation_emails')
+        .select(`
+          email,
+          campaign_participant_id,
+          campaign_participants!inner(
+            campaign_id,
+            status,
+            influencer_id
+          )
+        `)
+        .in('email', emails)
+        .eq('campaign_participants.campaign_id', campaignId);
+      
+      if (checkError) {
+        throw new Error('Failed to check for existing invitations');
+      }
+      
+      // Check for existing users by email
+      const { data: existingUsers, error: userCheckError } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .in('email', emails);
+      
+      if (userCheckError) {
+        throw new Error('Failed to check for existing users');
+      }
+      
+      // Check for already participating users
+      const userIds = existingUsers?.map(u => u.id) || [];
+      let existingParticipants: any[] = [];
+      
+      if (userIds.length > 0) {
+        const { data: participants, error: participantError } = await supabase
+          .from('campaign_participants')
+          .select('influencer_id, status')
+          .eq('campaign_id', campaignId)
+          .in('influencer_id', userIds)
+          .not('influencer_id', 'is', null);
+        
+        if (participantError) {
+          throw new Error('Failed to check for existing participants');
+        }
+        
+        existingParticipants = participants || [];
+      }
+      
+      // Create maps for quick lookup
+      const existingInvitationEmails = new Set((existingInvitations || []).map(inv => inv.email));
+      const existingUserMap = new Map((existingUsers || []).map(u => [u.email, u.id]));
+      const existingParticipantIds = new Set(existingParticipants.map(p => p.influencer_id));
+      
+      // Filter out duplicates and notify user
+      const duplicates: string[] = [];
+      const validInfluencers = manualInfluencers.filter(inf => {
+        // Check if invitation already sent
+        if (existingInvitationEmails.has(inf.email)) {
+          duplicates.push(`${inf.email} (invitation already sent)`);
+          return false;
+        }
+        
+        // Check if user exists and is already participating
+        const userId = existingUserMap.get(inf.email);
+        if (userId && existingParticipantIds.has(userId)) {
+          duplicates.push(`${inf.email} (already participating in this campaign)`);
+          return false;
+        }
+        
+        return true;
+      });
+      
+      if (duplicates.length > 0) {
+        toast({
+          title: "Duplicate Influencers Detected",
+          description: `The following influencers were skipped: ${duplicates.join(', ')}`,
+          variant: "destructive"
+        });
+      }
+      
+      if (validInfluencers.length === 0) {
+        toast({
+          title: "No Valid Influencers",
+          description: "All influencers are either already invited or participating in this campaign.",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+      
+      for (const manualInfluencer of validInfluencers) {
         // Create campaign participant with invitation data including Instagram profile
         const assignmentData = {
           tier: assignmentRequest.tier,

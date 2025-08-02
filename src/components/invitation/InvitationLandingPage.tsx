@@ -10,6 +10,7 @@ import { Loader2, CheckCircle, XCircle, Calendar, DollarSign } from 'lucide-reac
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/SimpleAuthContext';
 import { useToast } from '@/hooks/use-toast';
+import CampaignAcceptanceAnimation from '@/components/animations/CampaignAcceptanceAnimation';
 
 interface InvitationData {
   id: string;
@@ -49,6 +50,8 @@ const InvitationLandingPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [claiming, setClaiming] = useState(false);
+  const [showAnimation, setShowAnimation] = useState(false);
+  const [campaignCategory, setCampaignCategory] = useState<string>('');
 
   useEffect(() => {
     if (token) {
@@ -109,6 +112,12 @@ const InvitationLandingPage: React.FC = () => {
       let assignmentData;
       try {
         assignmentData = JSON.parse(data.application_message || '{}');
+        // Extract category from assignment data
+        if (assignmentData.category) {
+          setCampaignCategory(assignmentData.category);
+        } else if (assignmentData.influencerDetails?.category) {
+          setCampaignCategory(assignmentData.influencerDetails.category);
+        }
       } catch {
         assignmentData = {};
       }
@@ -173,12 +182,11 @@ const InvitationLandingPage: React.FC = () => {
           instagramData = parsedMessage.instagramData;
         }
       } catch (e) {
-        console.log('No Instagram data found in invitation');
+        // No Instagram data found in invitation
       }
 
       // If we have Instagram data, store it in the instagram_accounts table
       if (instagramData && user.id) {
-        console.log('Storing Instagram data for user:', user.id, instagramData);
         
         const { error: instagramError } = await supabase
           .from('instagram_accounts')
@@ -195,7 +203,7 @@ const InvitationLandingPage: React.FC = () => {
           });
 
         if (instagramError) {
-          console.error('Error storing Instagram account data:', instagramError);
+          // Non-critical error - continue with invitation acceptance
         }
       }
 
@@ -210,23 +218,22 @@ const InvitationLandingPage: React.FC = () => {
         })
         .eq('campaign_participant_id', invitationData.id);
 
-      if (emailError) console.error('Error updating email record:', emailError);
+      if (emailError) {
+        // Non-critical error - continue
+      }
 
       toast({
         title: "Success",
-        description: "You've successfully joined the campaign! Redirecting to your dashboard...",
+        description: "You've successfully joined the campaign!",
       });
+
+      // Show animation
+      setShowAnimation(true);
 
       // Invalidate queries to refresh dashboard data
       window.dispatchEvent(new CustomEvent('refreshDashboard'));
-      
-      // Redirect to influencer dashboard after a short delay
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 2000);
 
     } catch (error) {
-      console.error('Error claiming invitation:', error);
       toast({
         title: "Error",
         description: "Failed to join campaign. Please try again.",
@@ -235,6 +242,11 @@ const InvitationLandingPage: React.FC = () => {
     } finally {
       setClaiming(false);
     }
+  };
+
+  const handleAnimationComplete = () => {
+    setShowAnimation(false);
+    navigate('/dashboard');
   };
 
   const getTierColor = (tier: string) => {
@@ -301,7 +313,14 @@ const InvitationLandingPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <>
+      {showAnimation && (
+        <CampaignAcceptanceAnimation 
+          category={campaignCategory || 'general'} 
+          onComplete={handleAnimationComplete}
+        />
+      )}
+      <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-2xl mx-auto px-4">
         <Card className="mb-6">
           <CardHeader className="text-center">
@@ -359,7 +378,8 @@ const InvitationLandingPage: React.FC = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

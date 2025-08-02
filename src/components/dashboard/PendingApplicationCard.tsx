@@ -30,10 +30,6 @@ const PendingApplicationCard: React.FC<PendingApplicationCardProps> = ({ campaig
             </Badge>
           </div>
         </div>
-        <div className="text-right">
-          <p className="text-sm text-gray-500">Compensation</p>
-          <p className="font-semibold text-[#1a1f2e]">${campaign.amount}</p>
-        </div>
       </div>
       
       <div className="text-xs text-gray-500">

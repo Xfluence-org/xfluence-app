@@ -22,6 +22,7 @@ interface WaitingParticipant {
   followers_count: number;
   engagement_rate: number;
   influencer_profile_url?: string;
+  hasRealData: boolean;
 }
 
 const WaitingParticipantsSection: React.FC<WaitingParticipantsSectionProps> = ({ campaignId, contentTypes }) => {
@@ -40,7 +41,6 @@ const WaitingParticipantsSection: React.FC<WaitingParticipantsSectionProps> = ({
       });
 
       if (error) {
-        console.error('Error fetching waiting participants:', error);
         return [];
       }
 
@@ -62,15 +62,20 @@ const WaitingParticipantsSection: React.FC<WaitingParticipantsSectionProps> = ({
       return participantsList.map((participant: any) => {
         const instagram = instagramData.find(ig => ig.user_id === participant.influencer_id);
         
+        // Don't use fake generated data - use real data or show N/A
+        const isGeneratedHandle = participant.influencer_handle?.includes('@user_');
+        const isGeneratedFollowers = !instagram?.followers_count && participant.followers_count;
+        
         return {
           id: participant.id,
           influencer_id: participant.influencer_id,
           accepted_at: participant.accepted_at,
-          influencer_name: instagram?.username || participant.influencer_name,
-          influencer_handle: instagram?.username ? `@${instagram.username}` : participant.influencer_handle,
-          followers_count: instagram?.followers_count || participant.followers_count,
-          engagement_rate: instagram?.engagement_rate || participant.engagement_rate,
-          influencer_profile_url: instagram?.profile_picture
+          influencer_name: instagram?.username || participant.influencer_name || 'Unknown',
+          influencer_handle: instagram?.username ? `@${instagram.username}` : (isGeneratedHandle ? 'N/A' : participant.influencer_handle),
+          followers_count: instagram?.followers_count || 0,
+          engagement_rate: instagram?.engagement_rate || 0,
+          influencer_profile_url: instagram?.profile_picture,
+          hasRealData: !!instagram
         };
       });
     }
@@ -84,7 +89,6 @@ const WaitingParticipantsSection: React.FC<WaitingParticipantsSectionProps> = ({
     );
   }
 
-  // console.log('WaitingParticipantsSection render - participants:', waitingParticipants);
 
   if (waitingParticipants.length === 0) {
     return (
@@ -139,14 +143,22 @@ const WaitingParticipantsSection: React.FC<WaitingParticipantsSectionProps> = ({
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="font-medium">{participant.influencer_name}</h4>
-                      <Badge variant="outline" className="text-xs">
-                        {participant.influencer_handle ? (participant.influencer_handle.startsWith('@') ? participant.influencer_handle : `@${participant.influencer_handle}`) : '@user'}
-                      </Badge>
+                      {participant.influencer_handle !== 'N/A' && (
+                        <Badge variant="outline" className="text-xs">
+                          {participant.influencer_handle.startsWith('@') ? participant.influencer_handle : `@${participant.influencer_handle}`}
+                        </Badge>
+                      )}
                     </div>
                     
                     <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <span>{participant.followers_count.toLocaleString()} followers</span>
-                      <span>{participant.engagement_rate.toFixed(1)}% engagement</span>
+                      {participant.hasRealData ? (
+                        <>
+                          <span>{participant.followers_count.toLocaleString()} followers</span>
+                          <span>{participant.engagement_rate.toFixed(1)}% engagement</span>
+                        </>
+                      ) : (
+                        <span className="text-gray-400 italic">Instagram data not available</span>
+                      )}
                     </div>
                     
                     <div className="flex items-center gap-1 mt-2 text-xs text-yellow-600">

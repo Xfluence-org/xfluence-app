@@ -180,3 +180,200 @@
     100% { transform: rotate(360deg); }
   }
 }
+
+/* Category-specific animations */
+@keyframes beauty-sparkle {
+  0% {
+    transform: translate(0, 0) scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  25% {
+    transform: translate(-50px, -30px) scale(1) rotate(180deg);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-80px, -60px) scale(0.8) rotate(360deg);
+    opacity: 0.8;
+  }
+  75% {
+    transform: translate(-100px, -90px) scale(0.6) rotate(540deg);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-120px, -120px) scale(0) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+@keyframes fashion-strut {
+  0%, 100% {
+    transform: translateX(0) rotateY(0deg);
+  }
+  25% {
+    transform: translateX(-10px) rotateY(-5deg);
+  }
+  75% {
+    transform: translateX(10px) rotateY(5deg);
+  }
+}
+
+@keyframes tech-circuit {
+  0% {
+    stroke-dashoffset: 1000;
+    opacity: 0;
+  }
+  50% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: -1000;
+    opacity: 0;
+  }
+}
+
+@keyframes fitness-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+@keyframes travel-fly {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(50px, -20px) rotate(10deg);
+  }
+  50% {
+    transform: translate(100px, -10px) rotate(-5deg);
+  }
+  75% {
+    transform: translate(150px, -20px) rotate(5deg);
+  }
+  100% {
+    transform: translate(200px, 0) rotate(0deg);
+  }
+}
+
+@keyframes food-sizzle {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-5px) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(3deg);
+  }
+  75% {
+    transform: translateY(-5px) rotate(-3deg);
+  }
+}
+
+@keyframes gaming-powerup {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    transform: scale(1.5) rotate(180deg);
+    opacity: 1;
+    filter: hue-rotate(180deg);
+  }
+  100% {
+    transform: scale(2) rotate(360deg);
+    opacity: 0;
+    filter: hue-rotate(360deg);
+  }
+}
+
+@keyframes music-wave {
+  0%, 100% {
+    transform: scaleY(0.5);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes lifestyle-bloom {
+  0% {
+    transform: scale(0.3) rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1) rotate(180deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.3) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes default-celebration {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  25% {
+    transform: translateY(-20px) scale(1.1);
+  }
+  50% {
+    transform: translateY(0) scale(1);
+  }
+  75% {
+    transform: translateY(-10px) scale(1.05);
+  }
+}
+
+/* Animation utilities */
+.animate-beauty-sparkle {
+  animation: beauty-sparkle 1.5s ease-out infinite;
+}
+
+.animate-fashion-strut {
+  animation: fashion-strut 2s ease-in-out infinite;
+}
+
+.animate-tech-circuit {
+  animation: tech-circuit 2s linear infinite;
+}
+
+.animate-fitness-pulse {
+  animation: fitness-pulse 1.5s ease-out infinite;
+}
+
+.animate-travel-fly {
+  animation: travel-fly 3s ease-in-out infinite;
+}
+
+.animate-food-sizzle {
+  animation: food-sizzle 1s ease-in-out infinite;
+}
+
+.animate-gaming-powerup {
+  animation: gaming-powerup 2s ease-out infinite;
+}
+
+.animate-music-wave {
+  animation: music-wave 1s ease-in-out infinite;
+}
+
+.animate-lifestyle-bloom {
+  animation: lifestyle-bloom 3s ease-in-out infinite;
+}
+
+.animate-default-celebration {
+  animation: default-celebration 2s ease-in-out infinite;
+}

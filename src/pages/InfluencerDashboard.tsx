@@ -5,7 +5,6 @@ import Sidebar from '@/components/dashboard/Sidebar';
 import { useAuth } from '@/contexts/SimpleAuthContext';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import CampaignCard from '@/components/dashboard/CampaignCard';
-import InvitationCard from '@/components/dashboard/InvitationCard';
 import WaitingForRequirementsCard from '@/components/dashboard/WaitingForRequirementsCard';
 import PendingApplicationCard from '@/components/dashboard/PendingApplicationCard';
 import TaskWorkflowCard from '@/components/campaigns/TaskWorkflowCard';
@@ -15,13 +14,10 @@ import { useToast } from '@/components/ui/use-toast';
 const InfluencerDashboard = () => {
   const { user, profile, loading } = useAuth();
   const { 
-    invitations, 
     activeCampaigns,
     waitingCampaigns,
     pendingApplications, 
-    loading: dashboardLoading, 
-    acceptInvitation, 
-    declineInvitation 
+    loading: dashboardLoading
   } = useDashboardData();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -42,23 +38,6 @@ const InfluencerDashboard = () => {
     return <Navigate to="/brand-dashboard" replace />;
   }
 
-  const handleAcceptInvitation = async (campaignId: string) => {
-    const result = await acceptInvitation(campaignId);
-    toast({
-      title: result.success ? "Success" : "Error",
-      description: result.message,
-      variant: result.success ? "default" : "destructive"
-    });
-  };
-
-  const handleDeclineInvitation = async (campaignId: string) => {
-    const result = await declineInvitation(campaignId);
-    toast({
-      title: result.success ? "Success" : "Error", 
-      description: result.message,
-      variant: result.success ? "default" : "destructive"
-    });
-  };
 
   const handleViewTaskDetails = (taskId: string) => {
     // Navigate to campaigns page with task parameter to open the modal
@@ -235,10 +214,6 @@ const InfluencerDashboard = () => {
                               ))}
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className="text-sm text-gray-500">Compensation</p>
-                            <p className="font-semibold text-[#1a1f2e]">${campaign.amount}</p>
-                          </div>
                         </div>
                         
                         <div className="mb-4">
@@ -274,36 +249,23 @@ const InfluencerDashboard = () => {
               </div>
             </div>
 
-            {/* Recent Invitations */}
+            {/* Placeholder for future content */}
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-[#1a1f2e]">Recent Invitations</h2>
-                {invitations?.length > 2 && (
-                  <button 
-                    onClick={() => navigate('/campaigns?tab=Invitations')}
-                    className="text-gray-600 hover:text-[#1DDCD3] font-medium transition-colors duration-200 text-sm"
-                  >
-                    View more →
-                  </button>
-                )}
-              </div>
-              <div className="space-y-4">
-                {invitations?.length > 0 ? (
-                  invitations.slice(0, 2).map((campaign: any) => (
-                    <InvitationCard
-                      key={campaign.id}
-                      campaign={campaign}
-                      onAccept={handleAcceptInvitation}
-                      onDecline={handleDeclineInvitation}
-                    />
-                  ))
-                ) : (
-                  <Card className="p-6 text-center">
-                    <p className="text-gray-500">No recent invitations</p>
-                    <p className="text-sm text-gray-400 mt-1">New opportunities will appear here</p>
-                  </Card>
-                )}
-              </div>
+              <Card className="p-6">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-[#1a1f2e] mb-2">Quick Stats</h3>
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4">
+                      <p className="text-sm text-gray-600">Tasks Completed</p>
+                      <p className="text-2xl font-bold text-[#1a1f2e]">0</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg p-4">
+                      <p className="text-sm text-gray-600">Pending Tasks</p>
+                      <p className="text-2xl font-bold text-[#1a1f2e]">0</p>
+                    </div>
+                  </div>
+                </div>
+              </Card>
             </div>
           </div>
 
