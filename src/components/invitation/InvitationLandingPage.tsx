@@ -84,14 +84,11 @@ const InvitationLandingPage: React.FC = () => {
           )
         `)
         .eq('invitation_token', token)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          setError('Invalid or expired invitation link');
-        } else {
-          throw error;
-        }
+        console.error('Error fetching invitation:', error);
+        setError('Failed to load invitation details');
         return;
       }
 
@@ -144,7 +141,7 @@ const InvitationLandingPage: React.FC = () => {
           influencer_id: user.id,
           invitation_claimed_at: new Date().toISOString(),
           status: 'accepted',
-          current_stage: 'content_requirement'
+          current_stage: 'waiting_for_requirements'
         })
         .eq('id', invitationData.id);
 

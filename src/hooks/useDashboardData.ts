@@ -81,12 +81,12 @@ export const useDashboardData = () => {
           if (applicationStatuses.includes(item.status)) {
             return true;
           }
-          // Show invitations that were recently claimed (within last 30 days) and not in waiting_for_requirements
-          if (invitationStatuses.includes(item.status) && item.invitation_claimed_at) {
+          // Show accepted invitations that were recently claimed (within last 7 days) as pending
+          if (item.status === 'accepted' && item.invitation_claimed_at) {
             const claimedDate = new Date(item.invitation_claimed_at);
-            const thirtyDaysAgo = new Date();
-            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-            return claimedDate > thirtyDaysAgo;
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            return claimedDate > sevenDaysAgo;
           }
           return false;
         })
@@ -135,7 +135,8 @@ export const useDashboardData = () => {
             )
           `)
           .eq('influencer_id', user.id)
-          .eq('status', 'accepted');
+          .eq('status', 'accepted')
+          .neq('current_stage', 'waiting_for_requirements');
 
         if (fallbackError) throw fallbackError;
 
