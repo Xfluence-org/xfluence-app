@@ -147,7 +147,12 @@ const ContentReviewPanelEnhanced: React.FC<ContentReviewPanelEnhancedProps> = ({
       });
       
       await fetchUploadsAndReviews();
+      
+      // Trigger refresh of parent components
       onReviewComplete?.();
+      
+      // Dispatch custom event to refresh dashboard/workflow data
+      window.dispatchEvent(new CustomEvent('refreshTaskData', { detail: { taskId } }));
     } catch (error) {
       console.error('Error submitting review:', error);
       toast({

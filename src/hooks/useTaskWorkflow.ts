@@ -6,6 +6,20 @@ import { taskWorkflowService, WorkflowState, ContentDraft, ContentReview } from 
 export const useTaskWorkflow = (taskId: string | null) => {
   const queryClient = useQueryClient();
 
+  // Add listener for refresh events
+  useEffect(() => {
+    const handleRefresh = (event: CustomEvent) => {
+      if (event.detail?.taskId === taskId) {
+        queryClient.invalidateQueries({ queryKey: ['task-workflow', taskId] });
+        queryClient.invalidateQueries({ queryKey: ['content-drafts', taskId] });
+        queryClient.invalidateQueries({ queryKey: ['content-reviews', taskId] });
+      }
+    };
+
+    window.addEventListener('refreshTaskData', handleRefresh as EventListener);
+    return () => window.removeEventListener('refreshTaskData', handleRefresh as EventListener);
+  }, [taskId, queryClient]);
+
   const { data: workflowStates, isLoading: workflowLoading } = useQuery({
     queryKey: ['task-workflow', taskId],
     queryFn: () => taskWorkflowService.getWorkflowStates(taskId!),
@@ -60,6 +74,8 @@ export const useTaskWorkflow = (taskId: string | null) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['content-reviews'] });
       queryClient.invalidateQueries({ queryKey: ['task-workflow'] });
+      // Also invalidate task detail queries to refresh progress
+      queryClient.invalidateQueries({ queryKey: ['task-detail'] });
     }
   });
 

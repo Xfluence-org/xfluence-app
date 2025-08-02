@@ -208,6 +208,8 @@ export const taskWorkflowService = {
     feedback?: string,
     reviewedBy?: string
   ): Promise<void> {
+    console.log('Creating content review for task:', taskId, 'upload:', uploadId, 'status:', status);
+    
     const { error } = await supabase
       .from('task_content_reviews')
       .insert({
@@ -219,9 +221,14 @@ export const taskWorkflowService = {
         reviewed_at: new Date().toISOString()
       });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error creating content review:', error);
+      throw error;
+    }
 
     if (status === 'approved') {
+      console.log('Checking if all uploads are approved for task:', taskId);
+      
       // Check if all uploads have been approved
       const { data: allUploads } = await supabase
         .from('task_uploads')
@@ -234,33 +241,52 @@ export const taskWorkflowService = {
         .eq('task_id', taskId)
         .eq('status', 'approved');
 
+      console.log('Uploads:', allUploads?.length, 'Approved:', approvedReviews?.length);
+
       // If all uploads are approved, move to next phase
       if (allUploads && approvedReviews && allUploads.length === approvedReviews.length) {
+        console.log('All uploads approved, moving to publish phase for task:', taskId);
+        
         // Complete content review phase and start publish analytics
-        await supabase
+        const { error: reviewUpdateError } = await supabase
           .from('task_workflow_states')
           .update({ status: 'completed', updated_at: new Date().toISOString() })
           .eq('task_id', taskId)
           .eq('phase', 'content_review');
 
-        await supabase
+        if (reviewUpdateError) {
+          console.error('Error updating content_review phase:', reviewUpdateError);
+        }
+
+        const { error: publishUpdateError } = await supabase
           .from('task_workflow_states')
           .update({ status: 'in_progress', updated_at: new Date().toISOString() })
           .eq('task_id', taskId)
           .eq('phase', 'publish_analytics');
 
-        // Update visibility for final phase
-        await supabase
+        if (publishUpdateError) {
+          console.error('Error updating publish_analytics phase:', publishUpdateError);
+        }
+
+        // Update task visibility and phase info
+        const { error: taskUpdateError } = await supabase
           .from('campaign_tasks')
           .update({ 
             current_phase: 'publish_analytics',
+            status: 'publish_analytics',
             phase_visibility: {
               content_requirement: true,
               content_review: true,
-              publish_analytics: true // Both can see all phases now
+              publish_analytics: true // Now influencer can see publish phase
             }
           })
           .eq('id', taskId);
+
+        if (taskUpdateError) {
+          console.error('Error updating task phase visibility:', taskUpdateError);
+        }
+
+        console.log('Successfully moved task to publish phase');
       }
     }
     // If rejected, keep in content_review phase for re-upload
