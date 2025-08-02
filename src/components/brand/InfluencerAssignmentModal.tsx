@@ -232,6 +232,9 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ['waiting-participants', campaignId] });
       queryClient.invalidateQueries({ queryKey: ['active-participants', campaignId] });
       queryClient.invalidateQueries({ queryKey: ['campaign-participants', campaignId] });
+      queryClient.invalidateQueries({ queryKey: ['invitations', campaignId] });
+      queryClient.invalidateQueries({ queryKey: ['invitations'] });
+      queryClient.invalidateQueries({ queryKey: ['brand-campaigns'] });
 
       onAssignmentComplete([]);
       

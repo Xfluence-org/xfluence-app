@@ -47,8 +47,8 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ campaignId 
   const [influencerProfile, setInfluencerProfile] = useState<InfluencerProfile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
 
-  const { data: invitations = [], isLoading } = useQuery({
-    queryKey: ['brand-invitations', campaignId],
+  const { data: invitations = [], isLoading, refetch } = useQuery({
+    queryKey: ['invitations', campaignId],
     queryFn: async () => {
       let query = supabase
         .from('invitation_emails')
