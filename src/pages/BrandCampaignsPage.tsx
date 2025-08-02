@@ -9,16 +9,23 @@ import BrandCampaignCard from '@/components/brand/BrandCampaignCard';
 import CampaignDetailModal from '@/components/brand/CampaignDetailModal';
 import CreateCampaignModal from '@/components/brand/CreateCampaignModal';
 import InvitationManagement from '@/components/brand/InvitationManagement';
+import { useAuth } from '@/contexts/SimpleAuthContext';
+import SearchFilter from '@/components/campaigns/SearchFilter';
+import FilterModal, { FilterOptions } from '@/components/campaigns/FilterModal';
 
 
 type CampaignView = 'published' | 'completed' | 'archived' | 'invitations';
 
 const BrandCampaignsPage: React.FC = () => {
+  const { profile } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const [campaignTab, setCampaignTab] = useState<CampaignView>('published');
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [filters, setFilters] = useState<FilterOptions>({});
   
   const { 
     campaigns, 
@@ -75,6 +82,64 @@ const BrandCampaignsPage: React.FC = () => {
     setIsCreateModalOpen(false);
   };
 
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  const handleFilterClick = () => {
+    setIsFilterModalOpen(true);
+  };
+
+  const handleApplyFilters = (newFilters: FilterOptions) => {
+    setFilters(newFilters);
+  };
+
+  // Filter campaigns based on search and filters
+  const filteredCampaigns = campaigns.filter(campaign => {
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = 
+        campaign.campaign_title.toLowerCase().includes(query) ||
+        (campaign.category && campaign.category.toLowerCase().includes(query)) ||
+        (campaign.platforms && campaign.platforms.some(p => p.toLowerCase().includes(query)));
+      
+      if (!matchesSearch) return false;
+    }
+
+    // Status filter
+    if (filters.status && filters.status !== 'all') {
+      if (campaign.campaign_status !== filters.status) return false;
+    }
+
+    // Platform filter
+    if (filters.platform && filters.platform !== 'all') {
+      if (!campaign.platforms || !campaign.platforms.includes(filters.platform)) return false;
+    }
+
+    // Category filter
+    if (filters.category && filters.category !== 'all') {
+      if (!campaign.category || campaign.category !== filters.category) return false;
+    }
+
+    // Budget filter
+    if (filters.budgetRange) {
+      const budget = campaign.budget || 0;
+      if (budget < filters.budgetRange[0] || budget > filters.budgetRange[1]) return false;
+    }
+
+    // Date filter
+    if (filters.dateRange) {
+      const dueDate = campaign.due_date ? new Date(campaign.due_date) : null;
+      if (dueDate) {
+        if (filters.dateRange.from && dueDate < filters.dateRange.from) return false;
+        if (filters.dateRange.to && dueDate > filters.dateRange.to) return false;
+      }
+    }
+
+    return true;
+  });
+
   const renderCampaignContent = () => {
     return (
       <Tabs value={campaignTab} onValueChange={(value) => setCampaignTab(value as CampaignView)}>
@@ -86,10 +151,16 @@ const BrandCampaignsPage: React.FC = () => {
         </TabsList>
 
         <TabsContent value="published" className="mt-6">
+          <SearchFilter
+            searchQuery={searchQuery}
+            onSearchChange={handleSearchChange}
+            onFilterClick={handleFilterClick}
+            placeholder="Search by title, category, or platform..."
+          />
           <div className="space-y-6">
-            {campaigns.length > 0 ? (
+            {filteredCampaigns.length > 0 ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {campaigns.map((campaign) => (
+                {filteredCampaigns.map((campaign) => (
                   <BrandCampaignCard
                     key={campaign.campaign_id}
                     campaign={campaign}
@@ -101,18 +172,32 @@ const BrandCampaignsPage: React.FC = () => {
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">No published campaigns found</p>
-                <p className="text-gray-400 mt-2">Create a campaign to get started</p>
+                <p className="text-gray-500 text-lg">
+                  {searchQuery || Object.keys(filters).length > 0 
+                    ? 'No campaigns match your search criteria' 
+                    : 'No published campaigns found'}
+                </p>
+                <p className="text-gray-400 mt-2">
+                  {searchQuery || Object.keys(filters).length > 0 
+                    ? 'Try adjusting your filters' 
+                    : 'Create a campaign to get started'}
+                </p>
               </div>
             )}
           </div>
         </TabsContent>
 
         <TabsContent value="completed" className="mt-6">
+          <SearchFilter
+            searchQuery={searchQuery}
+            onSearchChange={handleSearchChange}
+            onFilterClick={handleFilterClick}
+            placeholder="Search by title, category, or platform..."
+          />
           <div className="space-y-6">
-            {campaigns.length > 0 ? (
+            {filteredCampaigns.length > 0 ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {campaigns.map((campaign) => (
+                {filteredCampaigns.map((campaign) => (
                   <BrandCampaignCard
                     key={campaign.campaign_id}
                     campaign={campaign}
@@ -132,10 +217,16 @@ const BrandCampaignsPage: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="archived" className="mt-6">
+          <SearchFilter
+            searchQuery={searchQuery}
+            onSearchChange={handleSearchChange}
+            onFilterClick={handleFilterClick}
+            placeholder="Search by title, category, or platform..."
+          />
           <div className="space-y-6">
-            {campaigns.length > 0 ? (
+            {filteredCampaigns.length > 0 ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {campaigns.map((campaign) => (
+                {filteredCampaigns.map((campaign) => (
                   <BrandCampaignCard
                     key={campaign.campaign_id}
                     campaign={campaign}
@@ -165,7 +256,7 @@ const BrandCampaignsPage: React.FC = () => {
   if (loading) {
     return (
       <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <BrandSidebar userName="Brand Team" />
+        <BrandSidebar userName={profile?.name || 'Brand'} />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
@@ -180,7 +271,7 @@ const BrandCampaignsPage: React.FC = () => {
   if (error) {
     return (
       <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <BrandSidebar userName="Brand Team" />
+        <BrandSidebar userName={profile?.name || 'Brand'} />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
@@ -195,7 +286,7 @@ const BrandCampaignsPage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <BrandSidebar userName="Brand Team" />
+      <BrandSidebar userName={profile?.name || 'Brand'} />
       
       <main className="flex-1 overflow-y-auto">
         <div className="p-8">
@@ -232,6 +323,14 @@ const BrandCampaignsPage: React.FC = () => {
       <CreateCampaignModal
         isOpen={isCreateModalOpen}
         onClose={handleCloseCreateModal}
+      />
+
+      <FilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilters={handleApplyFilters}
+        currentFilters={filters}
+        userType="brand"
       />
     </div>
   );

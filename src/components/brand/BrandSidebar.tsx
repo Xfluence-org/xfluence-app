@@ -9,7 +9,7 @@ interface BrandSidebarProps {
   userName?: string;
 }
 
-const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName = 'Brand Name' }) => {
+const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut, profile } = useAuth();
@@ -85,10 +85,16 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName = 'Brand Name' }) 
 
       {/* User Section */}
       <div className="p-4 border-t border-white/10">
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-sm text-gray-600 dark:text-gray-400">Logged in as</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="font-medium text-gray-800 dark:text-white truncate pr-2">
+            {userName || profile?.name || 'Brand'}
+          </span>
           <button 
             onClick={handleLogout}
-            className="p-3 text-gray-700 dark:text-gray-300 hover:bg-white/20 hover:text-gray-900 dark:hover:text-white rounded-xl transition-all duration-300 backdrop-blur-md border border-transparent hover:border-white/20"
+            className="p-2 text-gray-700 dark:text-gray-300 hover:bg-white/20 hover:text-gray-900 dark:hover:text-white rounded-lg transition-all duration-300 backdrop-blur-md border border-transparent hover:border-white/20"
             title="Log out"
           >
             <LogOut className="w-5 h-5" />

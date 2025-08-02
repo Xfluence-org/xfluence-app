@@ -7,13 +7,14 @@ import { usePublishedCampaigns } from '@/hooks/usePublishedCampaigns';
 import PublishedCampaignCard from '@/components/brand/PublishedCampaignCard';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 
 const BrandDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const { metrics: dashboardMetrics, loading, error } = useBrandDashboardData();
   const { data: publishedCampaigns = [], isLoading: publishedLoading } = usePublishedCampaigns(10);
 
-  console.log('Published campaigns in dashboard:', publishedCampaigns);
   
   // Calculate metrics from published campaigns since get_brand_campaigns is returning empty
   const metrics = {
@@ -32,7 +33,7 @@ const BrandDashboard: React.FC = () => {
   if (loading || publishedLoading) {
     return (
       <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <BrandSidebar userName="Brand Team" />
+        <BrandSidebar userName={profile?.name || 'Brand'} />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
@@ -47,7 +48,7 @@ const BrandDashboard: React.FC = () => {
   if (error) {
     return (
       <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <BrandSidebar userName="Brand Team" />
+        <BrandSidebar userName={profile?.name || 'Brand'} />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
@@ -62,7 +63,7 @@ const BrandDashboard: React.FC = () => {
 
   return (
     <div className="flex h-screen relative">
-      <BrandSidebar userName="Brand Team" />
+      <BrandSidebar userName={profile?.name || 'Brand'} />
       
       <main className="flex-1 overflow-y-auto">
         <div className="p-8">

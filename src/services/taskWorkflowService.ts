@@ -61,11 +61,9 @@ export const taskWorkflowService = {
   },
 
   async initializeWorkflow(taskId: string): Promise<void> {
-    console.log('Initializing workflow for task:', taskId);
     
     const existing = await this.getWorkflowStates(taskId);
     if (existing.length > 0) {
-      console.log('Workflow already initialized for task:', taskId);
       return;
     }
 
@@ -79,7 +77,6 @@ export const taskWorkflowService = {
       ]);
 
     if (error) {
-      console.error('Error initializing workflow states:', error);
       throw error;
     }
 
@@ -97,11 +94,9 @@ export const taskWorkflowService = {
       .eq('id', taskId);
 
     if (updateError) {
-      console.error('Error updating task phase visibility:', updateError);
       throw updateError;
     }
 
-    console.log('Workflow initialized successfully for task:', taskId);
   },
 
   async startContentRequirementPhase(taskId: string): Promise<void> {
@@ -208,7 +203,6 @@ export const taskWorkflowService = {
     feedback?: string,
     reviewedBy?: string
   ): Promise<void> {
-    console.log('Creating content review for task:', taskId, 'upload:', uploadId, 'status:', status);
     
     const { error } = await supabase
       .from('task_content_reviews')
@@ -222,12 +216,10 @@ export const taskWorkflowService = {
       });
 
     if (error) {
-      console.error('Error creating content review:', error);
       throw error;
     }
 
     if (status === 'approved') {
-      console.log('Checking if all uploads are approved for task:', taskId);
       
       // Check if all uploads have been approved
       const { data: allUploads } = await supabase
@@ -241,11 +233,9 @@ export const taskWorkflowService = {
         .eq('task_id', taskId)
         .eq('status', 'approved');
 
-      console.log('Uploads:', allUploads?.length, 'Approved:', approvedReviews?.length);
 
       // If all uploads are approved, move to next phase
       if (allUploads && approvedReviews && allUploads.length === approvedReviews.length) {
-        console.log('All uploads approved, moving to publish phase for task:', taskId);
         
         // Complete content review phase and start publish analytics
         const { error: reviewUpdateError } = await supabase
@@ -255,7 +245,6 @@ export const taskWorkflowService = {
           .eq('phase', 'content_review');
 
         if (reviewUpdateError) {
-          console.error('Error updating content_review phase:', reviewUpdateError);
         }
 
         const { error: publishUpdateError } = await supabase
@@ -265,7 +254,6 @@ export const taskWorkflowService = {
           .eq('phase', 'publish_analytics');
 
         if (publishUpdateError) {
-          console.error('Error updating publish_analytics phase:', publishUpdateError);
         }
 
         // Update task visibility and phase info
@@ -283,10 +271,8 @@ export const taskWorkflowService = {
           .eq('id', taskId);
 
         if (taskUpdateError) {
-          console.error('Error updating task phase visibility:', taskUpdateError);
         }
 
-        console.log('Successfully moved task to publish phase');
       }
     }
     // If rejected, keep in content_review phase for re-upload
@@ -368,7 +354,6 @@ export const taskWorkflowService = {
       .maybeSingle();
 
     if (error) {
-      console.error('Error checking phase visibility:', error);
       return {};
     }
 

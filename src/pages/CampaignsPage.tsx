@@ -10,14 +10,19 @@ import { CampaignTab } from '@/types/campaigns';
 import { useTaskDetail } from '@/hooks/useTaskDetail';
 import { useCampaignData } from '@/hooks/useCampaignData';
 import { Card } from '@/components/ui/card';
+import { useAuth } from '@/contexts/SimpleAuthContext';
+import FilterModal, { FilterOptions } from '@/components/campaigns/FilterModal';
 
 const CampaignsPage: React.FC = () => {
+  const { profile } = useAuth();
   const [searchParams] = useSearchParams();
   const tabFromUrl = searchParams.get('tab') as CampaignTab;
   const taskIdFromUrl = searchParams.get('task');
   const [activeTab, setActiveTab] = useState<CampaignTab>(tabFromUrl || 'Active');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(taskIdFromUrl);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [filters, setFilters] = useState<FilterOptions>({});
 
   // Update active tab and task when URL changes
   useEffect(() => {
@@ -42,23 +47,56 @@ const CampaignsPage: React.FC = () => {
     deleteFile
   } = useTaskDetail(selectedTaskId);
 
-  // Filter campaigns based on search query only (tab filtering is now done server-side)
+  // Filter campaigns based on search query and filters
   const filteredCampaigns = useMemo(() => {
     if (!campaigns) return [];
     
-    let filtered = campaigns;
+    return campaigns.filter(campaign => {
+      // Search filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch = 
+          campaign.title.toLowerCase().includes(query) ||
+          campaign.brand.toLowerCase().includes(query);
+        
+        if (!matchesSearch) return false;
+      }
 
-    // Filter by search query only
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(campaign =>
-        campaign.title.toLowerCase().includes(query) ||
-        campaign.brand.toLowerCase().includes(query)
-      );
-    }
+      // Status filter
+      if (filters.status && filters.status !== 'all') {
+        if (campaign.status !== filters.status) return false;
+      }
 
-    return filtered;
-  }, [campaigns, searchQuery]);
+      // Platform filter
+      if (filters.platform && filters.platform !== 'all') {
+        if (!campaign.platforms || !campaign.platforms.includes(filters.platform)) return false;
+      }
+
+      // Category filter
+      if (filters.category && filters.category !== 'all') {
+        // Campaign might not have category field yet
+        const campaignCategory = (campaign as any).category;
+        if (!campaignCategory || campaignCategory !== filters.category) return false;
+      }
+
+      // Budget filter
+      if (filters.budgetRange) {
+        const amount = campaign.amount || 0;
+        if (amount < filters.budgetRange[0] || amount > filters.budgetRange[1]) return false;
+      }
+
+      // Date filter
+      if (filters.dateRange) {
+        const dueDate = campaign.dueDate ? new Date(campaign.dueDate) : null;
+        if (dueDate) {
+          if (filters.dateRange.from && dueDate < filters.dateRange.from) return false;
+          if (filters.dateRange.to && dueDate > filters.dateRange.to) return false;
+        }
+      }
+
+      return true;
+    });
+  }, [campaigns, searchQuery, filters]);
 
   const handleTabChange = (tab: CampaignTab) => {
     setActiveTab(tab);
@@ -69,8 +107,11 @@ const CampaignsPage: React.FC = () => {
   };
 
   const handleFilterClick = () => {
-    console.log('Filter clicked');
-    // Implement filter modal
+    setIsFilterModalOpen(true);
+  };
+
+  const handleApplyFilters = (newFilters: FilterOptions) => {
+    setFilters(newFilters);
   };
 
   const handleViewTaskDetails = (taskId: string) => {
@@ -83,33 +124,28 @@ const CampaignsPage: React.FC = () => {
 
   const handleSubmitForReview = async (taskId: string) => {
     const result = await submitForReview(taskId);
-    console.log('Submit result:', result);
   };
 
   const handleDownloadBrief = async (taskId: string) => {
     const result = await downloadBrief(taskId);
-    console.log('Download result:', result);
   };
 
   const handleSendMessage = async (taskId: string, message: string) => {
     const result = await sendMessage(taskId, message);
-    console.log('Message result:', result);
   };
 
   const handleFileUpload = async (taskId: string, files: FileList) => {
     const result = await uploadFiles(taskId, files);
-    console.log('Upload result:', result);
   };
 
   const handleDeleteFile = async (taskId: string, fileId: string) => {
     const result = await deleteFile(taskId, fileId);
-    console.log('Delete result:', result);
   };
 
   if (loading) {
     return (
       <div className="flex h-screen relative">
-        <Sidebar userName="Name" />
+        <Sidebar userName={profile?.name || 'User'} />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
@@ -124,7 +160,7 @@ const CampaignsPage: React.FC = () => {
   if (error) {
     return (
       <div className="flex h-screen relative">
-        <Sidebar userName="Name" />
+        <Sidebar userName={profile?.name || 'User'} />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
@@ -138,7 +174,7 @@ const CampaignsPage: React.FC = () => {
 
   return (
     <div className="flex h-screen relative">
-      <Sidebar userName="Name" />
+      <Sidebar userName={profile?.name || 'User'} />
       
       <main className="flex-1 overflow-y-auto">
         <div className="p-8">
@@ -197,6 +233,14 @@ const CampaignsPage: React.FC = () => {
         onSendMessage={handleSendMessage}
         onFileUpload={handleFileUpload}
         onDeleteFile={handleDeleteFile}
+      />
+
+      <FilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilters={handleApplyFilters}
+        currentFilters={filters}
+        userType="influencer"
       />
     </div>
   );

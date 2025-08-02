@@ -238,7 +238,6 @@ const BrandAIAssistantPage = () => {
                         
                         setMessages(prev => [...prev, aiResponse]);
                       } catch (error) {
-                        console.error('Error getting AI response:', error);
                         toast({
                           title: "Error",
                           description: error instanceof Error ? error.message : "Failed to get AI response",

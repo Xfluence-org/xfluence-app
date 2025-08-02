@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Facebook, Mail, Apple } from 'lucide-react';
 import { useAuth } from '@/contexts/SimpleAuthContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -316,25 +315,6 @@ const AuthFlow = () => {
               </Button>
             </form>
 
-            {isLogin && !isForgotPassword && (
-              <>
-                <div className="text-center text-sm text-[#6c757d]">
-                  or login with
-                </div>
-
-                <div className="flex justify-center space-x-3">
-                  <button className="w-11 h-11 rounded-full bg-[#f8f9fa] border border-[#e9ecef] flex items-center justify-center hover:bg-[#e9ecef] transition-colors">
-                    <Facebook size={20} className="text-[#1877f2]" />
-                  </button>
-                  <button className="w-11 h-11 rounded-full bg-[#f8f9fa] border border-[#e9ecef] flex items-center justify-center hover:bg-[#e9ecef] transition-colors">
-                    <Mail size={20} className="text-[#ea4335]" />
-                  </button>
-                  <button className="w-11 h-11 rounded-full bg-[#f8f9fa] border border-[#e9ecef] flex items-center justify-center hover:bg-[#e9ecef] transition-colors">
-                    <Apple size={20} className="text-[#000000]" />
-                  </button>
-                </div>
-              </>
-            )}
           </div>
         </div>
       </div>
@@ -542,19 +522,6 @@ const AuthFlow = () => {
             )}
           </div>
 
-          {isLogin && !isForgotPassword && (
-            <div className="mt-6 flex justify-center space-x-4">
-              <button className="w-10 h-10 rounded-full bg-[#f8f9fa] border border-[#e9ecef] flex items-center justify-center">
-                <Facebook size={16} className="text-[#1877f2]" />
-              </button>
-              <button className="w-10 h-10 rounded-full bg-[#f8f9fa] border border-[#e9ecef] flex items-center justify-center">
-                <Mail size={16} className="text-[#ea4335]" />
-              </button>
-              <button className="w-10 h-10 rounded-full bg-[#f8f9fa] border border-[#e9ecef] flex items-center justify-center">
-                <Apple size={16} className="text-[#000000]" />
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>

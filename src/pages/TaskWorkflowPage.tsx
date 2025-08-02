@@ -14,7 +14,7 @@ import { ArrowLeft } from 'lucide-react';
 const TaskWorkflowPage = () => {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
   const { data: taskData, isLoading, error } = useQuery({
     queryKey: ['task-details', taskId],
@@ -68,9 +68,9 @@ const TaskWorkflowPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex">
         {userProfile?.user_type === 'Brand' || userProfile?.user_type === 'Agency' ? (
-          <BrandSidebar />
+          <BrandSidebar userName={profile?.name || 'Brand'} />
         ) : (
-          <Sidebar />
+          <Sidebar userName={profile?.name || 'User'} />
         )}
         <main className="flex-1 ml-64 p-8">
           <div className="text-center py-12">
@@ -85,9 +85,9 @@ const TaskWorkflowPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex">
         {userProfile?.user_type === 'Brand' || userProfile?.user_type === 'Agency' ? (
-          <BrandSidebar />
+          <BrandSidebar userName={profile?.name || 'Brand'} />
         ) : (
-          <Sidebar />
+          <Sidebar userName={profile?.name || 'User'} />
         )}
         <main className="flex-1 ml-64 p-8">
           <div className="text-center py-12">
@@ -123,7 +123,7 @@ const TaskWorkflowPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {isBrandUser ? <BrandSidebar /> : <Sidebar />}
+      {isBrandUser ? <BrandSidebar userName={profile?.name || 'Brand'} /> : <Sidebar userName={profile?.name || 'User'} />}
       
       <main className="flex-1 ml-64 p-8">
         <div className="max-w-6xl mx-auto">

@@ -61,7 +61,6 @@ const InfluencerDashboard = () => {
   };
 
   const handleViewTaskDetails = (taskId: string) => {
-    console.log('handleViewTaskDetails called with taskId:', taskId);
     // Navigate to campaigns page with task parameter to open the modal
     navigate(`/campaigns?tab=Active&task=${taskId}`);
   };
@@ -190,7 +189,6 @@ const InfluencerDashboard = () => {
               <div className="space-y-4">
                 {activeCampaigns?.length > 0 ? (
                   activeCampaigns.slice(0, 2).map((campaign: any) => {
-                    console.log('Dashboard campaign data:', campaign); // Debug log
                     
                     // Check if campaign has tasks to show the workflow card
                     if (campaign.tasks?.length > 0) {

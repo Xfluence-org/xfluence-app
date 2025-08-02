@@ -40,7 +40,6 @@ const BrandSettingsPage = () => {
 
   const handleSave = () => {
     // TODO: Implement save functionality
-    console.log('Saving settings:', formData);
   };
 
   return (

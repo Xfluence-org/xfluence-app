@@ -52,8 +52,6 @@ const OpportunitiesPage = () => {
   const { data: allOpportunities = [], isLoading, error } = useQuery({
     queryKey: ['opportunities'],
     queryFn: async () => {
-      console.log('Fetching all opportunities');
-      
       const { data, error } = await supabase.rpc('get_opportunities', {
         search_query: '',
         category_filter: '',
@@ -63,11 +61,9 @@ const OpportunitiesPage = () => {
       });
 
       if (error) {
-        console.error('Error fetching opportunities:', error);
         throw error;
       }
 
-      console.log('Opportunities fetched:', data);
       return data || [];
     },
     staleTime: 60000, // Cache data for 1 minute

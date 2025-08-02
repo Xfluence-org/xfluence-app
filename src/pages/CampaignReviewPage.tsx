@@ -31,9 +31,6 @@ const CampaignReviewPage = () => {
     
     if (tempResults) {
       const results = JSON.parse(tempResults);
-      console.log('Campaign results loaded from localStorage:', results);
-      console.log('Results keys:', Object.keys(results));
-      console.log('Results structure:', JSON.stringify(results, null, 2));
       setCampaignResults(results);
     }
   }, []);
@@ -97,7 +94,6 @@ const CampaignReviewPage = () => {
         .single();
 
       if (campaignError) {
-        console.error('Error saving campaign:', campaignError);
         throw campaignError;
       }
 
@@ -122,7 +118,6 @@ const CampaignReviewPage = () => {
           });
 
         if (llmError) {
-          console.error('Error saving LLM interaction:', llmError);
           // Don't throw here, as the campaign was saved successfully
         }
       }
@@ -141,7 +136,6 @@ const CampaignReviewPage = () => {
       navigate(`/brand/campaigns?tab=published&view=${campaign.id}`);
       
     } catch (error) {
-      console.error('Error saving campaign:', error);
       toast({
         title: "Error",
         description: `Failed to save campaign: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -160,8 +154,6 @@ const CampaignReviewPage = () => {
   const createMockLLMInteractions = () => {
     if (!campaignResults) return [];
     
-    console.log('Creating mock LLM interactions with results:', campaignResults);
-    console.log('Campaign results keys:', Object.keys(campaignResults));
     
     // Try different data access patterns based on common AI response structures
     let planData = campaignResults;
@@ -169,21 +161,16 @@ const CampaignReviewPage = () => {
     // Check if data is nested under 'plan' key
     if (campaignResults.plan) {
       planData = campaignResults.plan;
-      console.log('Found plan data:', planData);
     }
     // Check if data is nested under 'campaign_strategy' or similar
     else if (campaignResults.campaign_strategy) {
       planData = campaignResults.campaign_strategy;
-      console.log('Found campaign_strategy data:', planData);
     }
     // Check if data is nested under 'strategy' key
     else if (campaignResults.strategy) {
       planData = campaignResults.strategy;
-      console.log('Found strategy data:', planData);
     }
     
-    console.log('Final plan data being passed to components:', planData);
-    console.log('Plan data keys:', Object.keys(planData));
     
     return [{
       raw_output: planData
@@ -203,9 +190,6 @@ const CampaignReviewPage = () => {
       planData = campaignResults.strategy;
     }
 
-    console.log('Strategy overview accessing plan data:', planData);
-    console.log('Influencer allocation in plan data:', planData?.influencer_allocation);
-    console.log('Search tactics in plan data:', planData?.actionable_search_tactics);
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

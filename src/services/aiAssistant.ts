@@ -26,7 +26,6 @@ export const aiAssistantService = {
       // If no campaignId provided, fetch the most recent campaign
       let activeCampaignId = campaignId;
       if (!activeCampaignId) {
-        console.log('Fetching most recent campaign...');
         const { data: campaigns, error: campaignError } = await supabase
           .from('campaigns')
           .select('id, title, created_at')
@@ -34,16 +33,12 @@ export const aiAssistantService = {
           .limit(1);
         
         if (campaignError) {
-          console.error('Error fetching campaign:', campaignError);
         } else if (campaigns && campaigns.length > 0) {
           activeCampaignId = campaigns[0].id;
-          console.log('Found campaign:', campaigns[0]);
         } else {
-          console.log('No campaigns found in database');
         }
       }
 
-      console.log('Calling AI assistant with campaignId:', activeCampaignId);
       
       // Call the Edge Function
       const { data, error } = await supabase.functions.invoke('ai-assistant', {
@@ -59,7 +54,6 @@ export const aiAssistantService = {
 
       return data as AIAssistantResponse;
     } catch (error) {
-      console.error('AI Assistant error:', error);
       return {
         message: '',
         error: error instanceof Error ? error.message : 'Failed to get AI response'
