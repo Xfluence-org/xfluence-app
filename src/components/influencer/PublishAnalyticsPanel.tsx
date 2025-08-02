@@ -302,7 +302,7 @@ const PublishAnalyticsPanel: React.FC<PublishAnalyticsPanelProps> = ({
                   </div>
                 </div>
                 <p className="text-sm text-green-700 mt-3">
-                  ✅ Analytics have been submitted for this content. The brand can now view the performance data.
+                  Analytics have been submitted for this content. The brand can now view the performance data.
                 </p>
               </div>
             ) : (

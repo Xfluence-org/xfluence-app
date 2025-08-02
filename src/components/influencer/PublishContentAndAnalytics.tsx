@@ -324,7 +324,7 @@ const PublishContentAndAnalytics: React.FC<PublishContentAndAnalyticsProps> = ({
                         </a>
                         {content.analytics_data && (
                           <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                            ✓ Complete
+                            Complete
                           </span>
                         )}
                       </div>

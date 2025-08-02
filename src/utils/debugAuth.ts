@@ -42,7 +42,7 @@ export async function debugAuthIssue(userId: string) {
 }
 
 export const debugAuthState = async () => {
-  console.group('🔍 Auth Debug Information');
+  console.group('Auth Debug Information');
   
   try {
     // Get current session
@@ -75,7 +75,7 @@ export const debugAuthState = async () => {
     }
     
     // Check localStorage
-    console.log('\n📦 localStorage Auth Keys:');
+    console.log('\nlocalStorage Auth Keys:');
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && (key.includes('supabase') || key.includes('auth'))) {
@@ -93,7 +93,7 @@ export const debugAuthState = async () => {
     }
     
     // Check auth state listeners
-    console.log('\n🎧 Auth State Listener Test:');
+    console.log('\nAuth State Listener Test:');
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state change event:', event, 'Session:', !!session);
     });

@@ -6,6 +6,7 @@ import { useBrandDashboardData } from '@/hooks/useBrandDashboardData';
 import { usePublishedCampaigns } from '@/hooks/usePublishedCampaigns';
 import PublishedCampaignCard from '@/components/brand/PublishedCampaignCard';
 import { useNavigate } from 'react-router-dom';
+import { Card } from '@/components/ui/card';
 
 const BrandDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -60,7 +61,7 @@ const BrandDashboard: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="flex h-screen relative">
       <BrandSidebar userName="Brand Team" />
       
       <main className="flex-1 overflow-y-auto">
@@ -72,7 +73,7 @@ const BrandDashboard: React.FC = () => {
 
           {/* Metrics Overview */}
           <section className="mb-12">
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
+            <Card className="p-8">
               <h2 className="text-2xl font-bold text-[#1a1f2e] mb-6">Overview</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <MetricsCard
@@ -80,37 +81,37 @@ const BrandDashboard: React.FC = () => {
                   value={metrics.publishedCampaigns || 0}
                   subtitle={`${metrics.totalCampaigns || 0} total campaigns`}
                   trend={{ value: 12, isPositive: true }}
-                  icon="📱"
+                  icon="campaigns"
                 />
                 <MetricsCard
                   title="Published Budget"
                   value={`$${(metrics.publishedBudget || 0).toLocaleString()}`}
                   subtitle={`$${(metrics.publishedSpent || 0).toLocaleString()} spent`}
                   trend={{ value: 8, isPositive: true }}
-                  icon="💰"
+                  icon="budget"
                 />
                 <MetricsCard
                   title="Active Campaigns"
                   value={metrics.publishedCampaigns || 0}
                   subtitle="In progress"
-                  icon="📝"
+                  icon="active"
                 />
                 <MetricsCard
                   title="Total Reach"
                   value={metrics.totalReach > 0 ? `${(metrics.totalReach / 1000000).toFixed(1)}M` : '0'}
                   subtitle={`${metrics.avgEngagementRate.toFixed(1)}% avg engagement`}
                   trend={{ value: 15, isPositive: true }}
-                  icon="📈"
+                  icon="reach"
                 />
               </div>
-            </div>
+            </Card>
           </section>
 
 
 
           {/* Published Campaigns */}
           <section className="mb-12">
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
+            <Card className="p-8">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-[#1a1f2e]">Published Campaigns</h2>
                   <button 
@@ -135,7 +136,7 @@ const BrandDashboard: React.FC = () => {
                     <p className="text-gray-500">No published campaigns yet. Complete your active campaigns to see them here!</p>
                   </div>
                 )}
-              </div>
+              </Card>
             </section>
 
         </div>

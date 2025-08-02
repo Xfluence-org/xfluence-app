@@ -20,7 +20,7 @@ import WaitingParticipantsSection from '@/components/brand/WaitingParticipantsSe
 import ActiveInfluencersSection from '@/components/brand/ActiveInfluencersSection';
 import BrandTaskViewModal from '@/components/brand/BrandTaskViewModal';
 import CampaignAnalyticsDashboard from '@/components/brand/CampaignAnalyticsDashboard';
-import { Save, Edit, X } from 'lucide-react';
+import { Save, Edit, X, Sprout, TrendingUp, Rocket, Star, User } from 'lucide-react';
 import PublicCampaignToggle from '@/components/brand/PublicCampaignToggle';
 import ApplicationsManagementSection from '@/components/brand/ApplicationsManagementSection';
 import InvitationManagement from '@/components/brand/InvitationManagement';
@@ -174,11 +174,11 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
   // Helper functions for influencer allocation display
   const getTierIcon = (tier: string) => {
     switch (tier) {
-      case 'nano': return '🌱';
-      case 'micro': return '📈';
-      case 'macro': return '🚀';
-      case 'mega': return '⭐';
-      default: return '👤';
+      case 'nano': return <Sprout className="w-4 h-4 inline" />;
+      case 'micro': return <TrendingUp className="w-4 h-4 inline" />;
+      case 'macro': return <Rocket className="w-4 h-4 inline" />;
+      case 'mega': return <Star className="w-4 h-4 inline" />;
+      default: return <User className="w-4 h-4 inline" />;
     }
   };
 

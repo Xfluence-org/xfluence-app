@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { FileText, Film, Video, File } from 'lucide-react';
 
 interface ContentStrategyData {
   content_distribution?: {
@@ -129,10 +130,10 @@ const ContentStrategySection: React.FC<ContentStrategySectionProps> = ({ llmInte
 
   const getContentTypeIcon = (type: string) => {
     switch (type) {
-      case 'post': return '📝';
-      case 'reel': return '🎬';
-      case 'story': return '📱';
-      default: return '📄';
+      case 'post': return <FileText className="w-5 h-5 inline" />;
+      case 'reel': return <Film className="w-5 h-5 inline" />;
+      case 'story': return <Video className="w-5 h-5 inline" />;
+      default: return <File className="w-5 h-5 inline" />;
     }
   };
 

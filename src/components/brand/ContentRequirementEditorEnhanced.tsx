@@ -68,43 +68,43 @@ const ContentRequirementEditorEnhanced: React.FC<ContentRequirementEditorEnhance
       // Simulate AI generation with realistic content
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      const generatedContent = `🎯 CONTENT REQUIREMENTS
+      const generatedContent = `CONTENT REQUIREMENTS
 
-📱 Platform: Instagram Reel/Post
-⏱️ Duration: 15-30 seconds (for Reel) or high-quality static post
-🎨 Style: Authentic, lifestyle-focused, natural lighting
+Platform: Instagram Reel/Post
+Duration: 15-30 seconds (for Reel) or high-quality static post
+Style: Authentic, lifestyle-focused, natural lighting
 
-📝 CONTENT GUIDELINES:
+CONTENT GUIDELINES:
 • Feature the product naturally in your daily routine
 • Show the product being used or worn authentically
 • Include at least 2-3 close-up shots highlighting key features
 • Maintain your personal brand aesthetic while showcasing our product
 
-💬 CAPTIONS & MESSAGING:
+CAPTIONS & MESSAGING:
 • Start with a hook that relates to your audience's pain points
 • Share your genuine experience with the product
 • Include product benefits naturally in your story
 • End with a clear call-to-action
 
-🏷️ REQUIRED HASHTAGS:
+REQUIRED HASHTAGS:
 #brandpartner #productname #collaboration
 + 5-8 relevant hashtags from your niche
 
-📍 MENTIONS:
+MENTIONS:
 • Tag @brandusername in both post and story
 • Use branded hashtag #campaignhashtag
 
-📊 DELIVERABLES:
+DELIVERABLES:
 • 1 Instagram Reel OR 1 high-quality post
 • 1 Instagram story featuring the product
 • Submit analytics 48 hours after posting
 
-⚠️ COMPLIANCE:
+COMPLIANCE:
 • Include #ad or #sponsored in caption
 • Follow FTC guidelines for sponsored content
 • Ensure content aligns with brand values and guidelines
 
-📅 TIMELINE:
+TIMELINE:
 • Content submission: Within 7 days
 • Revisions (if needed): 2-3 days
 • Publishing: After brand approval`;
@@ -146,14 +146,14 @@ const ContentRequirementEditorEnhanced: React.FC<ContentRequirementEditorEnhance
       // Simulate AI refinement
       const refinedContent = requirements + `
 
-🤖 AI ENHANCEMENTS:
+AI ENHANCEMENTS:
 • Added specific timeline expectations for deliverables
 • Included compliance guidelines for sponsored content
 • Suggested optimal hashtag strategy for maximum reach
 • Recommended content structure for better engagement
 • Added technical specifications for image/video quality
 
-💡 ADDITIONAL SUGGESTIONS:
+ADDITIONAL SUGGESTIONS:
 • Consider requesting behind-the-scenes content for authenticity
 • Ask for user-generated content permissions for reposting
 • Include specific brand colors/aesthetics guidelines if applicable`;

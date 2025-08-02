@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Activity, DollarSign, FileText, TrendingUp } from 'lucide-react';
 
 interface MetricsCardProps {
   title: string;
@@ -32,7 +33,12 @@ const MetricsCard: React.FC<MetricsCardProps> = ({ title, value, subtitle, trend
           )}
         </div>
         {icon && (
-          <div className="text-2xl">{icon}</div>
+          <div className="text-gray-400">
+            {icon === 'campaigns' && <FileText className="w-6 h-6" />}
+            {icon === 'budget' && <DollarSign className="w-6 h-6" />}
+            {icon === 'active' && <Activity className="w-6 h-6" />}
+            {icon === 'reach' && <TrendingUp className="w-6 h-6" />}
+          </div>
         )}
       </div>
     </div>

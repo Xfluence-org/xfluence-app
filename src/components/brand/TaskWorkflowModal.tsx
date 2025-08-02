@@ -188,7 +188,7 @@ const TaskWorkflowModal: React.FC<TaskWorkflowModalProps> = ({
                   {existingDraft && existingDraft.shared_with_influencer && (
                     <div className="mt-4 p-3 bg-green-50 rounded-lg">
                       <p className="text-sm text-green-800">
-                        <strong>✓ Shared:</strong> These requirements have been shared with the influencer on {new Date(existingDraft.updated_at).toLocaleString()}
+                        <strong>Shared:</strong> These requirements have been shared with the influencer on {new Date(existingDraft.updated_at).toLocaleString()}
                       </p>
                     </div>
                   )}

@@ -29,7 +29,7 @@ const DetailedCampaignCard: React.FC<DetailedCampaignCardProps> = ({
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-8 mb-6 shadow-lg hover:shadow-xl transition-all duration-200">
+    <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 mb-6 shadow-2xl hover:shadow-3xl hover:bg-white/15 transition-all duration-300">
       {/* Campaign Header */}
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-start gap-4">

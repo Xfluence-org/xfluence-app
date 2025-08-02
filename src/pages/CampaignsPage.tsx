@@ -9,6 +9,7 @@ import TaskDetailModal from '@/components/campaigns/TaskDetailModal';
 import { CampaignTab } from '@/types/campaigns';
 import { useTaskDetail } from '@/hooks/useTaskDetail';
 import { useCampaignData } from '@/hooks/useCampaignData';
+import { Card } from '@/components/ui/card';
 
 const CampaignsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -107,7 +108,7 @@ const CampaignsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="flex h-screen relative">
         <Sidebar userName="Name" />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
@@ -122,7 +123,7 @@ const CampaignsPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="flex h-screen relative">
         <Sidebar userName="Name" />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
@@ -136,7 +137,7 @@ const CampaignsPage: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="flex h-screen relative">
       <Sidebar userName="Name" />
       
       <main className="flex-1 overflow-y-auto">
@@ -146,7 +147,7 @@ const CampaignsPage: React.FC = () => {
           </header>
 
           <section>
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
+            <Card className="p-8">
               <h2 className="text-2xl font-bold text-[#1a1f2e] mb-6">My Campaigns</h2>
               
               <CampaignSearch
@@ -182,7 +183,7 @@ const CampaignsPage: React.FC = () => {
                   </div>
                 )}
               </div>
-            </div>
+            </Card>
           </section>
         </div>
       </main>

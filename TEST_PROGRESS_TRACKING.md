@@ -43,9 +43,9 @@ The system tracks three main phases:
 ### Visual Indicators
 - **Progress Bars**: Show completion percentage
 - **Phase Status Badges**: 
-  - 🔵 Waiting (Blue)
-  - 🟡 In Progress (Yellow)
-  - ✅ Completed (Green)
+  - Waiting (Blue)
+  - In Progress (Yellow)
+  - Completed (Green)
 - **Timeline View**: Shows chronological activity
 - **Activity Logs**: Detailed action history
 

@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/SimpleAuthContext';
-import { LogOut } from 'lucide-react';
+import { LogOut, BarChart3, Lightbulb, Smartphone, Settings } from 'lucide-react';
 
 interface SidebarProps {
   userName?: string;
@@ -26,11 +26,11 @@ const Sidebar: React.FC<SidebarProps> = ({ userName = 'Name' }) => {
   const activeItem = getActiveItem();
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: '📊', path: '/dashboard' },
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3, path: '/dashboard' },
     // Only show opportunities for brands/agencies, not influencers
-    ...(profile?.user_type !== 'Influencer' ? [{ id: 'opportunities', label: 'Opportunities', icon: '💡', path: '/opportunities' }] : []),
-    { id: 'campaigns', label: 'Campaigns', icon: '📱', path: '/campaigns' },
-    { id: 'settings', label: 'Settings', icon: '⚙️', path: '/settings' },
+    ...(profile?.user_type !== 'Influencer' ? [{ id: 'opportunities', label: 'Opportunities', icon: Lightbulb, path: '/opportunities' }] : []),
+    { id: 'campaigns', label: 'Campaigns', icon: Smartphone, path: '/campaigns' },
+    { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
   ];
 
   const handleMenuClick = (item: typeof menuItems[0]) => {
@@ -43,10 +43,10 @@ const Sidebar: React.FC<SidebarProps> = ({ userName = 'Name' }) => {
   };
 
   return (
-    <div className="w-64 bg-gradient-to-b from-[#1a1f2e] to-[#252b3b] flex flex-col h-screen">
+    <div className="w-64 bg-white/10 backdrop-blur-2xl border-r border-white/20 flex flex-col h-screen relative overflow-hidden">
       {/* Logo/Brand */}
-      <div className="p-6 border-b border-gray-700">
-        <h1 className="text-2xl font-bold text-white">Xfluence</h1>
+      <div className="p-6 border-b border-white/10">
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Xfluence</h1>
       </div>
 
       {/* Navigation */}
@@ -56,24 +56,24 @@ const Sidebar: React.FC<SidebarProps> = ({ userName = 'Name' }) => {
             key={item.id}
             onClick={() => handleMenuClick(item)}
             className={cn(
-              "w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center gap-3",
+              "w-full text-left px-4 py-3 rounded-xl transition-all duration-300 flex items-center gap-3 backdrop-blur-md",
               activeItem === item.id
-                ? "bg-[#1DDCD3] text-white shadow-lg"
-                : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                ? "bg-gradient-to-r from-purple-500/30 to-pink-500/30 text-white shadow-lg border border-white/30"
+                : "text-gray-700 dark:text-gray-300 hover:bg-white/20 hover:text-gray-900 dark:hover:text-white border border-transparent hover:border-white/20"
             )}
           >
-            <span className="text-lg">{item.icon}</span>
+            <item.icon className="w-5 h-5" />
             <span className="font-medium">{item.label}</span>
           </button>
         ))}
       </nav>
 
       {/* User Section */}
-      <div className="p-4 border-t border-gray-700">
+      <div className="p-4 border-t border-white/10">
         <div className="flex items-center justify-center">
           <button 
             onClick={handleLogout}
-            className="p-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-all duration-200"
+            className="p-3 text-gray-700 dark:text-gray-300 hover:bg-white/20 hover:text-gray-900 dark:hover:text-white rounded-xl transition-all duration-300 backdrop-blur-md border border-transparent hover:border-white/20"
             title="Log out"
           >
             <LogOut className="w-5 h-5" />

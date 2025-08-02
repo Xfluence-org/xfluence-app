@@ -134,7 +134,7 @@ const ContentRequirementView: React.FC<ContentRequirementViewProps> = ({ taskId,
           task_id: taskId,
           sender_id: user.id,
           sender_type: 'influencer',
-          message: '✅ I have reviewed and accepted the content requirements. Ready to proceed with content creation!',
+          message: 'I have reviewed and accepted the content requirements. Ready to proceed with content creation!',
           phase: 'content_requirement'
         });
 
@@ -456,7 +456,7 @@ const ContentRequirementView: React.FC<ContentRequirementViewProps> = ({ taskId,
               {!conversation.some(item => 
                 item.type === 'feedback' && 
                 item.sender === 'influencer' && 
-                item.content.includes('✅ I have reviewed and accepted')
+                item.content.includes('I have reviewed and accepted')
               ) && (
                 <Card className="border-2 border-[#1DDCD3]">
                   <CardHeader>

@@ -118,7 +118,7 @@ const PublishedCampaignCard: React.FC<PublishedCampaignCardProps> = ({ campaign,
         {campaign.completion_rate === 100 && (
           <div className="flex items-center justify-center pt-2">
             <Badge className="bg-green-100 text-green-700 border-green-300">
-              ✅ Successfully Completed
+              Successfully Completed
             </Badge>
           </div>
         )}

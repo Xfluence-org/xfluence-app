@@ -9,6 +9,7 @@ import InvitationCard from '@/components/dashboard/InvitationCard';
 import WaitingForRequirementsCard from '@/components/dashboard/WaitingForRequirementsCard';
 import PendingApplicationCard from '@/components/dashboard/PendingApplicationCard';
 import TaskWorkflowCard from '@/components/campaigns/TaskWorkflowCard';
+import { Card } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 
 const InfluencerDashboard = () => {
@@ -67,24 +68,26 @@ const InfluencerDashboard = () => {
 
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen relative">
       <Sidebar userName={profile?.name} />
       
       <div className="flex-1 overflow-y-auto">
         <div className="p-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-[#1a1f2e] mb-2">
-              Welcome back, {profile?.name || 'Influencer'}! 👋
+              Welcome back, {profile?.name || 'Influencer'}!
             </h1>
             <p className="text-gray-600">Here's what's happening with your campaigns today.</p>
           </div>
 
           {/* Stats Overview */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-lg p-6 shadow-sm">
+            <Card className="p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-[#1DDCD3]/10 rounded-lg">
-                  <span className="text-2xl">📊</span>
+                <div className="p-2 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg backdrop-blur-sm border border-white/20">
+                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
                 </div>
                 <div className="ml-4">
                   <p className="text-sm text-gray-600">Active Campaigns</p>
@@ -93,43 +96,49 @@ const InfluencerDashboard = () => {
                   </p>
                 </div>
               </div>
-            </div>
+            </Card>
 
-            <div className="bg-white rounded-lg p-6 shadow-sm">
+            <Card className="p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-[#1DDCD3]/10 rounded-lg">
-                  <span className="text-2xl">✅</span>
+                <div className="p-2 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg backdrop-blur-sm border border-white/20">
+                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
                 </div>
                 <div className="ml-4">
                   <p className="text-sm text-gray-600">Completed</p>
                   <p className="text-2xl font-bold text-[#1a1f2e]">0</p>
                 </div>
               </div>
-            </div>
+            </Card>
 
-            <div className="bg-white rounded-lg p-6 shadow-sm">
+            <Card className="p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-[#1DDCD3]/10 rounded-lg">
-                  <span className="text-2xl">💰</span>
+                <div className="p-2 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg backdrop-blur-sm border border-white/20">
+                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
                 </div>
                 <div className="ml-4">
                   <p className="text-sm text-gray-600">Total Earnings</p>
                   <p className="text-2xl font-bold text-[#1a1f2e]">$0</p>
                 </div>
               </div>
-            </div>
+            </Card>
 
-            <div className="bg-white rounded-lg p-6 shadow-sm">
+            <Card className="p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-[#1DDCD3]/10 rounded-lg">
-                  <span className="text-2xl">📈</span>
+                <div className="p-2 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg backdrop-blur-sm border border-white/20">
+                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
                 </div>
                 <div className="ml-4">
                   <p className="text-sm text-gray-600">Success Rate</p>
                   <p className="text-2xl font-bold text-[#1a1f2e]">0%</p>
                 </div>
               </div>
-            </div>
+            </Card>
           </div>
 
           {/* Pending Applications */}
@@ -208,7 +217,7 @@ const InfluencerDashboard = () => {
                     
                     // Otherwise show the simple card
                     return (
-                      <div key={campaign.id} className="bg-white rounded-lg p-6 shadow-sm border">
+                      <Card key={campaign.id} className="p-6">
                         <div className="flex items-start justify-between mb-4">
                           <div>
                             <h3 className="font-semibold text-lg text-[#1a1f2e] mb-1">
@@ -255,14 +264,14 @@ const InfluencerDashboard = () => {
                             {campaign.completed_tasks}/{campaign.task_count} tasks completed
                           </span>
                         </div>
-                      </div>
+                      </Card>
                     );
                   })
                 ) : (
-                  <div className="bg-white rounded-lg p-6 text-center">
+                  <Card className="p-6 text-center">
                     <p className="text-gray-500">No active campaigns</p>
                     <p className="text-sm text-gray-400 mt-1">New campaigns will appear here when you're invited!</p>
-                  </div>
+                  </Card>
                 )}
               </div>
             </div>
@@ -291,10 +300,10 @@ const InfluencerDashboard = () => {
                     />
                   ))
                 ) : (
-                  <div className="bg-white rounded-lg p-6 text-center">
+                  <Card className="p-6 text-center">
                     <p className="text-gray-500">No recent invitations</p>
                     <p className="text-sm text-gray-400 mt-1">New opportunities will appear here</p>
-                  </div>
+                  </Card>
                 )}
               </div>
             </div>

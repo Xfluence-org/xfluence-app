@@ -79,8 +79,8 @@ SELECT
     tasks_with_workflow,
     calculated_campaign_progress,
     CASE 
-        WHEN stored_campaign_progress = calculated_campaign_progress THEN 'MATCH ✓'
-        ELSE 'MISMATCH ✗'
+        WHEN stored_campaign_progress = calculated_campaign_progress THEN 'MATCH'
+        ELSE 'MISMATCH'
     END AS progress_check
 FROM campaign_progress_calculation
 

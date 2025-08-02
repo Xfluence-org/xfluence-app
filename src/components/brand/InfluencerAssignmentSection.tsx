@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Users, Plus, UserCheck, UserPlus } from 'lucide-react';
+import { Users, Plus, UserCheck, UserPlus, FileText, Video, Film, File, Sprout, TrendingUp, Rocket, Star, User } from 'lucide-react';
 import InfluencerAssignmentModal from './InfluencerAssignmentModal';
 import ContentTypeWaitingSection from './ContentTypeWaitingSection';
 import ContentTypeActiveSection from './ContentTypeActiveSection';
@@ -250,10 +250,10 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
   
   const getContentTypeIcon = (type: string) => {
     switch (type) {
-      case 'post': return '📝';
-      case 'reel': return '🎬';
-      case 'story': return '📱';
-      default: return '📄';
+      case 'post': return <FileText className="w-4 h-4 inline" />;
+      case 'reel': return <Film className="w-4 h-4 inline" />;
+      case 'story': return <Video className="w-4 h-4 inline" />;
+      default: return <File className="w-4 h-4 inline" />;
     }
   };
 
@@ -268,12 +268,12 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
 
   const getTierIcon = (tier: string) => {
     switch (tier) {
-      case 'nano': return '🌱';
-      case 'micro': return '📈';
-      case 'mid': return '🚀';
-      case 'macro': return '🚀';
-      case 'mega': return '⭐';
-      default: return '👤';
+      case 'nano': return <Sprout className="w-4 h-4 inline" />;
+      case 'micro': return <TrendingUp className="w-4 h-4 inline" />;
+      case 'mid': return <Rocket className="w-4 h-4 inline" />;
+      case 'macro': return <Rocket className="w-4 h-4 inline" />;
+      case 'mega': return <Star className="w-4 h-4 inline" />;
+      default: return <User className="w-4 h-4 inline" />;
     }
   };
 

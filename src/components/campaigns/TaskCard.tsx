@@ -33,7 +33,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onViewDetails }) => {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200">
+    <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 shadow-lg hover:shadow-xl hover:bg-white/15 transition-all duration-300">
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <div>

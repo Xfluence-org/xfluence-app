@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Sprout, TrendingUp, Rocket, Star, User } from 'lucide-react';
 
 interface InfluencerAllocationData {
   total_influencers?: number;
@@ -125,12 +126,12 @@ const InfluencerAllocationSection: React.FC<InfluencerAllocationSectionProps> = 
 
   const getTierIcon = (tier: string) => {
     switch (tier) {
-      case 'nano': return '🌱';
-      case 'micro': return '📈';
-      case 'mid': return '🚀';
-      case 'macro': return '🚀';
-      case 'mega': return '⭐';
-      default: return '👤';
+      case 'nano': return <Sprout className="w-4 h-4 inline" />;
+      case 'micro': return <TrendingUp className="w-4 h-4 inline" />;
+      case 'mid': return <Rocket className="w-4 h-4 inline" />;
+      case 'macro': return <Rocket className="w-4 h-4 inline" />;
+      case 'mega': return <Star className="w-4 h-4 inline" />;
+      default: return <User className="w-4 h-4 inline" />;
     }
   };
 

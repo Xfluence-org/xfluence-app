@@ -298,7 +298,7 @@ const InfluencerAssignmentModal: React.FC<InfluencerAssignmentModalProps> = ({
                 <CollapsibleTrigger asChild>
                   <div className="flex items-center justify-between cursor-pointer">
                     <h3 className="text-lg font-semibold text-green-800">
-                      🎉 Invitation Links Generated ({generatedInvitations.length})
+                      Invitation Links Generated ({generatedInvitations.length})
                     </h3>
                     <Button variant="ghost" size="sm" className="text-green-700">
                       <ChevronDown className={`h-4 w-4 transition-transform ${showInvitations ? 'rotate-180' : ''}`} />

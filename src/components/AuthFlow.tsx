@@ -193,9 +193,9 @@ const AuthFlow = () => {
   };
 
   return (
-    <div className="min-h-screen flex overflow-hidden">
+    <div className="min-h-screen flex overflow-hidden relative">
       {/* Left Panel - Form Section (45% width) */}
-      <div className={`w-[45%] bg-white relative transition-all duration-700 ease-in-out ${isLogin ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`w-[45%] bg-white/80 backdrop-blur-2xl relative transition-all duration-700 ease-in-out ${isLogin ? 'translate-x-0' : 'translate-x-full'} border-r border-white/20`}>
         {/* Brand Header */}
         <div className="absolute top-6 left-6">
           <h1 className="text-lg font-medium text-[#1a1f2e]">Xfluence</h1>
@@ -341,7 +341,7 @@ const AuthFlow = () => {
 
       {/* Right Panel - Hero Section (55% width) */}
       <div className={`w-[55%] relative overflow-hidden transition-all duration-700 ease-in-out ${isLogin ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="h-full relative bg-gradient-to-br from-[#1a1f2e] to-[#252b3b]">
+        <div className="h-full relative bg-gradient-to-br from-purple-900/50 to-pink-900/50 backdrop-blur-2xl">
           {/* Animated fluid shapes */}
           <div className="absolute inset-0 overflow-hidden">
             {isLogin ? (
@@ -403,7 +403,7 @@ const AuthFlow = () => {
                   {isLogin ? (
                     <>Welcome Back!</>
                   ) : (
-                    <>Hello! 👋</>
+                    <>Hello!</>
                   )}
                 </h2>
                 <p className="text-[28px] leading-[43px] opacity-90" style={{ fontFamily: 'Poppins, sans-serif' }}>
