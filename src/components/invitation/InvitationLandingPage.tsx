@@ -165,6 +165,9 @@ const InvitationLandingPage: React.FC = () => {
         description: "You've successfully joined the campaign! Redirecting to your dashboard...",
       });
 
+      // Invalidate queries to refresh dashboard data
+      window.dispatchEvent(new CustomEvent('refreshDashboard'));
+      
       // Redirect to influencer dashboard after a short delay
       setTimeout(() => {
         navigate('/dashboard');

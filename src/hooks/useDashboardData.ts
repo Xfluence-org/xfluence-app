@@ -1,10 +1,24 @@
 
 // @ts-nocheck
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useEffect } from 'react';
 
 export const useDashboardData = () => {
+  const queryClient = useQueryClient();
+
+  // Listen for dashboard refresh events
+  useEffect(() => {
+    const handleRefresh = () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-waiting'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-active-campaigns'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-invitations'] });
+    };
+
+    window.addEventListener('refreshDashboard', handleRefresh);
+    return () => window.removeEventListener('refreshDashboard', handleRefresh);
+  }, [queryClient]);
   // For waiting for requirements campaigns
   const { data: waitingCampaigns = [], isLoading: isLoadingWaiting } = useQuery({
     queryKey: ['dashboard-waiting'],
