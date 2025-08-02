@@ -948,6 +948,10 @@ export type Database = {
         Args: { task_id_param: string }
         Returns: number
       }
+      can_access_campaign_via_invitation: {
+        Args: { campaign_id_param: string }
+        Returns: boolean
+      }
       create_assignment_tasks: {
         Args: { assignment_id_param: string }
         Returns: undefined
