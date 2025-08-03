@@ -11,9 +11,7 @@ const CampaignStrategyHighlights: React.FC<CampaignStrategyHighlightsProps> = ({
   if (!campaignResults) return null;
 
   // Handle raw response format
-  let strategyData = campaignResults;
   if (campaignResults.raw_response && !campaignResults.parsed) {
-    // Display raw response in a structured way
     return (
       <Card className="glass border-white/20">
         <CardHeader>
@@ -33,35 +31,38 @@ const CampaignStrategyHighlights: React.FC<CampaignStrategyHighlightsProps> = ({
     );
   }
 
-  // Extract data from different possible structures
-  let planData = strategyData;
-  if (strategyData.plan) {
-    planData = strategyData.plan;
-  } else if (strategyData.campaign_strategy) {
-    planData = strategyData.campaign_strategy;
-  } else if (strategyData.strategy) {
-    planData = strategyData.strategy;
+  // Extract campaign strategy data
+  let strategy = campaignResults;
+  if (campaignResults.campaign_strategy) {
+    strategy = campaignResults.campaign_strategy;
   }
 
-  // Extract key insights
-  const totalInfluencers = planData?.influencer_allocation?.total_influencers || 0;
-  const categories = Object.keys(planData?.influencer_allocation?.allocation_by_category || {});
-  const topHashtags = planData?.actionable_search_tactics?.niche_hashtags?.slice(0, 5) || [];
-  const contentTypes = planData?.content_strategy?.content_distribution || {};
+  const overview = strategy.campaign_overview || {};
+  const allocation = strategy.influencer_allocation || {};
+  const content = strategy.content_strategy || {};
+  const budget = strategy.budget_allocation || {};
+  const outcomes = strategy.expected_outcomes_and_kpis || {};
+  const hashtags = strategy.search_tactics_and_hashtags || {};
+
+  // Extract key metrics
+  const totalInfluencers = allocation.total_influencers || 0;
+  const contentTypes = content.content_types || {};
+  const topHashtags = hashtags.hashtag_recommendations?.primary_hashtags || hashtags.hashtag_recommendations?.secondary_hashtags || [];
+  const tiers = allocation.tier_distribution || {};
+  const goals = overview.campaign_goals || [];
   
-  // Calculate expected reach (estimation based on influencer tiers)
-  const expectedReach = () => {
-    const allocation = planData?.influencer_allocation?.allocation_by_tier || {};
+  // Calculate estimated reach
+  const calculateReach = () => {
     let totalReach = 0;
     
-    Object.entries(allocation).forEach(([tier, count]: [string, any]) => {
-      const influencerCount = typeof count === 'number' ? count : count.count || 0;
+    Object.entries(tiers).forEach(([tier, data]: [string, any]) => {
+      const count = data.count || 0;
       switch(tier) {
-        case 'nano': totalReach += influencerCount * 5000; break;
-        case 'micro': totalReach += influencerCount * 30000; break;
-        case 'mid': totalReach += influencerCount * 250000; break;
-        case 'macro': totalReach += influencerCount * 750000; break;
-        case 'mega': totalReach += influencerCount * 2000000; break;
+        case 'nano_influencers': totalReach += count * 5000; break;
+        case 'micro_influencers': totalReach += count * 30000; break;
+        case 'mid_influencers': totalReach += count * 250000; break;
+        case 'macro_influencers': totalReach += count * 750000; break;
+        case 'mega_influencers': totalReach += count * 2000000; break;
       }
     });
     
@@ -73,6 +74,8 @@ const CampaignStrategyHighlights: React.FC<CampaignStrategyHighlightsProps> = ({
     if (reach >= 1000) return `${(reach / 1000).toFixed(0)}K`;
     return reach.toString();
   };
+
+  const estimatedReach = calculateReach();
 
   return (
     <div className="space-y-6">
@@ -93,13 +96,13 @@ const CampaignStrategyHighlights: React.FC<CampaignStrategyHighlightsProps> = ({
                 <Badge variant="secondary">{totalInfluencers}</Badge>
               </div>
               <p className="text-sm font-medium text-gray-900">Influencers</p>
-              <p className="text-xs text-gray-600">{categories.length} categories</p>
+              <p className="text-xs text-gray-600">{Object.keys(tiers).length} tiers</p>
             </div>
             
             <div className="glass-light rounded-lg p-4 border border-white/20">
               <div className="flex items-center justify-between mb-2">
                 <TrendingUp className="h-5 w-5 text-emerald-600" />
-                <Badge variant="secondary">{formatReach(expectedReach())}</Badge>
+                <Badge variant="secondary">{formatReach(estimatedReach)}</Badge>
               </div>
               <p className="text-sm font-medium text-gray-900">Est. Reach</p>
               <p className="text-xs text-gray-600">Total exposure</p>
@@ -117,10 +120,10 @@ const CampaignStrategyHighlights: React.FC<CampaignStrategyHighlightsProps> = ({
             <div className="glass-light rounded-lg p-4 border border-white/20">
               <div className="flex items-center justify-between mb-2">
                 <Clock className="h-5 w-5 text-orange-600" />
-                <Badge variant="secondary">Ready</Badge>
+                <Badge variant="secondary">{overview.campaign_duration || 'Ready'}</Badge>
               </div>
-              <p className="text-sm font-medium text-gray-900">Status</p>
-              <p className="text-xs text-gray-600">Launch ready</p>
+              <p className="text-sm font-medium text-gray-900">Timeline</p>
+              <p className="text-xs text-gray-600">Campaign duration</p>
             </div>
           </div>
         </div>
@@ -142,9 +145,9 @@ const CampaignStrategyHighlights: React.FC<CampaignStrategyHighlightsProps> = ({
                   <span className="text-sm font-bold text-brand-primary">1</span>
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-medium text-gray-900">Launch {categories[0]} outreach</h4>
+                  <h4 className="font-medium text-gray-900">Launch {allocation.category_focus || 'influencer'} outreach</h4>
                   <p className="text-sm text-gray-600 mt-1">
-                    Target {planData?.influencer_allocation?.allocation_by_category?.[categories[0]] || totalInfluencers} influencers first
+                    Target {Math.floor(totalInfluencers / 2)} influencers in initial wave
                   </p>
                 </div>
               </div>
@@ -213,9 +216,9 @@ const CampaignStrategyHighlights: React.FC<CampaignStrategyHighlightsProps> = ({
               <div>
                 <h4 className="font-medium text-gray-900 mb-2">Why This Works</h4>
                 <p className="text-sm text-gray-600">
-                  {planData?.justification ? 
-                    planData.justification.substring(0, 120) + '...' : 
-                    `Targets ${formatReach(expectedReach())} potential customers across ${categories.length} high-impact categories`
+                  {strategy.justification?.tier_selection ? 
+                    strategy.justification.tier_selection.substring(0, 120) + '...' : 
+                    `Multi-tier approach targeting ${formatReach(estimatedReach)} potential customers with ${totalInfluencers} creators`
                   }
                 </p>
               </div>
@@ -236,7 +239,7 @@ const CampaignStrategyHighlights: React.FC<CampaignStrategyHighlightsProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
               <div className="text-2xl font-bold text-emerald-600 mb-1">
-                {formatReach(expectedReach())}+
+                {formatReach(estimatedReach)}+
               </div>
               <p className="text-sm text-gray-600">Total Reach</p>
             </div>
@@ -258,7 +261,7 @@ const CampaignStrategyHighlights: React.FC<CampaignStrategyHighlightsProps> = ({
           
           <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg border border-emerald-200">
             <p className="text-sm text-gray-700 text-center">
-              <strong>Strategy designed for maximum impact:</strong> Multi-tier approach ensures cost efficiency while targeting {categories.length} key audience segments for optimal brand exposure.
+              <strong>Strategy designed for maximum impact:</strong> Multi-tier approach ensures cost efficiency while targeting {Object.keys(tiers).length} influencer tiers for optimal brand exposure.
             </p>
           </div>
         </CardContent>
