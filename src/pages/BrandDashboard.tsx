@@ -22,7 +22,7 @@ const BrandDashboard: React.FC = () => {
     publishedCampaigns: publishedCampaigns.length,
     totalCampaigns: publishedCampaigns.length, // For now, showing only published
     publishedBudget: publishedCampaigns.reduce((sum, c) => sum + (c.budget / 100 || 0), 0), // Convert from cents
-    publishedSpent: publishedCampaigns.reduce((sum, c) => sum + ((c.budget / 100) * 0.8 || 0), 0), // Estimate 80% spent
+    publishedSpent: publishedCampaigns.reduce((sum, c) => sum + ((c.spent || 0) / 100), 0), // Use actual spent data
     totalReach: publishedCampaigns.reduce((sum, c) => sum + (c.total_reach || 0), 0),
     avgEngagementRate: publishedCampaigns.length > 0 
       ? publishedCampaigns.reduce((sum, c) => sum + c.avg_engagement_rate, 0) / publishedCampaigns.length 
@@ -81,14 +81,12 @@ const BrandDashboard: React.FC = () => {
                   title="Published Campaigns"
                   value={metrics.publishedCampaigns || 0}
                   subtitle={`${metrics.totalCampaigns || 0} total campaigns`}
-                  trend={{ value: 12, isPositive: true }}
                   icon="campaigns"
                 />
                 <MetricsCard
                   title="Published Budget"
                   value={`$${(metrics.publishedBudget || 0).toLocaleString()}`}
                   subtitle={`$${(metrics.publishedSpent || 0).toLocaleString()} spent`}
-                  trend={{ value: 8, isPositive: true }}
                   icon="budget"
                 />
                 <MetricsCard
@@ -99,9 +97,8 @@ const BrandDashboard: React.FC = () => {
                 />
                 <MetricsCard
                   title="Total Reach"
-                  value={metrics.totalReach > 0 ? `${(metrics.totalReach / 1000000).toFixed(1)}M` : '0'}
-                  subtitle={`${metrics.avgEngagementRate.toFixed(1)}% avg engagement`}
-                  trend={{ value: 15, isPositive: true }}
+                  value={metrics.totalReach > 0 ? `${(metrics.totalReach / 1000000).toFixed(1)}M` : 'N/A'}
+                  subtitle={metrics.avgEngagementRate > 0 ? `${metrics.avgEngagementRate.toFixed(1)}% avg engagement` : 'No data yet'}
                   icon="reach"
                 />
               </div>

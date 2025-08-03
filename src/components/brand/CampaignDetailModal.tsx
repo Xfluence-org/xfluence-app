@@ -20,7 +20,7 @@ import WaitingParticipantsSection from '@/components/brand/WaitingParticipantsSe
 import ActiveInfluencersSection from '@/components/brand/ActiveInfluencersSection';
 import BrandTaskViewModal from '@/components/brand/BrandTaskViewModal';
 import CampaignAnalyticsDashboard from '@/components/brand/CampaignAnalyticsDashboard';
-import { Save, Edit, X, Sprout, TrendingUp, Rocket, Star, User } from 'lucide-react';
+import { Save, Edit, X, Sprout, TrendingUp, Rocket, Star, User, Sparkles, Target, Calendar, DollarSign, Eye } from 'lucide-react';
 import PublicCampaignToggle from '@/components/brand/PublicCampaignToggle';
 import ApplicationsManagementSection from '@/components/brand/ApplicationsManagementSection';
 import InvitationManagement from '@/components/brand/InvitationManagement';
@@ -216,12 +216,18 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-2xl font-bold text-[#1a1f2e]">
-              Campaign Details
-            </DialogTitle>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto glass border-white/20">
+        <DialogHeader className="pb-6">
+          <div className="bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10 p-6 rounded-xl mb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm border border-white/20">
+                  <Sparkles className="h-6 w-6 text-purple-600" />
+                </div>
+                <DialogTitle className="text-2xl font-bold text-gray-900">
+                  Campaign Details
+                </DialogTitle>
+              </div>
             {!isEditing && activeTab === 'overview' ? (
               <Button 
                 variant="outline" 
@@ -242,7 +248,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                 </Button>
                 <Button 
                   onClick={handleSave}
-                  className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg transform transition-all duration-200 hover:scale-105"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   Save
@@ -265,18 +271,21 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
           </div>
         ) : campaign ? (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="strategy">Strategy</TabsTrigger>
-              <TabsTrigger value="content">Requirements</TabsTrigger>
-              <TabsTrigger value="influencers">Influencers</TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-5 glass border-white/20 p-1 gap-1">
+              <TabsTrigger value="overview" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/20 data-[state=active]:to-pink-500/20 data-[state=active]:border-purple-300/50">Overview</TabsTrigger>
+              <TabsTrigger value="strategy" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/20 data-[state=active]:to-pink-500/20 data-[state=active]:border-purple-300/50">Strategy</TabsTrigger>
+              <TabsTrigger value="content" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/20 data-[state=active]:to-pink-500/20 data-[state=active]:border-purple-300/50">Requirements</TabsTrigger>
+              <TabsTrigger value="influencers" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/20 data-[state=active]:to-pink-500/20 data-[state=active]:border-purple-300/50">Influencers</TabsTrigger>
+              <TabsTrigger value="analytics" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/20 data-[state=active]:to-pink-500/20 data-[state=active]:border-purple-300/50">Analytics</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6 mt-6">
 
-              <div className="bg-gray-50 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-[#1a1f2e] mb-4">Campaign Information</h3>
+              <div className="glass border-white/20 rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Eye className="h-5 w-5 text-purple-600" />
+                  Campaign Information
+                </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -331,7 +340,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Status
                     </label>
-                    <span className="inline-block px-3 py-1 rounded-full text-white text-sm font-medium bg-[#1DDCD3]">
+                    <span className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-teal-500/20 to-cyan-500/20 text-teal-700 border border-teal-300/50 backdrop-blur-sm">
                       {campaign.status}
                     </span>
                   </div>
@@ -374,38 +383,41 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
             </TabsContent>
 
             <TabsContent value="strategy" className="space-y-6 mt-6">
-              <div className="bg-gray-50 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-[#1a1f2e] mb-4">AI Generated Campaign Strategy</h3>
+              <div className="glass border-white/20 rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-purple-600" />
+                  AI Generated Campaign Strategy
+                </h3>
                 
                 {llmCampaignData ? (
                   <div className="space-y-6">
                     {/* Strategy Justification */}
                     {llmCampaignData.justification && (
-                      <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
-                        <h4 className="font-medium text-blue-800 mb-2">Strategy Justification</h4>
-                        <p className="text-blue-700">{llmCampaignData.justification}</p>
+                      <div className="glass-light border-l-4 border-gradient-to-r from-blue-400 to-cyan-400 p-4 rounded-lg">
+                        <h4 className="font-medium bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2">Strategy Justification</h4>
+                        <p className="text-gray-700">{llmCampaignData.justification}</p>
                       </div>
                     )}
 
                     {/* Search Strategy Summary */}
                     {llmCampaignData.search_strategy_summary && (
-                      <div className="bg-green-50 border-l-4 border-green-400 p-4">
-                        <h4 className="font-medium text-green-800 mb-2">Search Strategy Summary</h4>
-                        <p className="text-green-700">{llmCampaignData.search_strategy_summary}</p>
+                      <div className="glass-light border-l-4 border-gradient-to-r from-green-400 to-emerald-400 p-4 rounded-lg">
+                        <h4 className="font-medium bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">Search Strategy Summary</h4>
+                        <p className="text-gray-700">{llmCampaignData.search_strategy_summary}</p>
                       </div>
                     )}
 
                     {/* Actionable Search Tactics */}
                     {llmCampaignData.actionable_search_tactics && (
-                      <div className="bg-purple-50 border-l-4 border-purple-400 p-4">
-                        <h4 className="font-medium text-purple-800 mb-3">Actionable Search Tactics</h4>
+                      <div className="glass-light border-l-4 border-gradient-to-r from-purple-400 to-pink-400 p-4 rounded-lg">
+                        <h4 className="font-medium bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-3">Actionable Search Tactics</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {llmCampaignData.actionable_search_tactics.niche_hashtags && (
                             <div>
-                              <h5 className="font-medium text-purple-700 mb-2">Niche Hashtags</h5>
+                              <h5 className="font-medium text-gray-800 mb-2">Niche Hashtags</h5>
                               <div className="flex flex-wrap gap-2">
                                 {llmCampaignData.actionable_search_tactics.niche_hashtags.map((hashtag, index) => (
-                                  <span key={index} className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">
+                                  <span key={index} className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-700 px-2 py-1 rounded-full text-sm border border-purple-300/50 backdrop-blur-sm">
                                     {hashtag}
                                   </span>
                                 ))}
@@ -414,8 +426,8 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                           )}
                           {llmCampaignData.actionable_search_tactics.platform_tools && (
                             <div>
-                              <h5 className="font-medium text-purple-700 mb-2">Platform Tools</h5>
-                              <ul className="list-disc list-inside text-sm text-purple-700 space-y-1">
+                              <h5 className="font-medium text-gray-800 mb-2">Platform Tools</h5>
+                              <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
                                 {llmCampaignData.actionable_search_tactics.platform_tools.map((tool, index) => (
                                   <li key={index}>{tool}</li>
                                 ))}
@@ -457,8 +469,11 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
 
             <TabsContent value="influencers" className="space-y-6 mt-6">
               {/* Invitation Management */}
-              <div className="bg-gray-50 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-[#1a1f2e] mb-4">Invitations</h3>
+              <div className="glass border-white/20 rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Users className="h-5 w-5 text-purple-600" />
+                  Invitations
+                </h3>
                 <InvitationManagement campaignId={campaignId} />
               </div>
               

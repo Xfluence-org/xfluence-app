@@ -33,9 +33,22 @@ const ContentRequirementsSection: React.FC<ContentRequirementsSectionProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
-  // Parse content requirements from LLM interactions
+  // Load existing requirements or parse from LLM
   React.useEffect(() => {
-    const parseContentRequirements = () => {
+    const loadRequirements = async () => {
+      // First, try to load existing requirements from the campaign
+      const { data: campaign } = await supabase
+        .from('campaigns')
+        .select('requirements')
+        .eq('id', campaignId)
+        .single();
+
+      if (campaign?.requirements?.content_requirements) {
+        setRequirements(campaign.requirements.content_requirements);
+        return;
+      }
+
+      // If no saved requirements, parse from LLM interactions
       for (const interaction of llmInteractions) {
         if (interaction.raw_output?.content_strategy) {
           const contentStrategy = interaction.raw_output.content_strategy;
@@ -68,7 +81,7 @@ const ContentRequirementsSection: React.FC<ContentRequirementsSectionProps> = ({
         }
       }
       
-      // Default requirements if no LLM data found
+      // Default requirements if no data found
       setRequirements([
         {
           type: 'Posts',
@@ -83,8 +96,8 @@ const ContentRequirementsSection: React.FC<ContentRequirementsSectionProps> = ({
       ]);
     };
 
-    parseContentRequirements();
-  }, [llmInteractions]);
+    loadRequirements();
+  }, [campaignId, llmInteractions]);
 
   const addRequirement = () => {
     setRequirements([...requirements, {
@@ -107,15 +120,34 @@ const ContentRequirementsSection: React.FC<ContentRequirementsSectionProps> = ({
   const saveRequirements = async () => {
     setIsSaving(true);
     try {
-      // Save requirements as campaign tasks for approved influencers
+      // Save requirements to campaign metadata
+      const requirementsData = {
+        content_requirements: requirements,
+        updated_at: new Date().toISOString()
+      };
+
+      // Update campaign with requirements
+      const { error: updateError } = await supabase
+        .from('campaigns')
+        .update({ 
+          requirements: requirementsData 
+        })
+        .eq('id', campaignId);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      // Also create tasks for participants who are waiting for requirements
       const { data: participants } = await supabase
         .from('campaign_participants')
-        .select('influencer_id')
+        .select('id, influencer_id')
         .eq('campaign_id', campaignId)
-        .eq('status', 'accepted');
+        .eq('status', 'accepted')
+        .eq('current_stage', 'waiting_for_requirements');
 
-      if (participants) {
-        // Delete existing tasks
+      if (participants && participants.length > 0) {
+        // Delete existing tasks for this campaign
         await supabase
           .from('campaign_tasks')
           .delete()
@@ -124,22 +156,37 @@ const ContentRequirementsSection: React.FC<ContentRequirementsSectionProps> = ({
         // Create new tasks for each participant
         const tasks = [];
         for (const participant of participants) {
-          for (const requirement of requirements) {
-            tasks.push({
-              campaign_id: campaignId,
-              influencer_id: participant.influencer_id,
-              title: `Create ${requirement.count} ${requirement.type}`,
-              description: requirement.description,
-              task_type: requirement.type,
-              deliverable_count: requirement.count,
-              status: 'content_requirement',
-              progress: 0
-            });
+          if (participant.influencer_id) {
+            for (const requirement of requirements) {
+              tasks.push({
+                campaign_id: campaignId,
+                influencer_id: participant.influencer_id,
+                title: `Create ${requirement.count} ${requirement.type}`,
+                description: requirement.description,
+                task_type: requirement.type.toLowerCase(),
+                deliverable_count: requirement.count,
+                status: 'content_requirement',
+                progress: 0
+              });
+            }
           }
         }
 
         if (tasks.length > 0) {
-          await supabase.from('campaign_tasks').insert(tasks);
+          const { error: taskError } = await supabase
+            .from('campaign_tasks')
+            .insert(tasks);
+          
+          if (taskError) {
+            throw taskError;
+          }
+
+          // Update participants to content_requirement stage
+          const participantIds = participants.map(p => p.id);
+          await supabase
+            .from('campaign_participants')
+            .update({ current_stage: 'content_requirement' })
+            .in('id', participantIds);
         }
       }
 
@@ -151,7 +198,6 @@ const ContentRequirementsSection: React.FC<ContentRequirementsSectionProps> = ({
       setIsEditing(false);
       onRequirementsUpdated?.();
     } catch (error) {
-      console.error('Error saving requirements:', error);
       toast({
         title: "Error",
         description: "Failed to save content requirements.",

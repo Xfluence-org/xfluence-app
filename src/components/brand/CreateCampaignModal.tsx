@@ -357,19 +357,19 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
     <>
       {/* Fullscreen loading overlay - Higher z-index to appear above dialog */}
       {isSubmitting && (
-        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-md flex items-center justify-center">
+          <div className="glass rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl border border-white/20">
             <div className="text-center space-y-6">
               {/* Animated Icon */}
               <div className="relative">
-                <div className="w-24 h-24 mx-auto bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center animate-pulse">
-                  {loadingSteps[currentStep].icon === 'search' && <Search className="w-12 h-12 text-white animate-bounce" />}
-                  {loadingSteps[currentStep].icon === 'ai' && <Bot className="w-12 h-12 text-white animate-bounce" />}
-                  {loadingSteps[currentStep].icon === 'target' && <Target className="w-12 h-12 text-white animate-bounce" />}
-                  {loadingSteps[currentStep].icon === 'chart' && <BarChart3 className="w-12 h-12 text-white animate-bounce" />}
-                  {loadingSteps[currentStep].icon === 'sparkle' && <Sparkles className="w-12 h-12 text-white animate-bounce" />}
+                <div className="w-24 h-24 mx-auto bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full flex items-center justify-center animate-pulse backdrop-blur-sm border border-white/20">
+                  {loadingSteps[currentStep].icon === 'search' && <Search className="w-12 h-12 text-purple-600 animate-bounce" />}
+                  {loadingSteps[currentStep].icon === 'ai' && <Bot className="w-12 h-12 text-purple-600 animate-bounce" />}
+                  {loadingSteps[currentStep].icon === 'target' && <Target className="w-12 h-12 text-purple-600 animate-bounce" />}
+                  {loadingSteps[currentStep].icon === 'chart' && <BarChart3 className="w-12 h-12 text-purple-600 animate-bounce" />}
+                  {loadingSteps[currentStep].icon === 'sparkle' && <Sparkles className="w-12 h-12 text-purple-600 animate-bounce" />}
                 </div>
-                <div className="absolute inset-0 w-24 h-24 mx-auto bg-gradient-to-r from-purple-600 to-pink-600 rounded-full animate-ping opacity-20" />
+                <div className="absolute inset-0 w-24 h-24 mx-auto bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full animate-ping" />
               </div>
               
               {/* Dynamic Step Content */}
@@ -390,10 +390,10 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                       key={index}
                       className={`transition-all duration-500 ${
                         index === currentStep
-                          ? 'w-8 h-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full'
+                          ? 'w-8 h-2 bg-gradient-to-r from-purple-500/80 to-pink-500/80 rounded-full backdrop-blur-sm'
                           : index < currentStep
-                          ? 'w-2 h-2 bg-purple-600 rounded-full'
-                          : 'w-2 h-2 bg-gray-300 rounded-full'
+                          ? 'w-2 h-2 bg-purple-500/60 rounded-full backdrop-blur-sm'
+                          : 'w-2 h-2 bg-gray-300/50 rounded-full backdrop-blur-sm'
                       }`}
                     />
                   ))}
@@ -415,15 +415,15 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                       <span className="text-lg mt-0.5">{step.icon}</span>
                       <div className="flex-1">
                         <p className={`text-sm font-medium ${
-                          index <= currentStep ? 'text-purple-900' : 'text-gray-600'
+                          index <= currentStep ? 'text-purple-700' : 'text-gray-600'
                         }`}>
                           {step.title}
                         </p>
                         {index === currentStep && (
                           <div className="mt-1">
-                            <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
+                            <div className="h-1 bg-gray-200/50 rounded-full overflow-hidden backdrop-blur-sm">
                               <div 
-                                className="h-full bg-gradient-to-r from-purple-600 to-pink-600 rounded-full transition-all duration-[2000ms] ease-out"
+                                className="h-full bg-gradient-to-r from-purple-500/80 to-pink-500/80 rounded-full transition-all duration-[2000ms] ease-out"
                                 style={{ width: '100%' }}
                               />
                             </div>
@@ -445,13 +445,13 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
       )}
 
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 border-purple-200">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto glass border-white/20">
           <DialogHeader>
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg">
-                <Sparkles className="h-6 w-6 text-white" />
+              <div className="p-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg backdrop-blur-sm border border-white/20">
+                <Sparkles className="h-6 w-6 text-purple-600" />
               </div>
-              <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <DialogTitle className="text-2xl font-bold text-gray-900">
                 AI-Powered Campaign Creator
               </DialogTitle>
             </div>
@@ -461,14 +461,14 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* AI Suggestion Box */}
-            <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg p-4 border border-purple-300">
+            <div className="glass-light rounded-lg p-4 border border-white/20">
               <div className="flex items-start gap-3">
-                <div className="p-1.5 bg-white rounded-full">
+                <div className="p-1.5 bg-white/20 rounded-full backdrop-blur-sm">
                   <Sparkles className="h-4 w-4 text-purple-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-purple-900">AI Tip</p>
-                  <p className="text-xs text-purple-700 mt-1">
+                  <p className="text-sm font-medium text-gray-800">AI Tip</p>
+                  <p className="text-xs text-gray-600 mt-1">
                     Fill in the details below and our AI will create a comprehensive campaign strategy tailored to your goals and budget.
                   </p>
                 </div>
@@ -485,7 +485,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                   <FormControl>
                     <Input
                       placeholder="Enter your brand name..."
-                      className="border-purple-200 focus:border-purple-400 focus:ring-purple-400"
+                      className="glass-input"
                       {...field}
                     />
                   </FormControl>

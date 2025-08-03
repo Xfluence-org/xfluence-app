@@ -36,19 +36,14 @@ export const useBrandDashboardData = () => {
   const { data: campaignsData = [], isLoading: campaignsLoading, error: campaignsError } = useQuery({
     queryKey: ['brand-campaigns'],
     queryFn: async () => {
-      console.log('Fetching brand campaigns for dashboard using get_brand_campaigns function');
-      
       const { data, error } = await supabase.rpc('get_brand_campaigns', {
         brand_filter: 'all'
       });
 
       if (error) {
-        console.error('Error fetching brand campaigns:', error);
         throw error;
       }
 
-      console.log('Fetched brand campaigns for dashboard:', data);
-      console.log('Raw campaign data structure:', data?.[0]);
       return data || [];
     }
   });
@@ -67,9 +62,9 @@ export const useBrandDashboardData = () => {
     category: campaign.category, // Now expecting a single category string from database function
     progress: campaign.progress,
     performance: {
-      reach: Math.floor(Math.random() * 200000) + 50000, // Mock data for now
-      engagement: Math.random() * 2 + 3,
-      clicks: Math.floor(Math.random() * 1000) + 500
+      reach: 0, // Will be calculated from actual influencer data
+      engagement: 0, // Will be calculated from actual engagement data
+      clicks: 0 // Will be calculated from actual click data
     }
   }));
 
@@ -77,8 +72,6 @@ export const useBrandDashboardData = () => {
   const publishedCampaigns = campaignsData.filter(c => c.campaign_status === 'published');
   const activeCampaigns = campaignsData.filter(c => c.campaign_status === 'active');
   
-  console.log('Published campaigns count:', publishedCampaigns.length);
-  console.log('Published campaigns:', publishedCampaigns);
   
   const metrics: BrandMetrics = {
     totalCampaigns: campaignsData.length,
@@ -87,11 +80,11 @@ export const useBrandDashboardData = () => {
     totalBudget: campaignsData.reduce((sum, c) => sum + (c.budget || 0), 0),
     totalSpent: campaignsData.reduce((sum, c) => sum + (c.spent || 0), 0),
     pendingApplications: campaignsData.reduce((sum, c) => sum + (c.applicants - c.accepted), 0),
-    // Calculate reach from published campaigns (estimate based on accepted influencers)
-    totalReach: publishedCampaigns.reduce((sum, c) => sum + (c.accepted * 50000), 0) || 1250000,
-    // Calculate average engagement from published campaigns
-    avgEngagementRate: publishedCampaigns.length > 0 ? 4.2 : 0,
-    completedCampaigns: publishedCampaigns.length,
+    // Calculate reach from actual data - for now set to 0 until we have real data
+    totalReach: 0, // Will be calculated from actual influencer follower counts
+    // Calculate average engagement from actual data - for now set to 0
+    avgEngagementRate: 0, // Will be calculated from actual engagement metrics
+    completedCampaigns: campaignsData.filter(c => c.campaign_status === 'completed').length,
     publishedBudget: publishedCampaigns.reduce((sum, c) => sum + (c.budget || 0), 0),
     publishedSpent: publishedCampaigns.reduce((sum, c) => sum + (c.spent || 0), 0)
   };
