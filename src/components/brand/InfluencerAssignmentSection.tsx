@@ -343,7 +343,7 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
                 <h5 className="font-medium text-gray-700 mb-2">Content Types</h5>
                 <div className="flex flex-wrap gap-2">
                   {contentTypes.map((content) => (
-                    <Badge key={content.type} className="bg-[#1DDCD3] text-white">
+                    <Badge key={content.type} className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-700 border border-purple-300/50">
                       {getContentTypeIcon(content.type)} {content.percentage}%
                     </Badge>
                   ))}
