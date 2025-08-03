@@ -15,11 +15,11 @@ interface MetricsCardProps {
 
 const MetricsCard: React.FC<MetricsCardProps> = ({ title, value, subtitle, trend, icon }) => {
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200">
+    <div className="bg-gradient-to-br from-white to-gray-50/50 rounded-2xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 backdrop-blur-sm">
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-          <p className="text-2xl font-bold text-[#1a1f2e]">{value}</p>
+          <p className="text-2xl font-bold bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">{value}</p>
           {subtitle && (
             <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
           )}
