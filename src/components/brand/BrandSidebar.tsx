@@ -60,8 +60,8 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName }) => {
     <div className="w-64 bg-white/10 backdrop-blur-2xl border-r border-white/20 flex flex-col h-screen relative overflow-hidden">
       {/* Logo/Brand */}
       <div className="p-6 border-b border-white/10">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Xfluence</h1>
-        <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">{profile?.user_type || 'Brand'} Portal</p>
+        <h1 className="text-2xl font-bold text-brand-primary">Xfluence</h1>
+        <p className="text-sm text-muted-foreground mt-1">{profile?.user_type || 'Brand'} Portal</p>
       </div>
 
       {/* Navigation */}
@@ -86,15 +86,15 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName }) => {
       {/* User Section */}
       <div className="p-4 border-t border-white/10">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-sm text-gray-600 dark:text-gray-400">Logged in as</span>
+          <span className="text-sm text-muted-foreground">Logged in as</span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="font-medium text-gray-800 dark:text-white truncate pr-2">
+          <span className="font-medium text-foreground truncate pr-2">
             {userName || profile?.name || 'Brand'}
           </span>
           <button 
             onClick={handleLogout}
-            className="p-2 text-gray-700 dark:text-gray-300 hover:bg-white/20 hover:text-gray-900 dark:hover:text-white rounded-lg transition-all duration-300 backdrop-blur-md border border-transparent hover:border-white/20"
+            className="p-2 text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg transition-all duration-300"
             title="Log out"
           >
             <LogOut className="w-5 h-5" />

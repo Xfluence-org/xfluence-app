@@ -20,8 +20,8 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange })
           className={cn(
             "flex-1 px-4 py-2 rounded-lg font-medium transition-all duration-300",
             activeTab === tab
-              ? "bg-gradient-to-r from-purple-500/30 to-pink-500/30 text-white shadow-lg border border-white/30"
-              : "text-gray-600 hover:text-[#1a1f2e] hover:bg-white/10"
+              ? "bg-brand-primary text-brand-primary-foreground shadow-lg border border-brand-primary/30"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
           )}
         >
           {tab}
