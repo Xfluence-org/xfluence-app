@@ -157,15 +157,18 @@ const InvitationLandingPage: React.FC = () => {
     setClaiming(true);
     try {
       // Update the campaign participant with the user's ID and set current_stage
-      const { error: updateError } = await supabase
+      const { data: updatedParticipant, error: updateError } = await supabase
         .from('campaign_participants')
         .update({
           influencer_id: user.id,
           invitation_claimed_at: new Date().toISOString(),
+          accepted_at: new Date().toISOString(), // CRITICAL: This was missing!
           status: 'accepted',
           current_stage: 'waiting_for_requirements'
         })
-        .eq('id', invitationData.id);
+        .eq('id', invitationData.id)
+        .select()
+        .single();
 
       if (updateError) {
         console.error('Error updating campaign participant:', updateError);
@@ -180,7 +183,8 @@ const InvitationLandingPage: React.FC = () => {
         userId: user.id,
         campaignId: invitationData.campaign.id,
         status: 'accepted',
-        currentStage: 'waiting_for_requirements'
+        currentStage: 'waiting_for_requirements',
+        updatedData: updatedParticipant
       });
 
       // Extract and store Instagram profile data if available in application_message
@@ -236,11 +240,13 @@ const InvitationLandingPage: React.FC = () => {
         description: "You've successfully joined the campaign!",
       });
 
-      // Show animation
-      setShowAnimation(true);
-
-      // Invalidate queries to refresh dashboard data
+      // Invalidate queries to refresh dashboard data immediately
       window.dispatchEvent(new CustomEvent('refreshDashboard'));
+
+      // Add delay to ensure DB propagation before showing animation
+      setTimeout(() => {
+        setShowAnimation(true);
+      }, 500);
 
     } catch (error) {
       toast({

@@ -11,9 +11,14 @@ export const useDashboardData = () => {
   // Listen for dashboard refresh events
   useEffect(() => {
     const handleRefresh = () => {
+      console.log('Dashboard refresh event triggered - invalidating all queries');
       queryClient.invalidateQueries({ queryKey: ['dashboard-waiting'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-active-campaigns'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-invitations'] });
+      // Force refetch immediately
+      queryClient.refetchQueries({ queryKey: ['dashboard-waiting'] });
+      queryClient.refetchQueries({ queryKey: ['dashboard-active-campaigns'] });
+      queryClient.refetchQueries({ queryKey: ['dashboard-invitations'] });
     };
 
     window.addEventListener('refreshDashboard', handleRefresh);
