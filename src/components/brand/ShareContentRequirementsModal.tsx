@@ -42,135 +42,75 @@ const ShareContentRequirementsModal: React.FC<ShareContentRequirementsModalProps
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // AI-generated content requirements with dummy data
+  // AI-generated content requirements using edge function
   const generateAIRequirements = async () => {
     setIsGeneratingAI(true);
     try {
-      // Simulate AI generation delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-    let contentSpecificRequirements = '';
-    
-    switch (contentType?.toLowerCase()) {
-      case 'posts':
-      case 'post':
-        contentSpecificRequirements = `Content Requirements for ${influencerName} - Posts:
+      // Get the current user's token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
 
-**Posts (3 required)**
-- High-quality lifestyle shots featuring the product
-- Natural, authentic captions sharing your experience
-- Minimum 150 words per caption
-- Use campaign hashtags: #BrandCampaign #AuthenticReviews
-- Tag @brand in all posts
-- Include clear product visibility in each shot
-- Mix of close-up product shots and lifestyle integration
+      // Call the edge function
+      const response = await supabase.functions.invoke('generate-content-requirements', {
+        body: { campaignId },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
 
-Image Guidelines:
-- High resolution (minimum 1080x1080)
-- Natural lighting preferred
-- Consistent aesthetic with your feed
-- No heavy filters that obscure product details
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to generate requirements');
+      }
 
-Caption Structure:
-- Hook: Attention-grabbing opening line
-- Story: Personal experience with the product
-- Features: Highlight 2-3 key benefits
-- CTA: Encourage followers to learn more`;
-        break;
-        
-      case 'stories':
-      case 'story':
-        contentSpecificRequirements = `Content Requirements for ${influencerName} - Stories:
+      const data = response.data;
+      
+      // Format the response into readable requirements
+      let formattedRequirements = `Content Requirements for ${influencerName}\n\n`;
+      
+      if (data.campaign_name) {
+        formattedRequirements += `**Campaign: ${data.campaign_name}**\n\n`;
+      }
+      
+      // Format each category of deliverables
+      const deliverables = data.generated_deliverables || {};
+      
+      const categoryTitles = {
+        content_creation_requirements: 'Content Creation Requirements',
+        technical_specifications: 'Technical Specifications',
+        timeline_scheduling: 'Timeline & Scheduling',
+        performance_metrics_kpis: 'Performance Metrics & KPIs',
+        legal_compliance: 'Legal & Compliance',
+        brand_guidelines_messaging: 'Brand Guidelines & Messaging',
+        approval_process: 'Approval Process',
+        reporting_analytics: 'Reporting & Analytics',
+        budget_payment_terms: 'Budget & Payment Terms',
+        quality_assurance: 'Quality Assurance Standards'
+      };
+      
+      // If content type is specified, prioritize relevant categories
+      if (contentType) {
+        formattedRequirements += `**${contentType} Specific Requirements:**\n\n`;
+      }
+      
+      Object.entries(deliverables).forEach(([key, points]) => {
+        if (Array.isArray(points) && points.length > 0) {
+          const title = categoryTitles[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+          formattedRequirements += `**${title}:**\n`;
+          points.forEach(point => {
+            formattedRequirements += `• ${point}\n`;
+          });
+          formattedRequirements += '\n';
+        }
+      });
+      
+      // Add metadata footer
+      if (data.metadata) {
+        formattedRequirements += `\n---\n_Generated on ${new Date(data.metadata.generated_date).toLocaleDateString()}_`;
+      }
 
-**Stories (5 required)**
-- Behind-the-scenes content of using the product
-- Share unboxing experience if applicable
-- Include interactive elements (polls, questions, quizzes)
-- Highlight key product features
-- Use product stickers and mentions
-- Mix of photo and video stories
-- Each story should be 15 seconds max
-
-Story Ideas:
-1. Unboxing/First impressions
-2. How-to use/Tutorial
-3. Day in the life featuring product
-4. Before/after or results showcase
-5. Q&A about the product
-
-Interactive Elements:
-- Poll: "Have you tried [product]?"
-- Question sticker for audience engagement
-- Quiz about product benefits
-- Slider for product rating`;
-        break;
-        
-      case 'reels':
-      case 'reel':
-        contentSpecificRequirements = `Content Requirements for ${influencerName} - Reels:
-
-**Reels (2 required)**
-- Create engaging 15-30 second videos
-- Show product in action/daily use
-- Use trending audio where appropriate
-- Focus on benefits and transformation
-- Include text overlays for key points
-- Fast-paced, engaging editing
-- Clear product placement throughout
-
-Reel Concepts:
-1. "Day in my life" featuring the product
-2. Before/after transformation
-3. "Things I love about [product]"
-4. Quick tutorial or tips
-5. Product review in under 30 seconds
-
-Technical Requirements:
-- Vertical format (9:16 ratio)
-- Good lighting and clear audio
-- Captions/subtitles recommended
-- Eye-catching thumbnail`;
-        break;
-        
-      default:
-        // If no specific content type, include all
-        contentSpecificRequirements = `Content Requirements for ${influencerName}:
-
-1. **Posts (3 required)**
-   - High-quality lifestyle shots featuring the product
-   - Natural, authentic captions sharing your experience
-   - Use campaign hashtags: #BrandCampaign #AuthenticReviews
-   - Tag @brand in all posts
-
-2. **Stories (5 required)**
-   - Behind-the-scenes content of using the product
-   - Share unboxing experience
-   - Include interactive elements (polls, questions)
-   - Highlight key product features
-
-3. **Reels (2 required)**
-   - Create engaging 15-30 second videos
-   - Show product in action/daily use
-   - Use trending audio where appropriate
-   - Focus on benefits and transformation`;
-    }
-    
-    const aiRequirements = `${contentSpecificRequirements}
-
-General Guidelines:
-- Maintain authentic voice and style
-- Content should align with your usual aesthetic
-- Deadline: 14 days from acceptance
-- Submit content for review before posting
-- All content must be original
-- No competitor products in frame
-- Follow FTC guidelines for sponsored content
-
-Submission Process:
-1. Upload content drafts for review
-2. Wait for brand approval before posting
-3. Share live links after publishing`;
-
-      setRequirements(aiRequirements);
+      setRequirements(formattedRequirements);
       toast({
         title: "AI Requirements Generated",
         description: "Review and customize the generated requirements before sharing.",
@@ -180,7 +120,7 @@ Submission Process:
       console.error('Error generating AI requirements:', error);
       toast({
         title: "Error",
-        description: "Failed to generate AI requirements",
+        description: error.message || "Failed to generate AI requirements",
         variant: "destructive"
       });
     } finally {

@@ -186,13 +186,18 @@ const InvitationLandingPage: React.FC = () => {
         currentStage: 'waiting_for_requirements',
         updatedData: updatedParticipant
       });
+      
+      // Store the updated invitation data to prevent re-claiming
+      setInvitationData(prev => prev ? {
+        ...prev,
+        invitation_claimed_at: new Date().toISOString()
+      } : null);
 
       // Extract and store Instagram profile data if available in application_message
       let instagramData = null;
       try {
-        if (invitationData.application_message) {
-          const parsedMessage = JSON.parse(invitationData.application_message);
-          instagramData = parsedMessage.instagramData;
+        if (invitationData.assignmentData && invitationData.assignmentData.instagramData) {
+          instagramData = invitationData.assignmentData.instagramData;
         }
       } catch (e) {
         // No Instagram data found in invitation

@@ -182,7 +182,7 @@ const WaitingParticipantsSection: React.FC<WaitingParticipantsSectionProps> = ({
                     className="bg-[#1DDCD3] hover:bg-[#1DDCD3]/90"
                   >
                     <Send className="h-4 w-4 mr-2" />
-                    Share All Requirements
+                    Share Content Requirements
                   </Button>
                 </div>
               </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,9 +22,23 @@ const AuthFlow = () => {
   const { signUp, signIn, resetPassword, user, profile, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Remove the navigation logic - let AuthContext handle it
   // This prevents duplicate navigation attempts
+  
+  // Check if user is already logged in
+  useEffect(() => {
+    if (user && profile) {
+      // Check if we have a returnTo path
+      if (location.state?.returnTo) {
+        navigate(location.state.returnTo, { replace: true });
+      } else {
+        // Default navigation based on user type
+        navigate(profile.user_type === 'Influencer' ? '/dashboard' : '/brand-dashboard', { replace: true });
+      }
+    }
+  }, [user, profile, location.state, navigate]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));

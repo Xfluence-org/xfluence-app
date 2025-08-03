@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 type UserType = 'Agency' | 'Brand' | 'Influencer';
 
@@ -40,6 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     let isMounted = true;
@@ -109,12 +110,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setProfile(data);
               // Only redirect on actual sign-in from login page
               const currentPath = window.location.pathname;
-              if (currentPath === '/' && data.user_type) {
+              // Check if we have a returnTo state or if we're on an invitation page
+              const isOnInvitationPage = currentPath.startsWith('/invite/');
+              
+              if (currentPath === '/' && data.user_type && !isOnInvitationPage) {
                 console.log('Redirecting after sign-in, user type:', data.user_type);
-                // Small delay to ensure state is updated
-                setTimeout(() => {
-                  navigate(data.user_type === 'Influencer' ? '/dashboard' : '/brand-dashboard');
-                }, 100);
+                // Don't redirect - let the AuthFlow component handle it based on location state
               }
             }
           })
