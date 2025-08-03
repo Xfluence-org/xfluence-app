@@ -107,11 +107,10 @@ const CampaignStrategyHighlights: React.FC<CampaignStrategyHighlightsProps> = ({
 
       {/* Main Dashboard Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 glass border-white/20">
+        <TabsList className="grid w-full grid-cols-3 glass border-white/20">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="influencer">Influencer Strategy</TabsTrigger>
-          <TabsTrigger value="content">Content Plan</TabsTrigger>
-          <TabsTrigger value="tactics">Search Tactics</TabsTrigger>
+          <TabsTrigger value="content">Content Strategy</TabsTrigger>
+          <TabsTrigger value="strategy">Influencer Strategy & Search Strategy</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -141,57 +140,110 @@ const CampaignStrategyHighlights: React.FC<CampaignStrategyHighlightsProps> = ({
           </Card>
         </TabsContent>
 
-        {/* Influencer Strategy Tab */}
-        <TabsContent value="influencer" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="glass border-white/20">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <PieChart className="h-5 w-5 text-blue-600" />
-                  Category Allocation
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {Object.entries(allocationByCategory).map(([category, count]: [string, any]) => (
-                    <div key={category} className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">{category}</span>
-                        <Badge variant="outline">{count} influencers</Badge>
-                      </div>
-                      <Progress value={(count / totalInfluencers) * 100} className="h-2" />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="glass border-white/20">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-emerald-600" />
-                  Tier Distribution
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {Object.entries(allocationByTier).map(([category, tiers]: [string, any]) => (
-                    <div key={category} className="space-y-3">
-                      <h4 className="font-medium text-gray-900">{category}</h4>
-                      {Object.entries(tiers).map(([tier, count]: [string, any]) => (
-                        <div key={tier} className="space-y-2 ml-4">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm capitalize">{tier} tier</span>
-                            <Badge variant="secondary">{count}</Badge>
-                          </div>
-                          <Progress value={(count / totalInfluencers) * 100} className="h-1" />
+        {/* Combined Strategy Tab */}
+        <TabsContent value="strategy" className="space-y-6">
+          {/* Influencer Strategy Section */}
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+              <Users className="h-5 w-5 text-brand-primary" />
+              Influencer Strategy
+            </h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="glass border-white/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <PieChart className="h-5 w-5 text-blue-600" />
+                    Category Allocation
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {Object.entries(allocationByCategory).map(([category, count]: [string, any]) => (
+                      <div key={category} className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">{category}</span>
+                          <Badge variant="outline">{count} influencers</Badge>
                         </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                        <Progress value={(count / totalInfluencers) * 100} className="h-2" />
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="glass border-white/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-emerald-600" />
+                    Tier Distribution
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {Object.entries(allocationByTier).map(([category, tiers]: [string, any]) => (
+                      <div key={category} className="space-y-3">
+                        <h4 className="font-medium text-gray-900">{category}</h4>
+                        {Object.entries(tiers).map(([tier, count]: [string, any]) => (
+                          <div key={tier} className="space-y-2 ml-4">
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm capitalize">{tier} tier</span>
+                              <Badge variant="secondary">{count}</Badge>
+                            </div>
+                            <Progress value={(count / totalInfluencers) * 100} className="h-1" />
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* Search Strategy Section */}
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+              <Hash className="h-5 w-5 text-brand-primary" />
+              Search Strategy
+            </h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="glass border-white/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Hash className="h-5 w-5 text-blue-600" />
+                    Niche Hashtags
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {niches.map((tag: string, index: number) => (
+                      <Badge key={index} variant="outline" className="text-sm">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="glass border-white/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-emerald-600" />
+                    Platform Tools
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {tools.map((tool: string, index: number) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-emerald-600" />
+                        <span className="text-sm">{tool}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </TabsContent>
 
@@ -266,47 +318,6 @@ const CampaignStrategyHighlights: React.FC<CampaignStrategyHighlightsProps> = ({
           </Card>
         </TabsContent>
 
-        {/* Search Tactics Tab */}
-        <TabsContent value="tactics" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="glass border-white/20">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Hash className="h-5 w-5 text-blue-600" />
-                  Niche Hashtags
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {niches.map((tag: string, index: number) => (
-                    <Badge key={index} variant="outline" className="text-sm">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="glass border-white/20">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5 text-emerald-600" />
-                  Platform Tools
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {tools.map((tool: string, index: number) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-600" />
-                      <span className="text-sm">{tool}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
       </Tabs>
     </div>
   );

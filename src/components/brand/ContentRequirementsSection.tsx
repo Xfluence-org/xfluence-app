@@ -73,6 +73,14 @@ const ContentRequirementsSection: React.FC<ContentRequirementsSectionProps> = ({
               });
             }
             
+            if (distribution.story) {
+              parsed.push({
+                type: 'Stories',
+                count: Math.ceil((distribution.story.percentage || 40) / 8), // Convert percentage to rough count
+                description: distribution.story.purpose || 'Create engaging stories with product content'
+              });
+            }
+            
             if (parsed.length > 0) {
               setRequirements(parsed);
               return;
