@@ -224,7 +224,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                 <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm border border-white/20">
                   <Sparkles className="h-6 w-6 text-purple-600" />
                 </div>
-                <DialogTitle className="text-2xl font-bold text-gray-900">
+                <DialogTitle className="text-2xl font-bold text-foreground">
                   Campaign Details
                 </DialogTitle>
               </div>
@@ -283,14 +283,14 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
             <TabsContent value="overview" className="space-y-6 mt-6">
 
               <div className="glass border-white/20 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Eye className="h-5 w-5 text-purple-600" />
+                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <Eye className="h-5 w-5 text-brand-primary" />
                   Campaign Information
                 </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-muted-foreground mb-2">
                       Campaign Title
                     </label>
                     {isEditing ? (
@@ -300,12 +300,12 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                         placeholder="Enter campaign title"
                       />
                     ) : (
-                      <p className="text-gray-900">{campaign.title}</p>
+                      <p className="text-foreground font-medium">{campaign.title}</p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-muted-foreground mb-2">
                       Category
                     </label>
                     {isEditing ? (
@@ -315,14 +315,14 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                         placeholder="Enter category"
                       />
                     ) : (
-                      <p className="text-gray-900">
+                      <p className="text-foreground font-medium">
                         {getCategoryDisplay(campaign.category)}
                       </p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-muted-foreground mb-2">
                       Budget
                     </label>
                     {isEditing ? (
@@ -333,40 +333,40 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                         placeholder="Enter budget"
                       />
                     ) : (
-                      <p className="text-gray-900">${campaign.budget?.toLocaleString()}</p>
+                      <p className="text-foreground font-medium">${campaign.budget?.toLocaleString()}</p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-muted-foreground mb-2">
                       Status
                     </label>
-                    <span className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-teal-500/20 to-cyan-500/20 text-teal-700 border border-teal-300/50 backdrop-blur-sm">
+                    <span className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-brand-primary/20 text-brand-primary border border-brand-primary/30 backdrop-blur-sm">
                       {campaign.status}
                     </span>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-muted-foreground mb-2">
                       Due Date
                     </label>
-                    <p className="text-gray-900">
+                    <p className="text-foreground font-medium">
                       {campaign.due_date ? new Date(campaign.due_date).toLocaleDateString() : 'Not set'}
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-muted-foreground mb-2">
                       Created
                     </label>
-                    <p className="text-gray-900">
+                    <p className="text-foreground font-medium">
                       {new Date(campaign.created_at).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
 
                 <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-muted-foreground mb-2">
                     Description
                   </label>
                   {isEditing ? (
@@ -377,7 +377,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                       rows={3}
                     />
                   ) : (
-                    <p className="text-gray-900">{campaign.description || 'No description available'}</p>
+                    <p className="text-foreground font-medium">{campaign.description || 'No description available'}</p>
                   )}
                 </div>
               </div>
@@ -385,8 +385,8 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
 
             <TabsContent value="strategy" className="space-y-6 mt-6">
               <div className="glass border-white/20 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-purple-600" />
+                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-brand-secondary" />
                   AI Generated Campaign Strategy
                 </h3>
                 
@@ -396,7 +396,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                     {llmCampaignData.justification && (
                       <div className="glass-light border-l-4 border-gradient-to-r from-blue-400 to-cyan-400 p-4 rounded-lg">
                         <h4 className="font-medium bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2">Strategy Justification</h4>
-                        <p className="text-gray-700">{llmCampaignData.justification}</p>
+                        <p className="text-muted-foreground">{llmCampaignData.justification}</p>
                       </div>
                     )}
 
@@ -404,7 +404,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                     {llmCampaignData.search_strategy_summary && (
                       <div className="glass-light border-l-4 border-gradient-to-r from-green-400 to-emerald-400 p-4 rounded-lg">
                         <h4 className="font-medium bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">Search Strategy Summary</h4>
-                        <p className="text-gray-700">{llmCampaignData.search_strategy_summary}</p>
+                        <p className="text-muted-foreground">{llmCampaignData.search_strategy_summary}</p>
                       </div>
                     )}
 
@@ -415,7 +415,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {llmCampaignData.actionable_search_tactics.niche_hashtags && (
                             <div>
-                              <h5 className="font-medium text-gray-800 mb-2">Niche Hashtags</h5>
+                              <h5 className="font-medium text-foreground mb-2">Niche Hashtags</h5>
                               <div className="flex flex-wrap gap-2">
                                 {llmCampaignData.actionable_search_tactics.niche_hashtags.map((hashtag, index) => (
                                   <span key={index} className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-700 px-2 py-1 rounded-full text-sm border border-purple-300/50 backdrop-blur-sm">
@@ -427,8 +427,8 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                           )}
                           {llmCampaignData.actionable_search_tactics.platform_tools && (
                             <div>
-                              <h5 className="font-medium text-gray-800 mb-2">Platform Tools</h5>
-                              <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                              <h5 className="font-medium text-foreground mb-2">Platform Tools</h5>
+                              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
                                 {llmCampaignData.actionable_search_tactics.platform_tools.map((tool, index) => (
                                   <li key={index}>{tool}</li>
                                 ))}
@@ -451,8 +451,8 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <p className="text-gray-500">No campaign strategy available</p>
-                    <p className="text-gray-400 text-sm mt-1">
+                    <p className="text-muted-foreground">No campaign strategy available</p>
+                    <p className="text-muted-foreground/70 text-sm mt-1">
                       Campaign strategy is generated during campaign creation with AI assistance
                     </p>
                   </div>
@@ -471,8 +471,8 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
             <TabsContent value="influencers" className="space-y-6 mt-6">
               {/* Invitation Management */}
               <div className="glass border-white/20 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <User className="h-5 w-5 text-purple-600" />
+                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <User className="h-5 w-5 text-brand-secondary" />
                   Invitations
                 </h3>
                 <InvitationManagement campaignId={campaignId} />
