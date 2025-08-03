@@ -78,7 +78,7 @@ const CampaignStrategyHighlights: React.FC<CampaignStrategyHighlightsProps> = ({
             <div className="glass-light rounded-lg p-4 border border-white/20">
               <div className="flex items-center justify-between mb-2">
                 <Users className="h-5 w-5 text-brand-primary" />
-                <Badge variant="secondary">{totalInfluencers}</Badge>
+                <Badge className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-700 border border-purple-300/50">{totalInfluencers}</Badge>
               </div>
               <p className="text-sm font-medium text-gray-900">Total Influencers</p>
               <p className="text-xs text-gray-600">Recommended creators</p>
@@ -87,7 +87,7 @@ const CampaignStrategyHighlights: React.FC<CampaignStrategyHighlightsProps> = ({
             <div className="glass-light rounded-lg p-4 border border-white/20">
               <div className="flex items-center justify-between mb-2">
                 <Target className="h-5 w-5 text-blue-600" />
-                <Badge variant="secondary">{Object.keys(allocationByCategory).length}</Badge>
+                <Badge className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-700 border border-purple-300/50">{Object.keys(allocationByCategory).length}</Badge>
               </div>
               <p className="text-sm font-medium text-gray-900">Categories</p>
               <p className="text-xs text-gray-600">Target niches</p>
@@ -270,7 +270,7 @@ const CampaignStrategyHighlights: React.FC<CampaignStrategyHighlightsProps> = ({
                           {type === 'story' && <Clock className="h-4 w-4" />}
                           <span className="font-medium capitalize">{type}s</span>
                         </div>
-                        <Badge variant="secondary">{data.percentage}%</Badge>
+                        <Badge className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-700 border border-purple-300/50">{data.percentage}%</Badge>
                       </div>
                       <p className="text-sm text-gray-600">{data.purpose}</p>
                     </div>

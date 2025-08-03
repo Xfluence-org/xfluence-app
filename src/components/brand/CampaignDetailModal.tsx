@@ -341,7 +341,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                     <label className="block text-sm font-medium text-muted-foreground mb-2">
                       Status
                     </label>
-                    <span className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-brand-primary/20 text-brand-primary border border-brand-primary/30 backdrop-blur-sm">
+                    <span className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-700 border border-purple-300/50 backdrop-blur-sm">
                       {campaign.status}
                     </span>
                   </div>
@@ -469,14 +469,18 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
             </TabsContent>
 
             <TabsContent value="influencers" className="space-y-6 mt-6">
-              {/* Invitation Management */}
-              <div className="glass border-white/20 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <User className="h-5 w-5 text-brand-secondary" />
-                  Invitations
-                </h3>
-                <InvitationManagement campaignId={campaignId} />
-              </div>
+              {/* Influencer Allocation Overview */}
+              {llmCampaignData?.influencer_allocation && (
+                <InfluencerAllocationSection llmInteractions={createMockLLMInteractions()} />
+              )}
+              
+              {/* Influencer Assignment / Add Influencer */}
+              <InfluencerAssignmentSection 
+                campaignId={campaignId}
+                llmInteractions={createMockLLMInteractions()}
+                key={`assignment-${refreshKey}`}
+                onViewTasks={handleViewTasks}
+              />
               
               {/* Active Influencers Working on Content */}
               <ActiveInfluencersSection 
@@ -492,13 +496,14 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                 contentTypes={getContentTypes()}
               />
               
-              {/* Influencer Assignment */}
-              <InfluencerAssignmentSection 
-                campaignId={campaignId}
-                llmInteractions={createMockLLMInteractions()}
-                key={`assignment-${refreshKey}`}
-                onViewTasks={handleViewTasks}
-              />
+              {/* Invitation Management */}
+              <div className="glass border-white/20 rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <User className="h-5 w-5 text-brand-secondary" />
+                  Invitations
+                </h3>
+                <InvitationManagement campaignId={campaignId} />
+              </div>
             </TabsContent>
 
 
