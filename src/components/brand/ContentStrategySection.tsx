@@ -161,7 +161,7 @@ const ContentStrategySection: React.FC<ContentStrategySectionProps> = ({ llmInte
                         <span className="text-lg">{getContentTypeIcon(contentType)}</span>
                         <h5 className="font-medium text-gray-700">{getContentTypeDisplay(contentType)}</h5>
                       </div>
-                      <span className="bg-[#1DDCD3] text-white px-2 py-1 rounded text-sm">
+                      <span className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-700 border border-purple-300/50 px-2 py-1 rounded text-sm">
                         {contentData.percentage}%
                       </span>
                     </div>
