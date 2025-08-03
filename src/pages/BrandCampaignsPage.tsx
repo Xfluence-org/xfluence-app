@@ -143,11 +143,11 @@ const BrandCampaignsPage: React.FC = () => {
   const renderCampaignContent = () => {
     return (
       <Tabs value={campaignTab} onValueChange={(value) => setCampaignTab(value as CampaignView)}>
-        <TabsList className="grid w-full grid-cols-4 bg-muted border border-border p-1 gap-1">
-          <TabsTrigger value="published" className="data-[state=active]:bg-brand-primary data-[state=active]:text-brand-primary-foreground text-foreground font-medium">Published</TabsTrigger>
-          <TabsTrigger value="completed" className="data-[state=active]:bg-brand-primary data-[state=active]:text-brand-primary-foreground text-foreground font-medium">Completed</TabsTrigger>
-          <TabsTrigger value="archived" className="data-[state=active]:bg-brand-primary data-[state=active]:text-brand-primary-foreground text-foreground font-medium">Archived</TabsTrigger>
-          <TabsTrigger value="invitations" className="data-[state=active]:bg-brand-primary data-[state=active]:text-brand-primary-foreground text-foreground font-medium">Invitations</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 bg-muted/50 border border-border p-1 gap-1 rounded-lg">
+          <TabsTrigger value="published" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 text-foreground font-medium rounded-md transition-all duration-200 hover:bg-purple-50">Published</TabsTrigger>
+          <TabsTrigger value="completed" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 text-foreground font-medium rounded-md transition-all duration-200 hover:bg-purple-50">Completed</TabsTrigger>
+          <TabsTrigger value="archived" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 text-foreground font-medium rounded-md transition-all duration-200 hover:bg-purple-50">Archived</TabsTrigger>
+          <TabsTrigger value="invitations" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 text-foreground font-medium rounded-md transition-all duration-200 hover:bg-purple-50">Invitations</TabsTrigger>
         </TabsList>
 
         <TabsContent value="published" className="mt-6">

@@ -272,12 +272,12 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
           </div>
         ) : campaign ? (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-5 bg-muted/80 border-2 border-border/80 p-1 gap-1 shadow-sm">
-              <TabsTrigger value="overview" className="data-[state=active]:bg-brand-primary/30 data-[state=active]:text-brand-primary data-[state=active]:border-brand-primary/70 data-[state=active]:shadow-md font-medium hover:bg-brand-primary/10 transition-all duration-200">Overview</TabsTrigger>
-              <TabsTrigger value="strategy" className="data-[state=active]:bg-brand-primary/30 data-[state=active]:text-brand-primary data-[state=active]:border-brand-primary/70 data-[state=active]:shadow-md font-medium hover:bg-brand-primary/10 transition-all duration-200">Strategy</TabsTrigger>
-              <TabsTrigger value="content" className="data-[state=active]:bg-brand-primary/30 data-[state=active]:text-brand-primary data-[state=active]:border-brand-primary/70 data-[state=active]:shadow-md font-medium hover:bg-brand-primary/10 transition-all duration-200">Requirements</TabsTrigger>
-              <TabsTrigger value="influencers" className="data-[state=active]:bg-brand-primary/30 data-[state=active]:text-brand-primary data-[state=active]:border-brand-primary/70 data-[state=active]:shadow-md font-medium hover:bg-brand-primary/10 transition-all duration-200">Influencers</TabsTrigger>
-              <TabsTrigger value="analytics" className="data-[state=active]:bg-brand-primary/30 data-[state=active]:text-brand-primary data-[state=active]:border-brand-primary/70 data-[state=active]:shadow-md font-medium hover:bg-brand-primary/10 transition-all duration-200">Analytics</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-5 bg-muted/50 border border-border p-1 gap-1 shadow-sm rounded-lg">
+              <TabsTrigger value="overview" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 font-medium hover:bg-purple-50 transition-all duration-200 rounded-md">Overview</TabsTrigger>
+              <TabsTrigger value="strategy" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 font-medium hover:bg-purple-50 transition-all duration-200 rounded-md">Strategy</TabsTrigger>
+              <TabsTrigger value="content" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 font-medium hover:bg-purple-50 transition-all duration-200 rounded-md">Requirements</TabsTrigger>
+              <TabsTrigger value="influencers" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 font-medium hover:bg-purple-50 transition-all duration-200 rounded-md">Influencers</TabsTrigger>
+              <TabsTrigger value="analytics" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 font-medium hover:bg-purple-50 transition-all duration-200 rounded-md">Analytics</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6 mt-6">

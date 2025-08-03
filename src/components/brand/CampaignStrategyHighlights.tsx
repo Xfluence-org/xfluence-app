@@ -107,10 +107,10 @@ const CampaignStrategyHighlights: React.FC<CampaignStrategyHighlightsProps> = ({
 
       {/* Main Dashboard Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 glass border-white/20">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="content">Content Strategy</TabsTrigger>
-          <TabsTrigger value="strategy">Influencer Strategy & Search Strategy</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 bg-muted/50 border border-border rounded-lg p-1 gap-1">
+          <TabsTrigger value="overview" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 font-medium hover:bg-purple-50 transition-all duration-200 rounded-md">Overview</TabsTrigger>
+          <TabsTrigger value="content" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 font-medium hover:bg-purple-50 transition-all duration-200 rounded-md">Content Strategy</TabsTrigger>
+          <TabsTrigger value="strategy" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 font-medium hover:bg-purple-50 transition-all duration-200 rounded-md">Influencer Strategy & Search Strategy</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
