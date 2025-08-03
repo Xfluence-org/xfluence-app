@@ -321,7 +321,7 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-gray-50 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-[#1DDCD3]">
+                <div className="text-2xl font-bold bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">
                   {safeRender(influencerAllocation.total_influencers || 0)}
                 </div>
                 <div className="text-sm text-gray-600">Total Influencers</div>
@@ -333,7 +333,7 @@ const InfluencerAssignmentSection: React.FC<InfluencerAssignmentSectionProps> = 
                   {Object.entries(influencerAllocation.allocation_by_category || {}).map(([category, count]) => (
                     <div key={category} className="flex justify-between text-sm">
                       <span className="text-gray-600">{category}</span>
-                      <Badge variant="secondary">{safeRender(count)}</Badge>
+                      <span className="font-medium bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">{safeRender(count)}</span>
                     </div>
                   ))}
                 </div>
