@@ -8,14 +8,17 @@ import { FileText, Sparkles, Brain, Wand2, Send, RefreshCw } from 'lucide-react'
 import { taskWorkflowService } from '@/services/taskWorkflowService';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/SimpleAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ContentRequirementEditorEnhancedProps {
   taskId: string;
+  campaignId?: string;
   onRequirementsShared: () => void;
 }
 
 const ContentRequirementEditorEnhanced: React.FC<ContentRequirementEditorEnhancedProps> = ({
   taskId,
+  campaignId,
   onRequirementsShared
 }) => {
   const [requirements, setRequirements] = useState('');
@@ -25,12 +28,35 @@ const ContentRequirementEditorEnhanced: React.FC<ContentRequirementEditorEnhance
   const [isRefining, setIsRefining] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [activeTab, setActiveTab] = useState('manual');
+  const [currentCampaignId, setCurrentCampaignId] = useState<string | null>(campaignId || null);
   const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
     checkExistingRequirements();
+    if (!currentCampaignId) {
+      fetchCampaignId();
+    }
   }, [taskId]);
+
+  const fetchCampaignId = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('campaign_tasks')
+        .select('campaign_id')
+        .eq('id', taskId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching campaign ID:', error);
+        return;
+      }
+      
+      setCurrentCampaignId(data?.campaign_id || null);
+    } catch (error) {
+      console.error('Error fetching campaign ID:', error);
+    }
+  };
 
   const checkExistingRequirements = async () => {
     try {
@@ -63,65 +89,66 @@ const ContentRequirementEditorEnhanced: React.FC<ContentRequirementEditorEnhance
   };
 
   const generateAIRequirements = async () => {
+    if (!currentCampaignId) {
+      toast({
+        title: "Error",
+        description: "Campaign ID not found. Please try again.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsGenerating(true);
     try {
-      // Simulate AI generation with realistic content
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Generating AI requirements for campaign:', currentCampaignId);
       
-      const generatedContent = `CONTENT REQUIREMENTS
+      // Call the edge function to generate content requirements
+      const { data, error } = await supabase.functions.invoke('generate-content-requirements', {
+        body: { campaignId: currentCampaignId }
+      });
 
-Platform: Instagram Reel/Post
-Duration: 15-30 seconds (for Reel) or high-quality static post
-Style: Authentic, lifestyle-focused, natural lighting
+      if (error) {
+        throw error;
+      }
 
-CONTENT GUIDELINES:
-• Feature the product naturally in your daily routine
-• Show the product being used or worn authentically
-• Include at least 2-3 close-up shots highlighting key features
-• Maintain your personal brand aesthetic while showcasing our product
+      console.log('AI requirements generated:', data);
 
-CAPTIONS & MESSAGING:
-• Start with a hook that relates to your audience's pain points
-• Share your genuine experience with the product
-• Include product benefits naturally in your story
-• End with a clear call-to-action
+      // Format the response for display
+      const deliverables = data.generated_deliverables;
+      let formattedContent = `CONTENT REQUIREMENTS\n\n`;
+      
+      // Format each category
+      Object.entries(deliverables).forEach(([category, items]) => {
+        const categoryTitle = category.replace(/_/g, ' ').toUpperCase();
+        formattedContent += `${categoryTitle}:\n`;
+        if (Array.isArray(items)) {
+          items.forEach(item => {
+            formattedContent += `• ${item}\n`;
+          });
+        }
+        formattedContent += `\n`;
+      });
 
-REQUIRED HASHTAGS:
-#brandpartner #productname #collaboration
-+ 5-8 relevant hashtags from your niche
+      // Add metadata
+      if (data.metadata) {
+        formattedContent += `\n--- AI GENERATION INFO ---\n`;
+        formattedContent += `Generated: ${new Date(data.metadata.generated_date).toLocaleString()}\n`;
+        formattedContent += `Model: ${data.metadata.model_used}\n`;
+      }
 
-MENTIONS:
-• Tag @brandusername in both post and story
-• Use branded hashtag #campaignhashtag
-
-DELIVERABLES:
-• 1 Instagram Reel OR 1 high-quality post
-• 1 Instagram story featuring the product
-• Submit analytics 48 hours after posting
-
-COMPLIANCE:
-• Include #ad or #sponsored in caption
-• Follow FTC guidelines for sponsored content
-• Ensure content aligns with brand values and guidelines
-
-TIMELINE:
-• Content submission: Within 7 days
-• Revisions (if needed): 2-3 days
-• Publishing: After brand approval`;
-
-      setAiRequirements(generatedContent);
+      setAiRequirements(formattedContent);
       setActiveTab('ai');
       
       toast({
         title: "AI Requirements Generated!",
-        description: "Review and customize the AI-generated content requirements.",
+        description: "Comprehensive content requirements generated based on your campaign strategy.",
         className: "bg-green-50 border-green-200"
       });
     } catch (error) {
       console.error('Error generating AI requirements:', error);
       toast({
-        title: "Error",
-        description: "Failed to generate AI requirements",
+        title: "Error", 
+        description: error.message || "Failed to generate AI requirements",
         variant: "destructive"
       });
     } finally {
