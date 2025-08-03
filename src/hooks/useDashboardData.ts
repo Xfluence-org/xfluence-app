@@ -42,7 +42,7 @@ export const useDashboardData = () => {
         `)
         .eq('influencer_id', (await supabase.auth.getUser()).data.user?.id)
         .eq('status', 'accepted')
-        .eq('current_stage', 'waiting_for_requirements');
+        .in('current_stage', ['waiting_for_requirements', 'content_requirement']);
 
       if (error) throw error;
 
@@ -153,7 +153,7 @@ export const useDashboardData = () => {
           `)
           .eq('influencer_id', user.id)
           .eq('status', 'accepted')
-          .neq('current_stage', 'waiting_for_requirements');
+          .not('current_stage', 'in', '(waiting_for_requirements,content_requirement)');
 
         if (fallbackError) throw fallbackError;
 
