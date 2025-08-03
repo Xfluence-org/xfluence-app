@@ -117,26 +117,31 @@ const ContentRequirementsSection: React.FC<ContentRequirementsSectionProps> = ({
     setRequirements(requirements.filter((_, i) => i !== index));
   };
 
-  const saveRequirements = async () => {
-    setIsSaving(true);
-    try {
-      // Save requirements to campaign metadata
-      const requirementsData = {
-        content_requirements: requirements,
-        updated_at: new Date().toISOString()
-      };
+   const saveRequirements = async () => {
+     setIsSaving(true);
+     try {
+       console.log('Saving requirements for campaign:', campaignId, requirements);
+       
+       // Save requirements to campaign metadata
+       const requirementsData = {
+         content_requirements: requirements,
+         updated_at: new Date().toISOString()
+       };
 
-      // Update campaign with requirements
-      const { error: updateError } = await supabase
-        .from('campaigns')
-        .update({ 
-          requirements: requirementsData 
-        })
-        .eq('id', campaignId);
+       // Update campaign with requirements
+       const { data, error: updateError } = await supabase
+         .from('campaigns')
+         .update({ 
+           requirements: requirementsData 
+         })
+         .eq('id', campaignId)
+         .select();
 
-      if (updateError) {
-        throw updateError;
-      }
+       console.log('Update result:', { data, error: updateError });
+
+       if (updateError) {
+         throw updateError;
+       }
 
       // Also create tasks for participants who are waiting for requirements
       const { data: participants } = await supabase
@@ -197,12 +202,13 @@ const ContentRequirementsSection: React.FC<ContentRequirementsSectionProps> = ({
 
       setIsEditing(false);
       onRequirementsUpdated?.();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save content requirements.",
-        variant: "destructive"
-      });
+     } catch (error) {
+       console.error('Error saving requirements:', error);
+       toast({
+         title: "Error",
+         description: error instanceof Error ? error.message : "Failed to save content requirements.",
+         variant: "destructive"
+       });
     } finally {
       setIsSaving(false);
     }
@@ -220,7 +226,7 @@ const ContentRequirementsSection: React.FC<ContentRequirementsSectionProps> = ({
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-[#1a1f2e]">Content Requirements</h3>
+        <h3 className="text-lg font-semibold text-foreground">Content Requirements</h3>
         {!isEditing ? (
           <Button onClick={() => setIsEditing(true)} variant="outline">
             <Edit className="h-4 w-4 mr-2" />
@@ -231,9 +237,9 @@ const ContentRequirementsSection: React.FC<ContentRequirementsSectionProps> = ({
             <Button onClick={() => setIsEditing(false)} variant="outline">
               Cancel
             </Button>
-            <Button onClick={saveRequirements} disabled={isSaving}>
-              <Save className="h-4 w-4 mr-2" />
-              {isSaving ? 'Saving...' : 'Save Requirements'}
+             <Button onClick={saveRequirements} disabled={isSaving} className="bg-brand-primary hover:bg-brand-primary/90 text-brand-primary-foreground">
+               <Save className="h-4 w-4 mr-2" />
+               {isSaving ? 'Saving...' : 'Save Requirements'}
             </Button>
           </div>
         )}
@@ -241,7 +247,7 @@ const ContentRequirementsSection: React.FC<ContentRequirementsSectionProps> = ({
 
       <div className="space-y-4">
         {requirements.map((requirement, index) => (
-          <div key={index} className="bg-gray-50 rounded-lg p-4">
+          <div key={index} className="bg-muted/50 rounded-lg p-4 border border-border">
             <div className="flex items-start gap-4">
               <div className="flex items-center gap-2 min-w-32">
                 {getIcon(requirement.type)}
@@ -249,7 +255,7 @@ const ContentRequirementsSection: React.FC<ContentRequirementsSectionProps> = ({
                   <select
                     value={requirement.type}
                     onChange={(e) => updateRequirement(index, 'type', e.target.value)}
-                    className="border rounded px-2 py-1 text-sm"
+                    className="border border-border rounded px-2 py-1 text-sm bg-background text-foreground"
                   >
                     <option value="Posts">Posts</option>
                     <option value="Stories">Stories</option>
@@ -262,7 +268,7 @@ const ContentRequirementsSection: React.FC<ContentRequirementsSectionProps> = ({
 
               <div className="flex-1 space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-600">Count:</span>
+                  <span className="text-sm font-medium text-muted-foreground">Count:</span>
                   {isEditing ? (
                     <Input
                       type="number"
@@ -272,7 +278,7 @@ const ContentRequirementsSection: React.FC<ContentRequirementsSectionProps> = ({
                       min={1}
                     />
                   ) : (
-                    <span className="font-semibold text-[#1DDCD3]">{requirement.count}</span>
+                    <span className="font-semibold text-brand-primary">{requirement.count}</span>
                   )}
                 </div>
 
@@ -284,7 +290,7 @@ const ContentRequirementsSection: React.FC<ContentRequirementsSectionProps> = ({
                     rows={2}
                   />
                 ) : (
-                  <p className="text-gray-700 text-sm">{requirement.description}</p>
+                  <p className="text-foreground text-sm">{requirement.description}</p>
                 )}
               </div>
 
@@ -310,9 +316,9 @@ const ContentRequirementsSection: React.FC<ContentRequirementsSectionProps> = ({
       </div>
 
       {!isEditing && requirements.length === 0 && (
-        <div className="text-center py-8 bg-gray-50 rounded-lg">
-          <p className="text-gray-500">No content requirements set</p>
-          <Button onClick={() => setIsEditing(true)} className="mt-2">
+        <div className="text-center py-8 bg-muted/50 rounded-lg border border-border">
+          <p className="text-muted-foreground">No content requirements set</p>
+          <Button onClick={() => setIsEditing(true)} className="mt-2 bg-brand-primary hover:bg-brand-primary/90 text-brand-primary-foreground">
             <Plus className="h-4 w-4 mr-2" />
             Add Requirements
           </Button>
