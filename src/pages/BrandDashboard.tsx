@@ -22,7 +22,7 @@ const BrandDashboard: React.FC = () => {
     publishedCampaigns: publishedCampaigns.length,
     totalCampaigns: publishedCampaigns.length, // For now, showing only published
     publishedBudget: publishedCampaigns.reduce((sum, c) => sum + (c.budget / 100 || 0), 0), // Convert from cents
-    publishedSpent: publishedCampaigns.reduce((sum, c) => sum + ((c.spent || 0) / 100), 0), // Use actual spent data
+    publishedSpent: 0, // TODO: Implement spent tracking
     totalReach: publishedCampaigns.reduce((sum, c) => sum + (c.total_reach || 0), 0),
     avgEngagementRate: publishedCampaigns.length > 0 
       ? publishedCampaigns.reduce((sum, c) => sum + c.avg_engagement_rate, 0) / publishedCampaigns.length 

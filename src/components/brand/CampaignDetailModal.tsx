@@ -472,7 +472,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
               {/* Invitation Management */}
               <div className="glass border-white/20 rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Users className="h-5 w-5 text-purple-600" />
+                  <User className="h-5 w-5 text-purple-600" />
                   Invitations
                 </h3>
                 <InvitationManagement campaignId={campaignId} />
