@@ -461,14 +461,14 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* AI Suggestion Box */}
-            <div className="glass-light rounded-lg p-4 border border-white/20">
+            <div className="bg-muted/50 rounded-lg p-4 border border-border shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="p-1.5 bg-white/20 rounded-full backdrop-blur-sm">
-                  <Sparkles className="h-4 w-4 text-purple-600" />
+                <div className="p-1.5 bg-brand-primary/20 rounded-full border border-brand-primary/30">
+                  <Sparkles className="h-4 w-4 text-brand-primary" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-800">AI Tip</p>
-                  <p className="text-xs text-gray-600 mt-1">
+                  <p className="text-sm font-medium text-foreground">AI Tip</p>
+                  <p className="text-xs text-muted-foreground mt-1">
                     Fill in the details below and our AI will create a comprehensive campaign strategy tailored to your goals and budget.
                   </p>
                 </div>
@@ -479,13 +479,13 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
               name="brand_name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-purple-600 inline mr-1" /> Brand Name
+                  <FormLabel className="flex items-center gap-2 text-foreground font-medium">
+                    <Sparkles className="w-4 h-4 text-brand-primary inline mr-1" /> Brand Name
                   </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Enter your brand name..."
-                      className="glass-input"
+                      className="shadow-sm"
                       {...field}
                     />
                   </FormControl>
@@ -499,8 +499,8 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
               name="goals"
               render={() => (
                 <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    <Target className="w-4 h-4 text-purple-600 inline mr-1" /> Campaign Goals
+                  <FormLabel className="flex items-center gap-2 text-foreground font-medium">
+                    <Target className="w-4 h-4 text-brand-primary inline mr-1" /> Campaign Goals
                   </FormLabel>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {[
@@ -540,7 +540,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                                   }}
                                 />
                               </FormControl>
-                              <FormLabel className="text-sm font-normal cursor-pointer">
+                              <FormLabel className="text-sm font-normal cursor-pointer text-foreground">
                                 {goal.label}
                               </FormLabel>
                             </FormItem>
@@ -577,11 +577,11 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
               name="campaign_description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Campaign Description</FormLabel>
+                  <FormLabel className="text-foreground font-medium">Campaign Description</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Provide detailed campaign description..."
-                      className="min-h-[100px]"
+                      className="min-h-[100px] shadow-sm"
                       {...field}
                     />
                   </FormControl>
@@ -596,8 +596,8 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                 name="categories"
                 render={() => (
                   <FormItem>
-                    <FormLabel>Categories (Multi-select)</FormLabel>
-                    <div className="grid grid-cols-2 gap-2 p-3 border rounded-md bg-background">
+                    <FormLabel className="text-foreground font-medium">Categories (Multi-select)</FormLabel>
+                    <div className="grid grid-cols-2 gap-2 p-3 border border-border rounded-md bg-muted/30 shadow-sm">
                       {categories.map((category) => (
                         <FormField
                           key={category}
