@@ -255,6 +255,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                 </Button>
               </div>
             ) : null}
+            </div>
           </div>
           <DialogDescription>
             View and manage campaign settings, strategy, and influencer assignments
