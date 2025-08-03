@@ -445,10 +445,10 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
       )}
 
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-card via-card to-brand-primary/5 border border-border shadow-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-card via-card to-brand-primary/8 border-2 border-border/80 shadow-2xl">
           <DialogHeader>
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-3 bg-gradient-to-br from-brand-primary/30 to-brand-primary/10 rounded-xl border border-brand-primary/30 shadow-lg">
+              <div className="p-3 bg-gradient-to-br from-brand-primary/40 to-brand-primary/20 rounded-xl border-2 border-brand-primary/40 shadow-lg">
                 <Sparkles className="h-6 w-6 text-brand-primary" />
               </div>
               <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-brand-primary to-brand-primary/70 bg-clip-text text-transparent">
@@ -461,9 +461,9 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* AI Suggestion Box */}
-            <div className="bg-gradient-to-r from-brand-primary/10 to-brand-primary/5 rounded-xl p-4 border border-brand-primary/30 shadow-md">
+            <div className="bg-gradient-to-r from-brand-primary/15 to-brand-primary/8 rounded-xl p-4 border-2 border-brand-primary/40 shadow-md">
               <div className="flex items-start gap-3">
-                <div className="p-2 bg-brand-primary/20 rounded-lg border border-brand-primary/30">
+                <div className="p-2 bg-brand-primary/30 rounded-lg border-2 border-brand-primary/40">
                   <Bot className="h-5 w-5 text-brand-primary" />
                 </div>
                 <div>
@@ -839,7 +839,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
             />
 
             <div className="space-y-4">
-              <div className="p-4 border-2 border-brand-primary/30 rounded-lg bg-gradient-to-r from-brand-primary/10 to-brand-primary/5">
+              <div className="p-4 border-2 border-brand-primary/40 rounded-lg bg-gradient-to-r from-brand-primary/15 to-brand-primary/8">
                 <div className="flex items-center justify-between">
                   <div>
                     <FormLabel className="text-sm font-medium text-brand-primary flex items-center gap-2">

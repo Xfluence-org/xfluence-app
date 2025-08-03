@@ -272,12 +272,12 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
           </div>
         ) : campaign ? (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-5 bg-muted border border-border p-1 gap-1">
-              <TabsTrigger value="overview" className="data-[state=active]:bg-brand-primary/20 data-[state=active]:text-brand-primary data-[state=active]:border-brand-primary/50">Overview</TabsTrigger>
-              <TabsTrigger value="strategy" className="data-[state=active]:bg-brand-primary/20 data-[state=active]:text-brand-primary data-[state=active]:border-brand-primary/50">Strategy</TabsTrigger>
-              <TabsTrigger value="content" className="data-[state=active]:bg-brand-primary/20 data-[state=active]:text-brand-primary data-[state=active]:border-brand-primary/50">Requirements</TabsTrigger>
-              <TabsTrigger value="influencers" className="data-[state=active]:bg-brand-primary/20 data-[state=active]:text-brand-primary data-[state=active]:border-brand-primary/50">Influencers</TabsTrigger>
-              <TabsTrigger value="analytics" className="data-[state=active]:bg-brand-primary/20 data-[state=active]:text-brand-primary data-[state=active]:border-brand-primary/50">Analytics</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-5 bg-muted/80 border-2 border-border/80 p-1 gap-1 shadow-sm">
+              <TabsTrigger value="overview" className="data-[state=active]:bg-brand-primary/30 data-[state=active]:text-brand-primary data-[state=active]:border-brand-primary/70 data-[state=active]:shadow-md font-medium hover:bg-brand-primary/10 transition-all duration-200">Overview</TabsTrigger>
+              <TabsTrigger value="strategy" className="data-[state=active]:bg-brand-primary/30 data-[state=active]:text-brand-primary data-[state=active]:border-brand-primary/70 data-[state=active]:shadow-md font-medium hover:bg-brand-primary/10 transition-all duration-200">Strategy</TabsTrigger>
+              <TabsTrigger value="content" className="data-[state=active]:bg-brand-primary/30 data-[state=active]:text-brand-primary data-[state=active]:border-brand-primary/70 data-[state=active]:shadow-md font-medium hover:bg-brand-primary/10 transition-all duration-200">Requirements</TabsTrigger>
+              <TabsTrigger value="influencers" className="data-[state=active]:bg-brand-primary/30 data-[state=active]:text-brand-primary data-[state=active]:border-brand-primary/70 data-[state=active]:shadow-md font-medium hover:bg-brand-primary/10 transition-all duration-200">Influencers</TabsTrigger>
+              <TabsTrigger value="analytics" className="data-[state=active]:bg-brand-primary/30 data-[state=active]:text-brand-primary data-[state=active]:border-brand-primary/70 data-[state=active]:shadow-md font-medium hover:bg-brand-primary/10 transition-all duration-200">Analytics</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6 mt-6">
