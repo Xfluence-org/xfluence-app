@@ -153,7 +153,7 @@ const InfluencerAllocationSection: React.FC<InfluencerAllocationSectionProps> = 
         <h4 className="text-lg font-semibold text-[#1a1f2e] mb-4">Campaign Overview</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-[#1DDCD3]">
+            <div className="text-2xl font-bold bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">
               {influencerAllocation.total_influencers || 0}
             </div>
             <div className="text-sm text-gray-600">Total Influencers</div>
@@ -162,10 +162,10 @@ const InfluencerAllocationSection: React.FC<InfluencerAllocationSectionProps> = 
           <div className="bg-white rounded-lg p-4">
             <h5 className="font-medium text-gray-700 mb-2">By Category</h5>
             <div className="space-y-1">
-              {Object.entries(influencerAllocation.allocation_by_category || {}).map(([category, count]) => (
+               {Object.entries(influencerAllocation.allocation_by_category || {}).map(([category, count]) => (
                 <div key={category} className="flex justify-between text-sm">
                   <span className="text-gray-600">{category}</span>
-                  <span className="font-medium">{count}</span>
+                  <span className="font-medium bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">{count}</span>
                 </div>
               ))}
             </div>
@@ -177,7 +177,7 @@ const InfluencerAllocationSection: React.FC<InfluencerAllocationSectionProps> = 
               {categories.map((category) => (
                 <span
                   key={category}
-                  className="px-2 py-1 bg-[#1DDCD3] text-white rounded text-xs"
+                  className="px-2 py-1 bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-700 border border-purple-300/50 rounded text-xs"
                 >
                   {category}
                 </span>
