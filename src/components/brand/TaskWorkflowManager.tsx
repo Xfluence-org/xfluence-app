@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { FileText, Eye, BarChart3, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { taskWorkflowService, WorkflowState } from '@/services/taskWorkflowService';
 import { useAuth } from '@/contexts/SimpleAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import ContentRequirementEditorEnhanced from './ContentRequirementEditorEnhanced';
 import ContentReviewPanelEnhanced from './ContentReviewPanelEnhanced';
 import PublishAnalyticsView from './PublishAnalyticsView';
@@ -26,6 +27,7 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({
   const [activeTab, setActiveTab] = useState('content_requirement');
   const [loading, setLoading] = useState(true);
   const [phaseVisibility, setPhaseVisibility] = useState<Record<string, boolean>>({});
+  const [campaignId, setCampaignId] = useState<string | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -50,6 +52,7 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({
       console.log('Initializing workflow for task:', taskId);
       
       await taskWorkflowService.initializeWorkflow(taskId);
+      await fetchCampaignId();
       await fetchWorkflowStates();
       await checkPhaseVisibility();
       
@@ -57,6 +60,26 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({
       console.error('Error initializing workflow:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCampaignId = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('campaign_tasks')
+        .select('campaign_id')
+        .eq('id', taskId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching campaign ID:', error);
+        return;
+      }
+      
+      setCampaignId(data?.campaign_id || null);
+      console.log('Fetched campaign ID:', data?.campaign_id);
+    } catch (error) {
+      console.error('Error fetching campaign ID:', error);
     }
   };
 
@@ -224,6 +247,7 @@ const TaskWorkflowManager: React.FC<TaskWorkflowManagerProps> = ({
               ) : (
                 <ContentRequirementEditorEnhanced
                   taskId={taskId}
+                  campaignId={campaignId || undefined}
                   onRequirementsShared={handleRefresh}
                 />
               )}
