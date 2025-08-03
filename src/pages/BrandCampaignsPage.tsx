@@ -143,11 +143,11 @@ const BrandCampaignsPage: React.FC = () => {
   const renderCampaignContent = () => {
     return (
       <Tabs value={campaignTab} onValueChange={(value) => setCampaignTab(value as CampaignView)}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="published">Published</TabsTrigger>
-          <TabsTrigger value="completed">Completed</TabsTrigger>
-          <TabsTrigger value="archived">Archived</TabsTrigger>
-          <TabsTrigger value="invitations">Invitations</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 bg-muted border border-border p-1 gap-1">
+          <TabsTrigger value="published" className="data-[state=active]:bg-brand-primary data-[state=active]:text-brand-primary-foreground text-foreground font-medium">Published</TabsTrigger>
+          <TabsTrigger value="completed" className="data-[state=active]:bg-brand-primary data-[state=active]:text-brand-primary-foreground text-foreground font-medium">Completed</TabsTrigger>
+          <TabsTrigger value="archived" className="data-[state=active]:bg-brand-primary data-[state=active]:text-brand-primary-foreground text-foreground font-medium">Archived</TabsTrigger>
+          <TabsTrigger value="invitations" className="data-[state=active]:bg-brand-primary data-[state=active]:text-brand-primary-foreground text-foreground font-medium">Invitations</TabsTrigger>
         </TabsList>
 
         <TabsContent value="published" className="mt-6">
@@ -172,12 +172,12 @@ const BrandCampaignsPage: React.FC = () => {
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">
+                <p className="text-muted-foreground text-lg">
                   {searchQuery || Object.keys(filters).length > 0 
                     ? 'No campaigns match your search criteria' 
                     : 'No published campaigns found'}
                 </p>
-                <p className="text-gray-400 mt-2">
+                <p className="text-muted-foreground/70 mt-2">
                   {searchQuery || Object.keys(filters).length > 0 
                     ? 'Try adjusting your filters' 
                     : 'Create a campaign to get started'}
@@ -209,8 +209,8 @@ const BrandCampaignsPage: React.FC = () => {
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">No completed campaigns found</p>
-                <p className="text-gray-400 mt-2">Completed campaigns will appear here</p>
+                <p className="text-muted-foreground text-lg">No completed campaigns found</p>
+                <p className="text-muted-foreground/70 mt-2">Completed campaigns will appear here</p>
               </div>
             )}
           </div>
@@ -238,8 +238,8 @@ const BrandCampaignsPage: React.FC = () => {
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">No archived campaigns found</p>
-                <p className="text-gray-400 mt-2">Archived campaigns will appear here</p>
+                <p className="text-muted-foreground text-lg">No archived campaigns found</p>
+                <p className="text-muted-foreground/70 mt-2">Archived campaigns will appear here</p>
               </div>
             )}
           </div>

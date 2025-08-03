@@ -82,7 +82,7 @@ const BrandAIAssistantPage = () => {
         </div>
 
         <div className="px-8 pb-8 flex-1 overflow-hidden">
-          <Card className="h-full flex flex-col overflow-hidden glass border-white/20">
+          <Card className="h-full flex flex-col overflow-hidden bg-card border border-border">
             <CardHeader className="border-b bg-gradient-to-r from-brand-primary/5 to-brand-accent/5 border-border">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
