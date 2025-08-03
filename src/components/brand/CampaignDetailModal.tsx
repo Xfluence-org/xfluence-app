@@ -216,13 +216,13 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto glass border-white/20">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto bg-background border border-border">
         <DialogHeader className="pb-6">
-          <div className="bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10 p-6 rounded-xl mb-4">
+          <div className="bg-gradient-to-r from-brand-primary/10 via-brand-secondary/10 to-brand-accent/10 p-6 rounded-xl mb-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm border border-white/20">
-                  <Sparkles className="h-6 w-6 text-purple-600" />
+                <div className="p-2 bg-brand-primary/10 rounded-lg backdrop-blur-sm border border-brand-primary/20">
+                  <Sparkles className="h-6 w-6 text-brand-primary" />
                 </div>
                 <DialogTitle className="text-2xl font-bold text-foreground">
                   Campaign Details
@@ -248,7 +248,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
                 </Button>
                 <Button 
                   onClick={handleSave}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg transform transition-all duration-200 hover:scale-105"
+                  className="bg-brand-primary hover:bg-brand-primary/90 text-brand-primary-foreground shadow-lg transform transition-all duration-200 hover:scale-105"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   Save
@@ -272,17 +272,17 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
           </div>
         ) : campaign ? (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-5 glass border-white/20 p-1 gap-1">
-              <TabsTrigger value="overview" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/20 data-[state=active]:to-pink-500/20 data-[state=active]:border-purple-300/50">Overview</TabsTrigger>
-              <TabsTrigger value="strategy" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/20 data-[state=active]:to-pink-500/20 data-[state=active]:border-purple-300/50">Strategy</TabsTrigger>
-              <TabsTrigger value="content" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/20 data-[state=active]:to-pink-500/20 data-[state=active]:border-purple-300/50">Requirements</TabsTrigger>
-              <TabsTrigger value="influencers" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/20 data-[state=active]:to-pink-500/20 data-[state=active]:border-purple-300/50">Influencers</TabsTrigger>
-              <TabsTrigger value="analytics" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/20 data-[state=active]:to-pink-500/20 data-[state=active]:border-purple-300/50">Analytics</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-5 bg-muted border border-border p-1 gap-1">
+              <TabsTrigger value="overview" className="data-[state=active]:bg-brand-primary/20 data-[state=active]:text-brand-primary data-[state=active]:border-brand-primary/50">Overview</TabsTrigger>
+              <TabsTrigger value="strategy" className="data-[state=active]:bg-brand-primary/20 data-[state=active]:text-brand-primary data-[state=active]:border-brand-primary/50">Strategy</TabsTrigger>
+              <TabsTrigger value="content" className="data-[state=active]:bg-brand-primary/20 data-[state=active]:text-brand-primary data-[state=active]:border-brand-primary/50">Requirements</TabsTrigger>
+              <TabsTrigger value="influencers" className="data-[state=active]:bg-brand-primary/20 data-[state=active]:text-brand-primary data-[state=active]:border-brand-primary/50">Influencers</TabsTrigger>
+              <TabsTrigger value="analytics" className="data-[state=active]:bg-brand-primary/20 data-[state=active]:text-brand-primary data-[state=active]:border-brand-primary/50">Analytics</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6 mt-6">
 
-              <div className="glass border-white/20 rounded-xl p-6">
+              <div className="bg-card border border-border rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                   <Eye className="h-5 w-5 text-brand-primary" />
                   Campaign Information
@@ -384,7 +384,7 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({
             </TabsContent>
 
             <TabsContent value="strategy" className="space-y-6 mt-6">
-              <div className="glass border-white/20 rounded-xl p-6">
+              <div className="bg-card border border-border rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-brand-secondary" />
                   AI Generated Campaign Strategy

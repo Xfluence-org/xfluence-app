@@ -88,16 +88,16 @@ const BrandAIAssistantPage = () => {
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <Bot className="h-8 w-8 text-brand-primary" />
-                    <div className="absolute -bottom-1 -right-1 h-3 w-3 bg-green-500 rounded-full border-2 border-background" />
+                    <div className="absolute -bottom-1 -right-1 h-3 w-3 bg-brand-primary rounded-full border-2 border-background" />
                   </div>
                   <div>
                     <CardTitle className="text-lg text-card-foreground">AI Assistant</CardTitle>
                     <CardDescription className="text-xs text-muted-foreground">Always here to help</CardDescription>
                   </div>
                 </div>
-                <Badge className="bg-green-100 text-green-700 border-green-200">
-                  Online
-                </Badge>
+                  <Badge className="bg-brand-primary/10 text-brand-primary border-brand-primary/20">
+                    Online
+                  </Badge>
               </div>
             </CardHeader>
             <CardContent className="flex-1 p-0 flex flex-col overflow-hidden">
