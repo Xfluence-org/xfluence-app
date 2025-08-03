@@ -23,6 +23,9 @@ export const useDashboardData = () => {
   const { data: waitingCampaigns = [], isLoading: isLoadingWaiting } = useQuery({
     queryKey: ['dashboard-waiting'],
     queryFn: async () => {
+      const user = (await supabase.auth.getUser()).data.user;
+      console.log('Fetching waiting campaigns for user:', user?.id);
+      
       const { data, error } = await supabase
         .from('campaign_participants')
         .select(`
@@ -30,6 +33,7 @@ export const useDashboardData = () => {
           campaign_id,
           accepted_at,
           current_stage,
+          status,
           campaigns!inner(
             id,
             title,
@@ -40,9 +44,11 @@ export const useDashboardData = () => {
             )
           )
         `)
-        .eq('influencer_id', (await supabase.auth.getUser()).data.user?.id)
+        .eq('influencer_id', user?.id)
         .eq('status', 'accepted')
         .in('current_stage', ['waiting_for_requirements', 'content_requirement']);
+
+      console.log('Waiting campaigns query result:', { data, error });
 
       if (error) throw error;
 

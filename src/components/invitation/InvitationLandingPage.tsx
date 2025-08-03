@@ -174,6 +174,15 @@ const InvitationLandingPage: React.FC = () => {
       
       console.log('Successfully updated campaign participant');
 
+      // Log the update result for debugging
+      console.log('Campaign participant updated:', {
+        participantId: invitationData.id,
+        userId: user.id,
+        campaignId: invitationData.campaign.id,
+        status: 'accepted',
+        currentStage: 'waiting_for_requirements'
+      });
+
       // Extract and store Instagram profile data if available in application_message
       let instagramData = null;
       try {
