@@ -445,13 +445,13 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
       )}
 
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card border border-border">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-card via-card to-brand-primary/5 border border-border shadow-2xl">
           <DialogHeader>
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-brand-primary/20 rounded-lg border border-border">
+              <div className="p-3 bg-gradient-to-br from-brand-primary/30 to-brand-primary/10 rounded-xl border border-brand-primary/30 shadow-lg">
                 <Sparkles className="h-6 w-6 text-brand-primary" />
               </div>
-              <DialogTitle className="text-2xl font-bold text-foreground">
+              <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-brand-primary to-brand-primary/70 bg-clip-text text-transparent">
                 AI-Powered Campaign Creator
               </DialogTitle>
             </div>
@@ -461,46 +461,55 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* AI Suggestion Box */}
-            <div className="bg-muted/50 rounded-lg p-4 border border-border shadow-sm">
+            <div className="bg-gradient-to-r from-brand-primary/10 to-brand-primary/5 rounded-xl p-4 border border-brand-primary/30 shadow-md">
               <div className="flex items-start gap-3">
-                <div className="p-1.5 bg-brand-primary/20 rounded-full border border-brand-primary/30">
-                  <Sparkles className="h-4 w-4 text-brand-primary" />
+                <div className="p-2 bg-brand-primary/20 rounded-lg border border-brand-primary/30">
+                  <Bot className="h-5 w-5 text-brand-primary" />
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">AI Tip</p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                <div>
+                  <h4 className="font-semibold text-brand-primary mb-1">AI Tip</h4>
+                  <p className="text-sm text-muted-foreground">
                     Fill in the details below and our AI will create a comprehensive campaign strategy tailored to your goals and budget.
                   </p>
                 </div>
               </div>
             </div>
-            <FormField
-              control={form.control}
-              name="brand_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2 text-foreground font-medium">
-                    <Sparkles className="w-4 h-4 text-brand-primary inline mr-1" /> Brand Name
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter your brand name..."
-                      className="shadow-sm"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
+            {/* Brand Name */}
+            <div className="space-y-2">
+              <FormField
+                control={form.control}
+                name="brand_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2 text-brand-primary font-semibold">
+                      <Sparkles className="h-4 w-4" />
+                      Brand Name
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter your brand name..."
+                        className="border-brand-primary/30 focus:border-brand-primary bg-background/80 shadow-sm"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Campaign Goals */}
+            <div className="space-y-3">
 
             <FormField
               control={form.control}
               name="goals"
               render={() => (
                 <FormItem>
-                  <FormLabel className="flex items-center gap-2 text-foreground font-medium">
-                    <Target className="w-4 h-4 text-brand-primary inline mr-1" /> Campaign Goals
+                  <FormLabel className="flex items-center gap-2 text-brand-primary font-semibold">
+                    <Target className="h-4 w-4" />
+                    Campaign Goals
                   </FormLabel>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {[
@@ -571,17 +580,22 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                 </FormItem>
               )}
             />
+            </div>
 
+            {/* Campaign Description */}
             <FormField
               control={form.control}
               name="campaign_description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-foreground font-medium">Campaign Description</FormLabel>
+                  <FormLabel className="flex items-center gap-2 text-brand-primary font-semibold">
+                    <Sparkles className="h-4 w-4" />
+                    Campaign Description
+                  </FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Provide detailed campaign description..."
-                      className="min-h-[100px] shadow-sm"
+                      className="min-h-[100px] border-brand-primary/30 focus:border-brand-primary bg-background/80 shadow-sm"
                       {...field}
                     />
                   </FormControl>
@@ -825,15 +839,16 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
             />
 
             <div className="space-y-4">
-              <div className="p-4 border-2 border-purple-200 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50">
+              <div className="p-4 border-2 border-brand-primary/30 rounded-lg bg-gradient-to-r from-brand-primary/10 to-brand-primary/5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <FormLabel className="text-sm font-medium text-purple-900 flex items-center gap-2">
-                      <Smartphone className="w-4 h-4 text-purple-600 inline mr-1" /> Platform
+                    <FormLabel className="text-sm font-medium text-brand-primary flex items-center gap-2">
+                      <Smartphone className="w-4 h-4" />
+                      Platform
                     </FormLabel>
-                    <p className="text-sm text-purple-700 mt-1 font-medium">Instagram</p>
+                    <p className="text-sm text-brand-primary/80 mt-1 font-medium">Instagram</p>
                   </div>
-                  <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0">
+                  <Badge className="bg-brand-primary text-brand-primary-foreground border-0">
                     AI Optimized
                   </Badge>
                 </div>
@@ -852,7 +867,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg transform transition-all duration-200 hover:scale-105"
+                className="bg-brand-primary hover:bg-brand-primary/90 text-brand-primary-foreground shadow-lg transform transition-all duration-200 hover:scale-105"
               >
                 {isSubmitting ? (
                   <>
