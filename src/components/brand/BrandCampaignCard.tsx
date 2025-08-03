@@ -63,7 +63,7 @@ const BrandCampaignCard: React.FC<BrandCampaignCardProps> = ({
       case 'archived':
         return `${baseClasses} bg-gradient-to-r from-gray-500/20 to-slate-500/20 text-gray-700 border-gray-300/50`;
       case 'published':
-        return `${baseClasses} bg-gradient-to-r from-blue-500/20 to-indigo-500/20 text-blue-700 border-blue-300/50`;
+        return `${baseClasses} bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-700 border-purple-300/50`;
       default:
         return `${baseClasses} bg-gray-100/50 text-gray-700 border-gray-300/50`;
     }

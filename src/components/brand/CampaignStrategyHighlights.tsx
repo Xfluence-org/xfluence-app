@@ -107,10 +107,10 @@ const CampaignStrategyHighlights: React.FC<CampaignStrategyHighlightsProps> = ({
 
       {/* Main Dashboard Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-muted/50 border border-border rounded-lg p-1 gap-1">
-          <TabsTrigger value="overview" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 font-medium hover:bg-purple-50 transition-all duration-200 rounded-md">Overview</TabsTrigger>
-          <TabsTrigger value="content" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 font-medium hover:bg-purple-50 transition-all duration-200 rounded-md">Content Strategy</TabsTrigger>
-          <TabsTrigger value="strategy" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 font-medium hover:bg-purple-50 transition-all duration-200 rounded-md">Influencer Strategy & Search Strategy</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200/50 rounded-lg p-1 gap-1 shadow-sm">
+          <TabsTrigger value="overview" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-100 data-[state=active]:to-blue-100 data-[state=active]:text-purple-700 font-medium hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50 transition-all duration-200 rounded-md">Overview</TabsTrigger>
+          <TabsTrigger value="content" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-100 data-[state=active]:to-blue-100 data-[state=active]:text-purple-700 font-medium hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50 transition-all duration-200 rounded-md">Content Strategy</TabsTrigger>
+          <TabsTrigger value="strategy" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-100 data-[state=active]:to-blue-100 data-[state=active]:text-purple-700 font-medium hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50 transition-all duration-200 rounded-md">Influencer Strategy & Search Strategy</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}

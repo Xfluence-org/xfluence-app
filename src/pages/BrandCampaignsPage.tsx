@@ -143,11 +143,11 @@ const BrandCampaignsPage: React.FC = () => {
   const renderCampaignContent = () => {
     return (
       <Tabs value={campaignTab} onValueChange={(value) => setCampaignTab(value as CampaignView)}>
-        <TabsList className="grid w-full grid-cols-4 bg-muted/50 border border-border p-1 gap-1 rounded-lg">
-          <TabsTrigger value="published" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 text-foreground font-medium rounded-md transition-all duration-200 hover:bg-purple-50">Published</TabsTrigger>
-          <TabsTrigger value="completed" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 text-foreground font-medium rounded-md transition-all duration-200 hover:bg-purple-50">Completed</TabsTrigger>
-          <TabsTrigger value="archived" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 text-foreground font-medium rounded-md transition-all duration-200 hover:bg-purple-50">Archived</TabsTrigger>
-          <TabsTrigger value="invitations" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 text-foreground font-medium rounded-md transition-all duration-200 hover:bg-purple-50">Invitations</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200/50 p-1 gap-1 rounded-lg shadow-sm">
+          <TabsTrigger value="published" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-100 data-[state=active]:to-blue-100 data-[state=active]:text-purple-700 text-foreground font-medium rounded-md transition-all duration-200 hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50">Published</TabsTrigger>
+          <TabsTrigger value="completed" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-100 data-[state=active]:to-blue-100 data-[state=active]:text-purple-700 text-foreground font-medium rounded-md transition-all duration-200 hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50">Completed</TabsTrigger>
+          <TabsTrigger value="archived" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-100 data-[state=active]:to-blue-100 data-[state=active]:text-purple-700 text-foreground font-medium rounded-md transition-all duration-200 hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50">Archived</TabsTrigger>
+          <TabsTrigger value="invitations" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-100 data-[state=active]:to-blue-100 data-[state=active]:text-purple-700 text-foreground font-medium rounded-md transition-all duration-200 hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50">Invitations</TabsTrigger>
         </TabsList>
 
         <TabsContent value="published" className="mt-6">
