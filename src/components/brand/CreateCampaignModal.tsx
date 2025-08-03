@@ -358,26 +358,26 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
       {/* Fullscreen loading overlay - Higher z-index to appear above dialog */}
       {isSubmitting && (
         <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-md flex items-center justify-center">
-          <div className="glass rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl border border-white/20">
+          <div className="bg-card border border-border rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
             <div className="text-center space-y-6">
               {/* Animated Icon */}
               <div className="relative">
-                <div className="w-24 h-24 mx-auto bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full flex items-center justify-center animate-pulse backdrop-blur-sm border border-white/20">
-                  {loadingSteps[currentStep].icon === 'search' && <Search className="w-12 h-12 text-purple-600 animate-bounce" />}
-                  {loadingSteps[currentStep].icon === 'ai' && <Bot className="w-12 h-12 text-purple-600 animate-bounce" />}
-                  {loadingSteps[currentStep].icon === 'target' && <Target className="w-12 h-12 text-purple-600 animate-bounce" />}
-                  {loadingSteps[currentStep].icon === 'chart' && <BarChart3 className="w-12 h-12 text-purple-600 animate-bounce" />}
-                  {loadingSteps[currentStep].icon === 'sparkle' && <Sparkles className="w-12 h-12 text-purple-600 animate-bounce" />}
+                <div className="w-24 h-24 mx-auto bg-brand-primary/20 rounded-full flex items-center justify-center animate-pulse border border-border">
+                  {loadingSteps[currentStep].icon === 'search' && <Search className="w-12 h-12 text-brand-primary animate-bounce" />}
+                  {loadingSteps[currentStep].icon === 'ai' && <Bot className="w-12 h-12 text-brand-primary animate-bounce" />}
+                  {loadingSteps[currentStep].icon === 'target' && <Target className="w-12 h-12 text-brand-primary animate-bounce" />}
+                  {loadingSteps[currentStep].icon === 'chart' && <BarChart3 className="w-12 h-12 text-brand-primary animate-bounce" />}
+                  {loadingSteps[currentStep].icon === 'sparkle' && <Sparkles className="w-12 h-12 text-brand-primary animate-bounce" />}
                 </div>
-                <div className="absolute inset-0 w-24 h-24 mx-auto bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full animate-ping" />
+                <div className="absolute inset-0 w-24 h-24 mx-auto bg-brand-primary/10 rounded-full animate-ping" />
               </div>
               
               {/* Dynamic Step Content */}
               <div className="space-y-2">
-                <h3 className="text-2xl font-bold text-gray-900 transition-all duration-500">
+                <h3 className="text-2xl font-bold text-foreground transition-all duration-500">
                   {loadingSteps[currentStep].title}
                 </h3>
-                <p className="text-gray-600 transition-all duration-500">
+                <p className="text-muted-foreground transition-all duration-500">
                   {loadingSteps[currentStep].subtitle}
                 </p>
               </div>
@@ -390,10 +390,10 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                       key={index}
                       className={`transition-all duration-500 ${
                         index === currentStep
-                          ? 'w-8 h-2 bg-gradient-to-r from-purple-500/80 to-pink-500/80 rounded-full backdrop-blur-sm'
+                          ? 'w-8 h-2 bg-brand-primary rounded-full'
                           : index < currentStep
-                          ? 'w-2 h-2 bg-purple-500/60 rounded-full backdrop-blur-sm'
-                          : 'w-2 h-2 bg-gray-300/50 rounded-full backdrop-blur-sm'
+                          ? 'w-2 h-2 bg-brand-primary/60 rounded-full'
+                          : 'w-2 h-2 bg-muted rounded-full'
                       }`}
                     />
                   ))}
@@ -415,15 +415,15 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                       <span className="text-lg mt-0.5">{step.icon}</span>
                       <div className="flex-1">
                         <p className={`text-sm font-medium ${
-                          index <= currentStep ? 'text-purple-700' : 'text-gray-600'
+                          index <= currentStep ? 'text-brand-primary' : 'text-muted-foreground'
                         }`}>
                           {step.title}
                         </p>
                         {index === currentStep && (
                           <div className="mt-1">
-                            <div className="h-1 bg-gray-200/50 rounded-full overflow-hidden backdrop-blur-sm">
+                            <div className="h-1 bg-muted rounded-full overflow-hidden">
                               <div 
-                                className="h-full bg-gradient-to-r from-purple-500/80 to-pink-500/80 rounded-full transition-all duration-[2000ms] ease-out"
+                                className="h-full bg-brand-primary rounded-full transition-all duration-[2000ms] ease-out"
                                 style={{ width: '100%' }}
                               />
                             </div>
@@ -445,17 +445,17 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
       )}
 
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto glass border-white/20">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card border border-border">
           <DialogHeader>
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg backdrop-blur-sm border border-white/20">
-                <Sparkles className="h-6 w-6 text-purple-600" />
+              <div className="p-2 bg-brand-primary/20 rounded-lg border border-border">
+                <Sparkles className="h-6 w-6 text-brand-primary" />
               </div>
-              <DialogTitle className="text-2xl font-bold text-gray-900">
+              <DialogTitle className="text-2xl font-bold text-foreground">
                 AI-Powered Campaign Creator
               </DialogTitle>
             </div>
-            <p className="text-sm text-gray-600">Let AI help you create the perfect influencer campaign</p>
+            <p className="text-sm text-muted-foreground">Let AI help you create the perfect influencer campaign</p>
           </DialogHeader>
 
         <Form {...form}>

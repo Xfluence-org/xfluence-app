@@ -71,10 +71,10 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName }) => {
             key={item.id}
             onClick={item.onClick}
             className={cn(
-              "w-full text-left px-4 py-3 rounded-xl transition-all duration-300 flex items-center gap-3 backdrop-blur-md",
+              "w-full text-left px-4 py-3 rounded-xl transition-all duration-300 flex items-center gap-3",
               activeItem === item.id
-                ? "bg-gradient-to-r from-purple-500/30 to-pink-500/30 text-white shadow-lg border border-white/30"
-                : "text-gray-700 dark:text-gray-300 hover:bg-white/20 hover:text-gray-900 dark:hover:text-white border border-transparent hover:border-white/20"
+                ? "bg-brand-primary text-brand-primary-foreground shadow-lg font-medium"
+                : "text-foreground hover:bg-muted/50 font-medium"
             )}
           >
             <item.icon className="w-5 h-5" />
