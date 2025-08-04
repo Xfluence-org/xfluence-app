@@ -241,6 +241,8 @@ const ContentReviewSimplified: React.FC<ContentReviewSimplifiedProps> = ({
                     uploadId={upload.id}
                     filename={upload.filename}
                     isVisible={true}
+                    taskId={taskId}
+                    campaignId={campaignId}
                   />
                 </div>
               );

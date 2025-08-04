@@ -14,6 +14,7 @@ import PublishLinkForm from '@/components/influencer/PublishLinkForm';
 
 interface ContentUploadPanelProps {
   taskId: string;
+  campaignId?: string;
   onUploadComplete: () => void;
 }
 
@@ -36,18 +37,23 @@ interface ContentReview {
 
 const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({
   taskId,
+  campaignId,
   onUploadComplete
 }) => {
   const [uploads, setUploads] = useState<TaskUpload[]>([]);
   const [reviews, setReviews] = useState<ContentReview[]>([]);
   const [uploading, setUploading] = useState(false);
   const [publishedLink, setPublishedLink] = useState<string>('');
+  const [fetchedCampaignId, setFetchedCampaignId] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
     fetchUploads();
     fetchReviews();
+    if (!campaignId) {
+      fetchCampaignId();
+    }
     fetchPublishedLink();
   }, [taskId]);
 
@@ -84,6 +90,24 @@ const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({
       setReviews(typedReviews);
     } catch (error) {
       console.error('Error fetching reviews:', error);
+    }
+  };
+
+  const fetchCampaignId = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('campaign_tasks')
+        .select('campaign_id')
+        .eq('id', taskId)
+        .single();
+
+      if (error) throw error;
+      
+      if (data?.campaign_id) {
+        setFetchedCampaignId(data.campaign_id);
+      }
+    } catch (error) {
+      console.error('Error fetching campaign ID:', error);
     }
   };
 
@@ -354,6 +378,8 @@ const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({
                     filename={upload.filename}
                     fileUrl={upload.file_url}
                     isVisible={true}
+                    taskId={taskId}
+                    campaignId={campaignId || fetchedCampaignId || undefined}
                   />
                 </div>
               );

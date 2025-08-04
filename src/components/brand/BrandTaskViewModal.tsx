@@ -317,8 +317,13 @@ const BrandTaskViewModal: React.FC<BrandTaskViewModalProps> = ({
                           requirementsAccepted: requirementsAccepted
                         });
                         
-                        // Check if we're in the review phase - content_review must be in_progress or active
-                        const isInReviewPhase = contentReviewStatus === 'in_progress' || contentReviewStatus === 'active';
+                        // Check if we can review - brand should be able to review anytime there are uploads
+                        // or when the content_review phase is active
+                        const hasUploads = task.task_uploads && task.task_uploads.length > 0;
+                        const isInReviewPhase = hasUploads || 
+                                              contentReviewStatus === 'in_progress' || 
+                                              contentReviewStatus === 'active' || 
+                                              contentReviewStatus === 'completed';
                         
                         return (
                           <Card key={task.id} className="overflow-hidden border-gray-200 rounded-xl hover:shadow-md transition-all">

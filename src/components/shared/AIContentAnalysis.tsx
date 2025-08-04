@@ -3,13 +3,19 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Brain, CheckCircle, AlertCircle, Zap, Image as ImageIcon, Video } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Brain, CheckCircle, AlertCircle, Zap, Image as ImageIcon, Video, Loader2, RefreshCw } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 
 interface AIContentAnalysisProps {
   uploadId: string;
   filename: string;
   fileUrl?: string;
   isVisible?: boolean;
+  taskId?: string;
+  campaignId?: string;
 }
 
 interface AnalysisResult {
@@ -27,6 +33,13 @@ interface AnalysisResult {
     composition: string;
     lighting: string;
   };
+}
+
+interface CategoryScores {
+  brand_alignment: number;
+  visual_quality: number;
+  content_relevance: number;
+  engagement_potential: number;
 }
 
 // Dummy AI analysis generator with consistent scoring
@@ -132,24 +145,184 @@ const AIContentAnalysis: React.FC<AIContentAnalysisProps> = ({
   uploadId, 
   filename, 
   fileUrl,
-  isVisible = true 
+  isVisible = true,
+  taskId,
+  campaignId
 }) => {
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [analyzing, setAnalyzing] = useState(true);
+  const [useRealAnalysis, setUseRealAnalysis] = useState(false);
+  const [isReanalyzing, setIsReanalyzing] = useState(false);
+  const { toast } = useToast();
+  const { profile } = useAuth();
 
-  useEffect(() => {
-    // Simulate AI analysis with realistic delay
-    const analyzeContent = () => {
+  const analyzeContent = async (forceRealAnalysis = false) => {
       setAnalyzing(true);
-      setTimeout(() => {
-        const result = generateDummyAnalysis(filename, fileUrl);
-        setAnalysis(result);
-        setAnalyzing(false);
-      }, 1500 + Math.random() * 1000); // 1.5-2.5 second delay
+      
+      // Check if we should use real analysis (only for video files with required IDs)
+      const isVideo = filename.toLowerCase().match(/\.(mp4|mov|avi|mkv|webm)$/);
+      const canUseRealAnalysis = isVideo && taskId && campaignId;
+      
+      if (canUseRealAnalysis || forceRealAnalysis) {
+        try {
+          // First check if analysis already exists in database
+          const { data: existingAnalysis } = await supabase
+            .from('content_ai_analysis')
+            .select('*')
+            .eq('upload_id', uploadId)
+            .single();
+            
+          if (existingAnalysis) {
+            // Use existing analysis
+            const result: AnalysisResult = {
+              overallScore: existingAnalysis.overall_score,
+              categories: [
+                { name: 'Brand Alignment', score: existingAnalysis.category_scores?.brand_alignment || 0 },
+                { name: 'Visual Quality', score: existingAnalysis.category_scores?.visual_quality || 0 },
+                { name: 'Content Relevance', score: existingAnalysis.category_scores?.content_relevance || 0 },
+                { name: 'Engagement Potential', score: existingAnalysis.category_scores?.engagement_potential || 0 }
+              ],
+              strengths: existingAnalysis.strengths || [],
+              suggestions: existingAnalysis.suggestions || [],
+              recommendation: existingAnalysis.recommendation,
+              contentType: existingAnalysis.content_type || 'video',
+              technicalQuality: existingAnalysis.technical_quality || {
+                resolution: '1080p HD',
+                composition: 'Well-balanced',
+                lighting: 'Natural lighting'
+              }
+            };
+            setAnalysis(result);
+            setUseRealAnalysis(true);
+          } else {
+            // Call edge function for new analysis
+            console.log('Calling analyze-content edge function...');
+            const { data, error } = await supabase.functions.invoke('analyze-content', {
+              body: { uploadId, taskId, campaignId }
+            });
+            
+            if (error) throw error;
+            
+            if (data?.analysis) {
+              const scores = data.analysis.scores as CategoryScores;
+              const result: AnalysisResult = {
+                overallScore: data.analysis.overallScore,
+                categories: [
+                  { name: 'Brand Alignment', score: scores.brand_alignment },
+                  { name: 'Visual Quality', score: scores.visual_quality },
+                  { name: 'Content Relevance', score: scores.content_relevance },
+                  { name: 'Engagement Potential', score: scores.engagement_potential }
+                ],
+                strengths: data.analysis.strengths,
+                suggestions: data.analysis.suggestions,
+                recommendation: data.analysis.recommendation,
+                contentType: data.analysis.contentType,
+                technicalQuality: data.analysis.technicalQuality
+              };
+              setAnalysis(result);
+              setUseRealAnalysis(true);
+              
+              toast({
+                title: "AI Analysis Complete",
+                description: "Content has been analyzed using TwelveLabs AI",
+                className: "bg-green-50 border-green-200"
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error with real AI analysis:', error);
+          toast({
+            title: "AI Analysis Error",
+            description: "Falling back to demo analysis",
+            variant: "destructive"
+          });
+          // Fall back to dummy analysis
+          const result = generateDummyAnalysis(filename, fileUrl);
+          setAnalysis(result);
+          setUseRealAnalysis(false);
+        }
+      } else {
+        // Use dummy analysis for non-video files or missing IDs
+        setTimeout(() => {
+          const result = generateDummyAnalysis(filename, fileUrl);
+          setAnalysis(result);
+          setUseRealAnalysis(false);
+        }, 1500 + Math.random() * 1000);
+      }
+      
+      setAnalyzing(false);
     };
 
+  useEffect(() => {
     analyzeContent();
-  }, [filename, fileUrl]);
+  }, [filename, fileUrl, uploadId, taskId, campaignId]);
+
+  const handleReanalyze = async () => {
+    if (!taskId || !campaignId) {
+      toast({
+        title: "Missing Information",
+        description: "Task ID and Campaign ID are required for AI analysis",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsReanalyzing(true);
+    try {
+      // Delete existing analysis if any
+      const { error: deleteError } = await supabase
+        .from('content_ai_analysis')
+        .delete()
+        .eq('upload_id', uploadId);
+
+      if (deleteError) {
+        console.error('Error deleting existing analysis:', deleteError);
+      }
+
+      // Call edge function for new analysis
+      console.log('Re-analyzing content with edge function...');
+      const { data, error } = await supabase.functions.invoke('analyze-content', {
+        body: { uploadId, taskId, campaignId }
+      });
+      
+      if (error) throw error;
+      
+      if (data?.analysis) {
+        const scores = data.analysis.scores as CategoryScores;
+        const result: AnalysisResult = {
+          overallScore: data.analysis.overallScore,
+          categories: [
+            { name: 'Brand Alignment', score: scores.brand_alignment },
+            { name: 'Visual Quality', score: scores.visual_quality },
+            { name: 'Content Relevance', score: scores.content_relevance },
+            { name: 'Engagement Potential', score: scores.engagement_potential }
+          ],
+          strengths: data.analysis.strengths,
+          suggestions: data.analysis.suggestions,
+          recommendation: data.analysis.recommendation,
+          contentType: data.analysis.contentType,
+          technicalQuality: data.analysis.technicalQuality
+        };
+        setAnalysis(result);
+        setUseRealAnalysis(true);
+        
+        toast({
+          title: "Analysis Complete",
+          description: "Content has been re-analyzed using AI",
+          className: "bg-green-50 border-green-200"
+        });
+      }
+    } catch (error) {
+      console.error('Error with re-analysis:', error);
+      toast({
+        title: "Re-analysis Failed",
+        description: "Could not re-analyze content. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsReanalyzing(false);
+    }
+  };
 
   if (!isVisible) return null;
 
@@ -192,20 +365,45 @@ const AIContentAnalysis: React.FC<AIContentAnalysisProps> = ({
   return (
     <Card className="border-l-4 border-l-purple-500 bg-gradient-to-r from-purple-50 to-blue-50">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Brain className="h-5 w-5 text-purple-600" />
-          AI Content Analysis (Demo)
-          <Zap className="h-4 w-4 text-yellow-500" />
-          {analysis && getContentTypeIcon(analysis.contentType)}
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Brain className="h-5 w-5 text-purple-600" />
+            AI Content Analysis {!useRealAnalysis && '(Demo)'}
+            <Zap className="h-4 w-4 text-yellow-500" />
+            {analysis && getContentTypeIcon(analysis.contentType)}
+          </CardTitle>
+          {!useRealAnalysis && profile?.user_type !== 'Influencer' && !analyzing && (
+            <Button
+              onClick={handleReanalyze}
+              disabled={isReanalyzing || !taskId || !campaignId}
+              size="sm"
+              variant="outline"
+              className="text-xs"
+            >
+              {isReanalyzing ? (
+                <>
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  Analyzing...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  Re-analyze with AI
+                </>
+              )}
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {analyzing || !analysis ? (
           <div className="flex items-center justify-center py-8">
             <div className="text-center">
-              <Zap className="h-8 w-8 text-purple-600 animate-pulse mx-auto mb-3" />
+              <Loader2 className="h-8 w-8 text-purple-600 animate-spin mx-auto mb-3" />
               <p className="text-gray-600">Analyzing content with AI...</p>
-              <p className="text-sm text-gray-500 mt-1">This is demo data for testing</p>
+              <p className="text-sm text-gray-500 mt-1">
+                {useRealAnalysis ? 'Processing with TwelveLabs AI' : 'Generating demo analysis'}
+              </p>
             </div>
           </div>
         ) : (
@@ -297,7 +495,9 @@ const AIContentAnalysis: React.FC<AIContentAnalysisProps> = ({
             <div className="mt-4 p-3 bg-white/50 rounded-lg border">
               <p className="text-xs text-gray-500 flex items-center gap-1">
                 <Brain className="h-3 w-3" />
-                Demo AI Analysis • {analysis.contentType.charAt(0).toUpperCase() + analysis.contentType.slice(1)} content detected • This is test data for development
+                AI Analysis • 
+                {analysis.contentType.charAt(0).toUpperCase() + analysis.contentType.slice(1)} content detected
+                {!useRealAnalysis && ' • This is test data for development'}
               </p>
             </div>
           </>

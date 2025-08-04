@@ -27,6 +27,7 @@ import AIContentAnalysis from '@/components/shared/AIContentAnalysis';
 
 interface ContentReviewPanelEnhancedProps {
   taskId: string;
+  campaignId?: string;
   onReviewComplete?: () => void;
 }
 
@@ -51,11 +52,13 @@ interface ContentReview {
 
 const ContentReviewPanelEnhanced: React.FC<ContentReviewPanelEnhancedProps> = ({
   taskId,
+  campaignId,
   onReviewComplete
 }) => {
   const [uploads, setUploads] = useState<Upload[]>([]);
   const [reviews, setReviews] = useState<ContentReview[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchedCampaignId, setFetchedCampaignId] = useState<string | null>(null);
   const [reviewingUploadId, setReviewingUploadId] = useState<string | null>(null);
   const [feedbacks, setFeedbacks] = useState<Record<string, string>>({});
   const [selectedUpload, setSelectedUpload] = useState<Upload | null>(null);
@@ -66,6 +69,9 @@ const ContentReviewPanelEnhanced: React.FC<ContentReviewPanelEnhancedProps> = ({
   useEffect(() => {
     if (taskId) {
       fetchUploadsAndReviews();
+      if (!campaignId) {
+        fetchCampaignId();
+      }
     } else {
       setLoading(false);
     }
@@ -163,6 +169,24 @@ const ContentReviewPanelEnhanced: React.FC<ContentReviewPanelEnhancedProps> = ({
       });
     } finally {
       setReviewingUploadId(null);
+    }
+  };
+
+  const fetchCampaignId = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('campaign_tasks')
+        .select('campaign_id')
+        .eq('id', taskId)
+        .single();
+
+      if (error) throw error;
+      
+      if (data?.campaign_id) {
+        setFetchedCampaignId(data.campaign_id);
+      }
+    } catch (error) {
+      console.error('Error fetching campaign ID:', error);
     }
   };
 
@@ -444,6 +468,8 @@ const ContentReviewPanelEnhanced: React.FC<ContentReviewPanelEnhancedProps> = ({
                           filename={upload.filename}
                           fileUrl={upload.file_url}
                           isVisible={true}
+                          taskId={taskId}
+                          campaignId={campaignId || fetchedCampaignId || undefined}
                         />
                       </div>
                     </div>
