@@ -163,16 +163,42 @@ const AIContentAnalysis: React.FC<AIContentAnalysisProps> = ({
       const isVideo = filename.toLowerCase().match(/\.(mp4|mov|avi|mkv|webm)$/);
       const canUseRealAnalysis = isVideo && taskId && campaignId;
       
-      if (canUseRealAnalysis || forceRealAnalysis) {
+      if (canUseRealAnalysis && !forceRealAnalysis) {
         try {
+          console.log('🔍 Attempting to fetch existing analysis from DB...');
+          console.log('Query params:', { uploadId, taskId });
+          
+          // Get current user for debugging
+          const { data: { user } } = await supabase.auth.getUser();
+          console.log('Current user ID:', user?.id);
+          
           // First check if analysis already exists in database
-          const { data: existingAnalysis } = await supabase
+          const { data: existingAnalysis, error: fetchError } = await supabase
             .from('content_ai_analysis')
             .select('*')
             .eq('upload_id', uploadId)
-            .single();
+            .eq('task_id', taskId)
+            .maybeSingle(); // Use maybeSingle() instead of single() to handle no results
+          
+          console.log('📊 Database query result:', {
+            found: !!existingAnalysis,
+            data: existingAnalysis,
+            error: fetchError,
+            errorMessage: fetchError?.message,
+            errorCode: fetchError?.code
+          });
             
           if (existingAnalysis) {
+            console.log('✅ Found existing analysis in DB, using cached data');
+            // Clean up the strengths and suggestions text
+            const cleanText = (text: string): string => {
+              return text
+                .replace(/\*\*/g, '') // Remove ** markers
+                .replace(/^[•\-*]\s*/gm, '') // Remove bullet points
+                .replace(/^\d+\.\s*/gm, '') // Remove numbered lists
+                .trim();
+            };
+            
             // Use existing analysis
             const result: AnalysisResult = {
               overallScore: existingAnalysis.overall_score,
@@ -182,8 +208,8 @@ const AIContentAnalysis: React.FC<AIContentAnalysisProps> = ({
                 { name: 'Content Relevance', score: existingAnalysis.category_scores?.content_relevance || 0 },
                 { name: 'Engagement Potential', score: existingAnalysis.category_scores?.engagement_potential || 0 }
               ],
-              strengths: existingAnalysis.strengths || [],
-              suggestions: existingAnalysis.suggestions || [],
+              strengths: (existingAnalysis.strengths || []).map(cleanText),
+              suggestions: (existingAnalysis.suggestions || []).map(cleanText),
               recommendation: existingAnalysis.recommendation,
               contentType: existingAnalysis.content_type || 'video',
               technicalQuality: existingAnalysis.technical_quality || {
@@ -194,16 +220,37 @@ const AIContentAnalysis: React.FC<AIContentAnalysisProps> = ({
             };
             setAnalysis(result);
             setUseRealAnalysis(true);
+            setAnalyzing(false);
+            return; // Exit early if we found existing analysis
           } else {
-            // Call edge function for new analysis
-            console.log('Calling analyze-content edge function...');
-            const { data, error } = await supabase.functions.invoke('analyze-content', {
-              body: { uploadId, taskId, campaignId }
-            });
+            console.log('⚠️ No existing analysis found in DB, will call edge function');
+          }
+        } catch (error) {
+          console.error('❌ Error fetching existing analysis:', error);
+        }
+      }
+      
+      if ((canUseRealAnalysis || forceRealAnalysis) && taskId && campaignId) {
+        try {
+          // Call edge function for new analysis
+          console.log('🚀 Calling analyze-content edge function...');
+          console.log('Edge function params:', { uploadId, taskId, campaignId });
+          
+          const { data, error } = await supabase.functions.invoke('analyze-content', {
+            body: { uploadId, taskId, campaignId }
+          });
             
             if (error) throw error;
             
             if (data?.analysis) {
+              const cleanText = (text: string): string => {
+                return text
+                  .replace(/\*\*/g, '') // Remove ** markers
+                  .replace(/^[•\-*]\s*/gm, '') // Remove bullet points
+                  .replace(/^\d+\.\s*/gm, '') // Remove numbered lists
+                  .trim();
+              };
+              
               const scores = data.analysis.scores as CategoryScores;
               const result: AnalysisResult = {
                 overallScore: data.analysis.overallScore,
@@ -213,8 +260,8 @@ const AIContentAnalysis: React.FC<AIContentAnalysisProps> = ({
                   { name: 'Content Relevance', score: scores.content_relevance },
                   { name: 'Engagement Potential', score: scores.engagement_potential }
                 ],
-                strengths: data.analysis.strengths,
-                suggestions: data.analysis.suggestions,
+                strengths: (data.analysis.strengths || []).map(cleanText),
+                suggestions: (data.analysis.suggestions || []).map(cleanText),
                 recommendation: data.analysis.recommendation,
                 contentType: data.analysis.contentType,
                 technicalQuality: data.analysis.technicalQuality
@@ -228,7 +275,6 @@ const AIContentAnalysis: React.FC<AIContentAnalysisProps> = ({
                 className: "bg-green-50 border-green-200"
               });
             }
-          }
         } catch (error) {
           console.error('Error with real AI analysis:', error);
           toast({
@@ -288,6 +334,14 @@ const AIContentAnalysis: React.FC<AIContentAnalysisProps> = ({
       if (error) throw error;
       
       if (data?.analysis) {
+        const cleanText = (text: string): string => {
+          return text
+            .replace(/\*\*/g, '') // Remove ** markers
+            .replace(/^[•\-*]\s*/gm, '') // Remove bullet points
+            .replace(/^\d+\.\s*/gm, '') // Remove numbered lists
+            .trim();
+        };
+        
         const scores = data.analysis.scores as CategoryScores;
         const result: AnalysisResult = {
           overallScore: data.analysis.overallScore,
@@ -297,8 +351,8 @@ const AIContentAnalysis: React.FC<AIContentAnalysisProps> = ({
             { name: 'Content Relevance', score: scores.content_relevance },
             { name: 'Engagement Potential', score: scores.engagement_potential }
           ],
-          strengths: data.analysis.strengths,
-          suggestions: data.analysis.suggestions,
+          strengths: (data.analysis.strengths || []).map(cleanText),
+          suggestions: (data.analysis.suggestions || []).map(cleanText),
           recommendation: data.analysis.recommendation,
           contentType: data.analysis.contentType,
           technicalQuality: data.analysis.technicalQuality

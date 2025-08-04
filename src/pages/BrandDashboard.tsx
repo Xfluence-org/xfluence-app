@@ -96,10 +96,10 @@ const BrandDashboard: React.FC = () => {
                   icon="active"
                 />
                 <MetricsCard
-                  title="Total Reach"
-                  value={metrics.totalReach > 0 ? `${(metrics.totalReach / 1000000).toFixed(1)}M` : 'N/A'}
-                  subtitle={metrics.avgEngagementRate > 0 ? `${metrics.avgEngagementRate.toFixed(1)}% avg engagement` : 'No data yet'}
-                  icon="reach"
+                  title="Total Influencers"
+                  value={metrics.totalInfluencers || 0}
+                  subtitle="Across all campaigns"
+                  icon="users"
                 />
               </div>
             </Card>

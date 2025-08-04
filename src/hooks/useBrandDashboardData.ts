@@ -24,8 +24,8 @@ interface BrandMetrics {
   totalBudget: number;
   totalSpent: number;
   pendingApplications: number;
-  totalReach: number;
-  avgEngagementRate: number;
+  totalInfluencers: number; // Changed from totalReach
+  acceptanceRate: number; // Changed from avgEngagementRate
   completedCampaigns: number;
   publishedBudget: number;
   publishedSpent: number;
@@ -73,6 +73,10 @@ export const useBrandDashboardData = () => {
   const activeCampaigns = campaignsData.filter(c => c.campaign_status === 'active');
   
   
+  // Calculate total applicants and accepted for acceptance rate
+  const totalApplicants = campaignsData.reduce((sum, c) => sum + (c.applicants || 0), 0);
+  const totalAccepted = campaignsData.reduce((sum, c) => sum + (c.accepted || 0), 0);
+  
   const metrics: BrandMetrics = {
     totalCampaigns: campaignsData.length,
     activeCampaigns: activeCampaigns.length,
@@ -80,10 +84,10 @@ export const useBrandDashboardData = () => {
     totalBudget: campaignsData.reduce((sum, c) => sum + (c.budget || 0), 0),
     totalSpent: campaignsData.reduce((sum, c) => sum + (c.spent || 0), 0),
     pendingApplications: campaignsData.reduce((sum, c) => sum + (c.applicants - c.accepted), 0),
-    // Calculate reach from actual data - for now set to 0 until we have real data
-    totalReach: 0, // Will be calculated from actual influencer follower counts
-    // Calculate average engagement from actual data - for now set to 0
-    avgEngagementRate: 0, // Will be calculated from actual engagement metrics
+    // Total influencers who have been accepted across all campaigns
+    totalInfluencers: totalAccepted,
+    // Acceptance rate as a percentage
+    acceptanceRate: totalApplicants > 0 ? (totalAccepted / totalApplicants) * 100 : 0,
     completedCampaigns: campaignsData.filter(c => c.campaign_status === 'completed').length,
     publishedBudget: publishedCampaigns.reduce((sum, c) => sum + (c.budget || 0), 0),
     publishedSpent: publishedCampaigns.reduce((sum, c) => sum + (c.spent || 0), 0)
