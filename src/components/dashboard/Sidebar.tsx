@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/SimpleAuthContext';
-import { LogOut, BarChart3, Bot } from 'lucide-react';
+import { LogOut, BarChart3, Lightbulb, Smartphone, Settings } from 'lucide-react';
 
 interface SidebarProps {
   userName?: string;
@@ -15,16 +15,22 @@ const Sidebar: React.FC<SidebarProps> = ({ userName }) => {
   const { signOut, profile } = useAuth();
 
   const getActiveItem = () => {
-    if (location.pathname === '/analyze-content') return 'analyze-content';
-    if (location.pathname === '/brand/ai-assistant') return 'ai-assistant';
-    return 'analyze-content';
+    if (location.pathname === '/dashboard') return 'dashboard';
+    if (location.pathname === '/opportunities') return 'opportunities';
+    if (location.pathname === '/campaigns') return 'campaigns';
+    if (location.pathname.startsWith('/task-workflow/')) return 'campaigns';
+    if (location.pathname === '/settings') return 'settings';
+    return 'dashboard';
   };
 
   const activeItem = getActiveItem();
 
   const menuItems = [
-    { id: 'analyze-content', label: 'Analyze Content', icon: BarChart3, path: '/analyze-content' },
-    { id: 'ai-assistant', label: 'AI Assistant', icon: Bot, path: '/brand/ai-assistant' },
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3, path: '/dashboard' },
+    // Only show opportunities for brands/agencies, not influencers
+    ...(profile?.user_type !== 'Influencer' ? [{ id: 'opportunities', label: 'Opportunities', icon: Lightbulb, path: '/opportunities' }] : []),
+    { id: 'campaigns', label: 'Campaigns', icon: Smartphone, path: '/campaigns' },
+    { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
   ];
 
   const handleMenuClick = (item: typeof menuItems[0]) => {

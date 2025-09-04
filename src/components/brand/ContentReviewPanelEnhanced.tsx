@@ -23,7 +23,7 @@ import {
   Calendar
 } from 'lucide-react';
 import { useTaskWorkflow } from '@/hooks/useTaskWorkflow';
-import AIContentAnalysisPlaceholder from '@/components/shared/AIContentAnalysisPlaceholder';
+import AIContentAnalysis from '@/components/shared/AIContentAnalysis';
 
 interface ContentReviewPanelEnhancedProps {
   taskId: string;
@@ -463,8 +463,13 @@ const ContentReviewPanelEnhanced: React.FC<ContentReviewPanelEnhancedProps> = ({
                     <div className="space-y-4">
                       <h4 className="font-medium text-[#1a1f2e]">AI Content Analysis</h4>
                       <div className="bg-white rounded-lg p-4 border border-gray-200">
-                        <AIContentAnalysisPlaceholder
+                        <AIContentAnalysis
+                          uploadId={upload.id}
+                          filename={upload.filename}
+                          fileUrl={upload.file_url}
+                          isVisible={true}
                           taskId={taskId}
+                          campaignId={campaignId || fetchedCampaignId || undefined}
                         />
                       </div>
                     </div>

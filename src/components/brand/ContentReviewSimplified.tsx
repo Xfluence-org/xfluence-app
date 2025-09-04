@@ -8,7 +8,7 @@ import { Check, X, Eye, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/SimpleAuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import AIContentAnalysisPlaceholder from '@/components/shared/AIContentAnalysisPlaceholder';
+import AIContentAnalysis from '@/components/shared/AIContentAnalysis';
 
 interface ContentReviewSimplifiedProps {
   taskId: string;
@@ -237,8 +237,12 @@ const ContentReviewSimplified: React.FC<ContentReviewSimplifiedProps> = ({
                   </Card>
 
                   {/* AI Analysis */}
-                  <AIContentAnalysisPlaceholder 
+                  <AIContentAnalysis 
+                    uploadId={upload.id}
+                    filename={upload.filename}
+                    isVisible={true}
                     taskId={taskId}
+                    campaignId={campaignId}
                   />
                 </div>
               );

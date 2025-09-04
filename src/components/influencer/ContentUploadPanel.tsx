@@ -9,7 +9,7 @@ import { Upload, File, X, Check, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/SimpleAuthContext';
 import { useToast } from '@/hooks/use-toast';
-import AIContentAnalysisPlaceholder from '@/components/shared/AIContentAnalysisPlaceholder';
+import AIContentAnalysis from '@/components/shared/AIContentAnalysis';
 import PublishLinkForm from '@/components/influencer/PublishLinkForm';
 
 interface ContentUploadPanelProps {
@@ -373,8 +373,13 @@ const ContentUploadPanel: React.FC<ContentUploadPanelProps> = ({
                   </Card>
 
                   {/* AI Analysis appears after upload */}
-                  <AIContentAnalysisPlaceholder 
+                  <AIContentAnalysis 
+                    uploadId={upload.id}
+                    filename={upload.filename}
+                    fileUrl={upload.file_url}
+                    isVisible={true}
                     taskId={taskId}
+                    campaignId={campaignId || fetchedCampaignId || undefined}
                   />
                 </div>
               );
