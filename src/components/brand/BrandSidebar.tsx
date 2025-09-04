@@ -28,19 +28,46 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName }) => {
       id: 'analyze-content', 
       label: 'Analyze Content', 
       icon: BarChart3,
-      onClick: () => navigate('/analyze-content')
+      onClick: () => navigate('/analyze-content'),
+      isActive: true
     },
     { 
       id: 'find-influencers', 
       label: 'Find Influencers', 
       icon: Smartphone,
-      onClick: () => navigate('/find-influencers')
+      onClick: () => navigate('/find-influencers'),
+      isActive: true
     },
     { 
       id: 'ai-assistant', 
       label: 'AI Assistant', 
       icon: Bot,
-      onClick: () => navigate('/brand/ai-assistant')
+      onClick: () => navigate('/brand/ai-assistant'),
+      isActive: true
+    },
+    { 
+      id: 'dashboard', 
+      label: 'Dashboard', 
+      icon: BarChart3,
+      onClick: () => {},
+      isActive: false,
+      comingSoon: true
+    },
+    { 
+      id: 'campaigns', 
+      label: 'Campaigns', 
+      icon: Smartphone,
+      onClick: () => {},
+      isActive: false,
+      comingSoon: true
+    },
+    { 
+      id: 'settings', 
+      label: 'Settings', 
+      icon: Settings,
+      onClick: () => {},
+      isActive: false,
+      comingSoon: true
     },
   ];
 
@@ -62,16 +89,24 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName }) => {
         {menuItems.map((item) => (
           <button
             key={item.id}
-            onClick={item.onClick}
+            onClick={item.isActive ? item.onClick : undefined}
+            disabled={!item.isActive}
             className={cn(
-              "w-full text-left px-4 py-3 rounded-xl transition-all duration-300 flex items-center gap-3",
-              activeItem === item.id
+              "w-full text-left px-4 py-3 rounded-xl transition-all duration-300 flex items-center gap-3 relative",
+              activeItem === item.id && item.isActive
                 ? "bg-brand-primary text-brand-primary-foreground shadow-lg font-medium"
-                : "text-foreground hover:bg-muted/50 font-medium"
+                : item.isActive
+                ? "text-foreground hover:bg-muted/50 font-medium"
+                : "text-muted-foreground font-medium opacity-60 cursor-not-allowed"
             )}
           >
             <item.icon className="w-5 h-5" />
             <span className="font-medium">{item.label}</span>
+            {item.comingSoon && (
+              <span className="ml-auto text-xs bg-muted text-muted-foreground px-2 py-1 rounded-md">
+                Soon
+              </span>
+            )}
           </button>
         ))}
       </nav>
