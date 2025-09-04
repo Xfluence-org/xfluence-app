@@ -21,6 +21,8 @@ import BrandSettingsPage from "./pages/BrandSettingsPage";
 import BrandAIAssistantPage from "./pages/BrandAIAssistantPage";
 import TaskWorkflowPage from "./pages/TaskWorkflowPage";
 import BrandProgressDashboard from "./pages/BrandProgressDashboard";
+import AnalyzeContentPage from "./pages/AnalyzeContentPage";
+import FindInfluencersPage from "./pages/FindInfluencersPage";
 import InvitationPage from "./pages/InvitationPage";
 import NotFound from "./pages/NotFound";
 
@@ -37,95 +39,78 @@ const App = () => (
             <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/invite/:token" element={<InvitationPage />} />
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute requiredUserType="Influencer">
-                  <InfluencerDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/settings" 
-              element={
-                <ProtectedRoute requiredUserType="Influencer">
-                  <SettingsPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/task-workflow/:taskId" 
-              element={
-                <ProtectedRoute>
-                  <TaskWorkflowPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/brand-dashboard" 
-              element={
-                <ProtectedRoute>
-                  <BrandDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/brand/campaigns" 
-              element={
-                <ProtectedRoute>
-                  <BrandCampaignsPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/brand/settings" 
-              element={
-                <ProtectedRoute>
-                  <BrandSettingsPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/brand/ai-assistant" 
-              element={
-                <ProtectedRoute>
-                  <BrandAIAssistantPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/brand/progress" 
-              element={
-                <ProtectedRoute>
-                  <BrandProgressDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/campaign-review" 
-              element={
-                <ProtectedRoute>
-                  <CampaignReviewPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/opportunities" 
-              element={
-                <ProtectedRoute>
-                  <OpportunitiesPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/campaigns" 
-              element={
-                <ProtectedRoute>
-                  <CampaignsPage />
-                </ProtectedRoute>
-              } 
-            />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            
+            {/* New Shared Routes - Available to both influencers and brands */}
+            <Route path="/analyze-content" element={
+              <ProtectedRoute>
+                <AnalyzeContentPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/find-influencers" element={
+              <ProtectedRoute requiredUserType="Brand">
+                <FindInfluencersPage />
+              </ProtectedRoute>
+            } />
+
+            {/* AI Assistant - Available to both */}
+            <Route path="/brand/ai-assistant" element={
+              <ProtectedRoute>
+                <BrandAIAssistantPage />
+              </ProtectedRoute>
+            } />
+
+            {/* Legacy Routes - Hidden but preserved */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute requiredUserType="Influencer">
+                <Navigate to="/analyze-content" replace />
+              </ProtectedRoute>
+            } />
+            <Route path="/brand-dashboard" element={
+              <ProtectedRoute requiredUserType="Brand">
+                <Navigate to="/analyze-content" replace />
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute requiredUserType="Influencer">
+                <SettingsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/task-workflow/:taskId" element={
+              <ProtectedRoute requiredUserType="Influencer">
+                <TaskWorkflowPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/brand/campaigns" element={
+              <ProtectedRoute requiredUserType="Brand">
+                <BrandCampaignsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/brand/settings" element={
+              <ProtectedRoute requiredUserType="Brand">
+                <BrandSettingsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/brand/progress" element={
+              <ProtectedRoute requiredUserType="Brand">
+                <BrandProgressDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/campaign-review" element={
+              <ProtectedRoute requiredUserType="Brand">
+                <CampaignReviewPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/opportunities" element={
+              <ProtectedRoute requiredUserType="Influencer">
+                <OpportunitiesPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/campaigns" element={
+              <ProtectedRoute>
+                <CampaignsPage />
+              </ProtectedRoute>
+            } />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
