@@ -22,6 +22,8 @@ import BrandAIAssistantPage from "./pages/BrandAIAssistantPage";
 import TaskWorkflowPage from "./pages/TaskWorkflowPage";
 import BrandProgressDashboard from "./pages/BrandProgressDashboard";
 import InvitationPage from "./pages/InvitationPage";
+import AnalyzeContentPage from "./pages/AnalyzeContentPage";
+import FindInfluencersPage from "./pages/FindInfluencersPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +39,22 @@ const App = () => (
             <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/invite/:token" element={<InvitationPage />} />
+            <Route 
+              path="/analyze-content" 
+              element={
+                <ProtectedRoute>
+                  <AnalyzeContentPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/find-influencers" 
+              element={
+                <ProtectedRoute>
+                  <FindInfluencersPage />
+                </ProtectedRoute>
+              } 
+            />
             <Route 
               path="/dashboard" 
               element={

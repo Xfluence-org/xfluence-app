@@ -15,39 +15,32 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName }) => {
   const { signOut, profile } = useAuth();
   
   const getActiveItem = () => {
-    if (location.pathname.includes('/brand-dashboard')) return 'dashboard';
-    if (location.pathname.includes('/brand/campaigns')) return 'campaigns';
+    if (location.pathname.includes('/analyze-content')) return 'analyze-content';
+    if (location.pathname.includes('/find-influencers')) return 'find-influencers';
     if (location.pathname.includes('/brand/ai-assistant')) return 'ai-assistant';
-    if (location.pathname.includes('/brand/settings')) return 'settings';
-    return 'dashboard';
+    return 'analyze-content';
   };
 
   const activeItem = getActiveItem();
 
   const menuItems = [
     { 
-      id: 'dashboard', 
-      label: 'Dashboard', 
+      id: 'analyze-content', 
+      label: 'Analyze Content', 
       icon: BarChart3,
-      onClick: () => navigate('/brand-dashboard')
+      onClick: () => navigate('/analyze-content')
     },
     { 
-      id: 'campaigns', 
-      label: 'Campaigns', 
+      id: 'find-influencers', 
+      label: 'Find Influencers', 
       icon: Smartphone,
-      onClick: () => navigate('/brand/campaigns')
+      onClick: () => navigate('/find-influencers')
     },
     { 
       id: 'ai-assistant', 
       label: 'AI Assistant', 
       icon: Bot,
       onClick: () => navigate('/brand/ai-assistant')
-    },
-    { 
-      id: 'settings', 
-      label: 'Settings', 
-      icon: Settings,
-      onClick: () => navigate('/brand/settings')
     },
   ];
 

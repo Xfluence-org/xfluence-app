@@ -3,12 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-interface AIContentAnalysisProps {
+interface AIContentAnalysisPlaceholderProps {
   contentUrl?: string;
   onAnalysisComplete?: (analysis: any) => void;
 }
 
-const AIContentAnalysis: React.FC<AIContentAnalysisProps> = ({ 
+const AIContentAnalysisPlaceholder: React.FC<AIContentAnalysisPlaceholderProps> = ({ 
   contentUrl, 
   onAnalysisComplete 
 }) => {
@@ -40,4 +40,4 @@ const AIContentAnalysis: React.FC<AIContentAnalysisProps> = ({
   );
 };
 
-export default AIContentAnalysis;
+export default AIContentAnalysisPlaceholder;

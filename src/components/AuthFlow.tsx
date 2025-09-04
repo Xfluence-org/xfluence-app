@@ -34,8 +34,8 @@ const AuthFlow = () => {
       if (location.state?.returnTo) {
         navigate(location.state.returnTo, { replace: true });
       } else {
-        // Default navigation based on user type
-        navigate(profile.user_type === 'Influencer' ? '/dashboard' : '/brand-dashboard', { replace: true });
+        // Redirect all users to analyze content page
+        navigate('/analyze-content', { replace: true });
       }
     }
   }, [user, profile, location.state, navigate]);
