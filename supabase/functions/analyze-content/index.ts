@@ -25,12 +25,12 @@ serve(async (req) => {
 
     console.log('Analyzing file:', file.name, 'Type:', file.type, 'Size:', file.size);
 
-    // Simulate AI analysis with realistic results
+    // Simple mock analysis - this is a standalone feature not touching existing DB
     const analysisResults = {
       overall_score: Math.floor(Math.random() * 30) + 70, // 70-100
       key_insights: [
         "Strong visual composition with good color balance",
-        "Engaging content that aligns with current trends",
+        "Engaging content that aligns with current trends", 
         "High potential for audience engagement",
         "Professional quality and execution"
       ],
