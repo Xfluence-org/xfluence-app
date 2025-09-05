@@ -8,7 +8,10 @@ import React from "react";
 import { AuthProvider } from "@/contexts/SimpleAuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AuthErrorBoundary from "@/components/AuthErrorBoundary";
+import { FeatureGate } from "@/components/FeatureGate";
+import { FeatureStatusIndicator, DevFeatureStatus } from "@/components/FeatureStatusIndicator";
 import "@/utils/debugAuth";
+import "@/utils/testFeatures";
 import Index from "./pages/Index";
 import InfluencerDashboard from "./pages/InfluencerDashboard";
 import OpportunitiesPage from "./pages/OpportunitiesPage";
@@ -24,6 +27,7 @@ import BrandProgressDashboard from "./pages/BrandProgressDashboard";
 import InvitationPage from "./pages/InvitationPage";
 import AnalyzeContentPage from "./pages/AnalyzeContentPage";
 import FindInfluencersPage from "./pages/FindInfluencersPage";
+import AdminFeatureToggle from "./pages/AdminFeatureToggle";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +37,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <FeatureStatusIndicator />
       <BrowserRouter>
         <AuthErrorBoundary>
           <AuthProvider>
@@ -40,10 +45,20 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/invite/:token" element={<InvitationPage />} />
             <Route 
+              path="/admin/features" 
+              element={
+                <ProtectedRoute>
+                  <AdminFeatureToggle />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/analyze-content" 
               element={
                 <ProtectedRoute>
-                  <AnalyzeContentPage />
+                  <FeatureGate feature="contentAnalysis" title="Content Analysis">
+                    <AnalyzeContentPage />
+                  </FeatureGate>
                 </ProtectedRoute>
               } 
             />
@@ -51,7 +66,9 @@ const App = () => (
               path="/find-influencers" 
               element={
                 <ProtectedRoute>
-                  <FindInfluencersPage />
+                  <FeatureGate feature="findInfluencers" title="Find Influencers">
+                    <FindInfluencersPage />
+                  </FeatureGate>
                 </ProtectedRoute>
               } 
             />
@@ -59,7 +76,9 @@ const App = () => (
               path="/dashboard" 
               element={
                 <ProtectedRoute requiredUserType="Influencer">
-                  <InfluencerDashboard />
+                  <FeatureGate feature="influencerDashboard" title="Influencer Dashboard">
+                    <InfluencerDashboard />
+                  </FeatureGate>
                 </ProtectedRoute>
               } 
             />
@@ -67,7 +86,9 @@ const App = () => (
               path="/settings" 
               element={
                 <ProtectedRoute requiredUserType="Influencer">
-                  <SettingsPage />
+                  <FeatureGate feature="influencerSettings" title="Settings">
+                    <SettingsPage />
+                  </FeatureGate>
                 </ProtectedRoute>
               } 
             />
@@ -75,7 +96,9 @@ const App = () => (
               path="/task-workflow/:taskId" 
               element={
                 <ProtectedRoute>
-                  <TaskWorkflowPage />
+                  <FeatureGate feature="taskWorkflow" title="Task Workflow">
+                    <TaskWorkflowPage />
+                  </FeatureGate>
                 </ProtectedRoute>
               } 
             />
@@ -83,7 +106,9 @@ const App = () => (
               path="/brand-dashboard" 
               element={
                 <ProtectedRoute>
-                  <BrandDashboard />
+                  <FeatureGate feature="brandDashboard" title="Brand Dashboard">
+                    <BrandDashboard />
+                  </FeatureGate>
                 </ProtectedRoute>
               } 
             />
@@ -91,7 +116,9 @@ const App = () => (
               path="/brand/campaigns" 
               element={
                 <ProtectedRoute>
-                  <BrandCampaignsPage />
+                  <FeatureGate feature="brandCampaigns" title="Campaign Management">
+                    <BrandCampaignsPage />
+                  </FeatureGate>
                 </ProtectedRoute>
               } 
             />
@@ -99,7 +126,9 @@ const App = () => (
               path="/brand/settings" 
               element={
                 <ProtectedRoute>
-                  <BrandSettingsPage />
+                  <FeatureGate feature="brandSettings" title="Brand Settings">
+                    <BrandSettingsPage />
+                  </FeatureGate>
                 </ProtectedRoute>
               } 
             />
@@ -107,7 +136,9 @@ const App = () => (
               path="/brand/ai-assistant" 
               element={
                 <ProtectedRoute>
-                  <BrandAIAssistantPage />
+                  <FeatureGate feature="aiAssistant" title="AI Assistant">
+                    <BrandAIAssistantPage />
+                  </FeatureGate>
                 </ProtectedRoute>
               } 
             />
@@ -115,7 +146,9 @@ const App = () => (
               path="/brand/progress" 
               element={
                 <ProtectedRoute>
-                  <BrandProgressDashboard />
+                  <FeatureGate feature="brandProgress" title="Progress Dashboard">
+                    <BrandProgressDashboard />
+                  </FeatureGate>
                 </ProtectedRoute>
               } 
             />
@@ -131,7 +164,9 @@ const App = () => (
               path="/opportunities" 
               element={
                 <ProtectedRoute>
-                  <OpportunitiesPage />
+                  <FeatureGate feature="opportunities" title="Opportunities">
+                    <OpportunitiesPage />
+                  </FeatureGate>
                 </ProtectedRoute>
               } 
             />
@@ -139,15 +174,17 @@ const App = () => (
               path="/campaigns" 
               element={
                 <ProtectedRoute>
-                  <CampaignsPage />
+                  <FeatureGate feature="campaigns" title="Campaigns">
+                    <CampaignsPage />
+                  </FeatureGate>
                 </ProtectedRoute>
               } 
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </AuthProvider>
-      </AuthErrorBoundary>
+      </AuthProvider>
+    </AuthErrorBoundary>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
