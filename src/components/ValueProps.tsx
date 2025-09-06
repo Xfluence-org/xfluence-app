@@ -1,85 +1,60 @@
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent } from './ui/card';
-import { TrendingUp, Users, Zap, Target } from 'lucide-react';
+import React from 'react';
 
 const ValueProps = () => {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    const element = document.getElementById('value-props-section');
-    if (element) {
-      observer.observe(element);
-    }
-
-    return () => observer.disconnect();
-  }, []);
-
-  const valueProps = [
-    {
-      icon: TrendingUp,
-      title: "10x Faster Growth",
-      description: "Accelerate your influence marketing campaigns with AI-powered automation and optimization"
-    },
-    {
-      icon: Users,
-      title: "Perfect Matches",
-      description: "Find and connect with influencers who align perfectly with your brand and audience"
-    },
-    {
-      icon: Zap,
-      title: "Real-time Insights",
-      description: "Get instant analytics and performance metrics to optimize your campaigns on the fly"
-    },
-    {
-      icon: Target,
-      title: "Higher ROI",
-      description: "Maximize your marketing spend with data-driven decisions and predictive analytics"
-    }
-  ];
-
   return (
-    <section id="value-props-section" className="py-20 sm:py-32 px-4 sm:px-6 bg-white">
-      <div className="max-w-7xl mx-auto">
-        <div className={`text-center mb-16 transition-all duration-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <h2 className="font-inter font-bold text-3xl sm:text-4xl md:text-5xl text-gray-900 mb-4">
-            Why Choose XFLUENCE?
+    <section className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="text-center mb-16">
+          <h2 className="font-bold text-4xl md:text-5xl text-black mb-4">
+            Why Choose Xfluence?
           </h2>
-          <p className="font-inter text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
-            Transform your marketing strategy with the power of AI and data-driven insights
+          <p className="text-xl text-gray-600">
+            Quantifiable results that transform your marketing
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-          {valueProps.map((prop, index) => (
-            <Card 
-              key={index} 
-              className={`group hover:shadow-xl transition-all duration-300 hover:scale-105 border-0 bg-gradient-to-br from-white to-gray-50 ${
-                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-              }`}
-              style={{ animationDelay: `${0.1 + index * 0.1}s` }}
-            >
-              <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <prop.icon className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="font-inter font-bold text-xl text-gray-900 mb-3">
-                  {prop.title}
-                </h3>
-                <p className="font-inter text-gray-600 leading-relaxed">
-                  {prop.description}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="bg-white rounded-2xl p-8 shadow-lg">
+            <div className="mb-6">
+              <span className="inline-block bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium uppercase tracking-wide">
+                VIRALITY & ENGAGEMENT
+              </span>
+            </div>
+            <h3 className="font-bold text-2xl text-black mb-4">
+              Virality & Engagement
+            </h3>
+            <p className="text-gray-600 leading-relaxed">
+              AI analyzes videos/audio for tweaks, breaks down niches/tasks—boost engagement 40%
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl p-8 shadow-lg">
+            <div className="mb-6">
+              <span className="inline-block bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-medium uppercase tracking-wide">
+                CAMPAIGN & CONTENT STRATEGY OPTIMIZATION
+              </span>
+            </div>
+            <h3 className="font-bold text-2xl text-black mb-4">
+              Campaign & Content Strategy Optimization
+            </h3>
+            <p className="text-gray-600 leading-relaxed">
+              Build campaigns, AI chatbot for queries, real-time alerts—cut planning time 60%
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl p-8 shadow-lg">
+            <div className="mb-6">
+              <span className="inline-block bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium uppercase tracking-wide">
+                FIND AND MANAGE INFLUENCERS
+              </span>
+            </div>
+            <h3 className="font-bold text-2xl text-black mb-4">
+              Find and Manage Influencers
+            </h3>
+            <p className="text-gray-600 leading-relaxed">
+              Find nano, micro and macro influencers, optimize in real-time—improve ROI 30%
+            </p>
+          </div>
         </div>
       </div>
     </section>
