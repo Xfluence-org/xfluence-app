@@ -103,6 +103,13 @@ export const FEATURES: Features = {
   },
   
   // Phase 4: Advanced Features (Month 2)
+  brandAIAssistant: {
+    enabled: false,
+    comingSoon: true,
+    releaseDate: "Coming in 2 months",
+    description: "AI assistant for brand management"
+  },
+  
   brandProgress: {
     enabled: false,
     comingSoon: true,

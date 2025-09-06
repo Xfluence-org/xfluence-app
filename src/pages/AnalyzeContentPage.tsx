@@ -36,7 +36,8 @@ const AnalyzeContentPage = () => {
 
   const loadRecentAnalyses = async () => {
     try {
-      const { data, error } = await supabase
+      // Use type assertion since we know the table exists but TypeScript doesn't
+      const { data, error } = await (supabase as any)
         .from('content_analyses')
         .select('*')
         .order('created_at', { ascending: false })
@@ -45,8 +46,8 @@ const AnalyzeContentPage = () => {
       if (error) throw error;
       
       // Transform database records to match expected format
-      const transformedAnalyses = data?.map(record => ({
-        ...record.analysis_result,
+      const transformedAnalyses = data?.map((record: any) => ({
+        ...(record.analysis_result || {}),
         fileName: record.file_name,
         analysisDate: record.created_at,
         id: record.id

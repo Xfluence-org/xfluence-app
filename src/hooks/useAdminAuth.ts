@@ -34,8 +34,7 @@ export const useAdminAuth = () => {
             // Add more admin emails as needed
           ];
           
-          const isAdminUser = adminEmails.includes(profile?.email || '') || 
-                             profile?.user_type === 'Admin';
+          const isAdminUser = adminEmails.includes(profile?.email || '');
           
           setIsAdmin(isAdminUser);
         }
