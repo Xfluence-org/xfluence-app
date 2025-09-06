@@ -22,14 +22,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredUserT
 
   // No user or profile - redirect to login
   if (!user || !profile) {
-    return <Navigate to="/" state={{ from: location }} replace />;
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
   // Check if user has valid user_type
   const validUserTypes = ['Agency', 'Brand', 'Influencer'];
   if (!validUserTypes.includes(profile.user_type)) {
     console.error('Invalid user type:', profile.user_type);
-    return <Navigate to="/" replace />;
+    return <Navigate to="/auth" replace />;
   }
 
   // Check if user has required user type

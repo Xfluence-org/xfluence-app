@@ -13,6 +13,7 @@ import { FeatureStatusIndicator, DevFeatureStatus } from "@/components/FeatureSt
 import "@/utils/debugAuth";
 import "@/utils/testFeatures";
 import Index from "./pages/Index";
+import LandingPage from "./pages/LandingPage";
 import InfluencerDashboard from "./pages/InfluencerDashboard";
 import OpportunitiesPage from "./pages/OpportunitiesPage";
 import CampaignsPage from "./pages/CampaignsPage";
@@ -42,7 +43,8 @@ const App = () => (
         <AuthErrorBoundary>
           <AuthProvider>
             <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/auth" element={<Index />} />
             <Route path="/invite/:token" element={<InvitationPage />} />
             <Route 
               path="/admin/features" 

@@ -299,7 +299,7 @@ const InvitationLandingPage: React.FC = () => {
             <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Invitation Error</h2>
             <p className="text-gray-600 mb-4">{error}</p>
-            <Button onClick={() => navigate('/')} variant="outline">
+            <Button onClick={() => navigate('/auth')} variant="outline">
               Go Home
             </Button>
           </CardContent>

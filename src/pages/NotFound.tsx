@@ -26,10 +26,10 @@ const NotFound = () => {
           navigate('/brand-dashboard');
         }
       } catch (error) {
-        navigate('/');
+        navigate('/auth');
       }
     } else {
-      navigate('/');
+      navigate('/auth');
     }
   };
 

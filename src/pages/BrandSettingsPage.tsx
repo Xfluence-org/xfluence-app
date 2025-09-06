@@ -27,7 +27,7 @@ const BrandSettingsPage = () => {
   }
 
   if (!user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/auth" replace />;
   }
 
   if (profile?.user_type === 'Influencer') {

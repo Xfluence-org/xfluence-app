@@ -92,7 +92,7 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName }) => {
 
   const handleLogout = async () => {
     await signOut();
-    navigate('/');
+    navigate('/auth');
   };
 
   const handleLockedFeatureClick = (featureName: string) => {
