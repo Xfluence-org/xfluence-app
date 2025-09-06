@@ -49,7 +49,7 @@ const InfluencerDashboard = () => {
     <div className="flex h-screen relative">
       <Sidebar userName={profile?.name} />
       
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 ml-64 overflow-y-auto">
         <div className="p-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-[#1a1f2e] mb-2">

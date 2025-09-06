@@ -108,7 +108,7 @@ const OpportunitiesPage = () => {
     return (
       <div className="flex h-screen bg-gray-50">
         <Sidebar userName={profile?.name} />
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 ml-64 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
               <p className="text-gray-500 text-lg">Loading opportunities...</p>
@@ -123,7 +123,7 @@ const OpportunitiesPage = () => {
     return (
       <div className="flex h-screen bg-gray-50">
         <Sidebar userName={profile?.name} />
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 ml-64 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
               <p className="text-red-500 text-lg">Error loading opportunities: {error.message}</p>
@@ -138,7 +138,7 @@ const OpportunitiesPage = () => {
     <div className="flex h-screen bg-gray-50">
       <Sidebar userName={profile?.name} />
       
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 ml-64 overflow-y-auto">
         <div className="p-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}

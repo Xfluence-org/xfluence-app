@@ -325,6 +325,21 @@ Provide honest, constructive feedback that helps the user improve their content 
 
     const parsedAnalysis = parseAnalysis(analysisText);
 
+    // Save analysis to content_analyses table
+    const { error: saveError } = await supabase.from('content_analyses').insert({
+      user_id: user.id,
+      file_name: fileName,
+      analysis_result: parsedAnalysis,
+      video_url: videoUrl,
+      twelve_labs_task_id: twelveLabsTaskId,
+      twelve_labs_video_id: completedTask.video_id
+    });
+
+    if (saveError) {
+      console.error('Error saving analysis:', saveError);
+      // Don't fail the request, just log the error
+    }
+
     // Log interaction for analytics
     await supabase.from('llm_interactions').insert({
       user_id: user.id,

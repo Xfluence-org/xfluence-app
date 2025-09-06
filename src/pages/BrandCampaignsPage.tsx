@@ -257,7 +257,7 @@ const BrandCampaignsPage: React.FC = () => {
     return (
       <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <BrandSidebar userName={profile?.name || 'Brand'} />
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 ml-64 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
               <p className="text-gray-500 text-lg">Loading campaigns...</p>
@@ -272,7 +272,7 @@ const BrandCampaignsPage: React.FC = () => {
     return (
       <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <BrandSidebar userName={profile?.name || 'Brand'} />
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 ml-64 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
               <p className="text-red-500 text-lg">Error loading campaigns</p>
@@ -288,7 +288,7 @@ const BrandCampaignsPage: React.FC = () => {
     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <BrandSidebar userName={profile?.name || 'Brand'} />
       
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 ml-64 overflow-y-auto">
         <div className="p-8">
           <header className="mb-8">
             <div className="flex justify-between items-center">

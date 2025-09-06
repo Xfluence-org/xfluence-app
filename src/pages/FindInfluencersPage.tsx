@@ -14,7 +14,7 @@ const FindInfluencersPage = () => {
     <div className="flex min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50">
       <BrandSidebar userName={profile?.name} />
       
-      <main className="flex-1 p-8">
+      <main className="flex-1 ml-64 p-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8">

@@ -100,7 +100,7 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName }) => {
   };
 
   return (
-    <div className="w-64 bg-white/10 backdrop-blur-2xl border-r border-white/20 flex flex-col h-screen relative overflow-hidden">
+    <div className="w-64 bg-white/10 backdrop-blur-2xl border-r border-white/20 flex flex-col h-screen fixed left-0 top-0 z-40 overflow-hidden">
       {/* Logo/Brand */}
       <div className="p-6 border-b border-white/10">
         <h1 className="text-2xl font-bold text-brand-primary">Xfluence</h1>
@@ -108,7 +108,7 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({ userName }) => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         {menuItems.map((item) => {
           const isEnabled = isFeatureEnabled(item.feature);
           const featureInfo = getFeatureInfo(item.feature);

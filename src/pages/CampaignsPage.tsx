@@ -146,7 +146,7 @@ const CampaignsPage: React.FC = () => {
     return (
       <div className="flex h-screen relative">
         <Sidebar userName={profile?.name || 'User'} />
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 ml-64 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
               <p className="text-gray-500 text-lg">Loading campaigns...</p>
@@ -161,7 +161,7 @@ const CampaignsPage: React.FC = () => {
     return (
       <div className="flex h-screen relative">
         <Sidebar userName={profile?.name || 'User'} />
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 ml-64 overflow-y-auto">
           <div className="p-8">
             <div className="text-center py-12">
               <p className="text-red-500 text-lg">Error loading campaigns. Please try again.</p>
@@ -176,7 +176,7 @@ const CampaignsPage: React.FC = () => {
     <div className="flex h-screen relative">
       <Sidebar userName={profile?.name || 'User'} />
       
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 ml-64 overflow-y-auto">
         <div className="p-8">
           <header className="mb-8">
             <h1 className="text-3xl font-bold text-[#1a1f2e] mb-2">Campaigns</h1>

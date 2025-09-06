@@ -243,7 +243,7 @@ const BrandProgressDashboard: React.FC = () => {
     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <BrandSidebar userName={profile?.name || profile?.email || 'User'} />
       
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 ml-64 overflow-y-auto">
         <div className="p-8">
           {/* Header */}
           <header className="mb-8">
