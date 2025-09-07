@@ -24,6 +24,17 @@ const AuthFlow = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Check URL parameters to determine initial mode
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const mode = urlParams.get('mode');
+    if (mode === 'signup') {
+      setIsLogin(false);
+    } else {
+      setIsLogin(true);
+    }
+  }, [location.search]);
+
   // Remove the navigation logic - let AuthContext handle it
   // This prevents duplicate navigation attempts
   
@@ -211,7 +222,12 @@ const AuthFlow = () => {
       <div className={`w-[45%] bg-white/80 backdrop-blur-2xl relative transition-all duration-700 ease-in-out ${isLogin ? 'translate-x-0' : 'translate-x-full'} border-r border-white/20`}>
         {/* Brand Header */}
         <div className="absolute top-6 left-6">
-          <h1 className="text-lg font-medium text-[#1a1f2e]">Xfluence</h1>
+          <button 
+            onClick={() => navigate('/')}
+            className="text-lg font-medium text-[#1a1f2e] hover:text-[#1DDCD3] transition-colors duration-200 cursor-pointer"
+          >
+            Xfluence
+          </button>
         </div>
 
         {/* Form Container */}
@@ -436,7 +452,12 @@ const AuthFlow = () => {
       <div className="md:hidden absolute inset-0 bg-white flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
-            <h1 className="text-lg font-medium text-[#1a1f2e] mb-2">Xfluence</h1>
+            <button 
+              onClick={() => navigate('/')}
+              className="text-lg font-medium text-[#1a1f2e] hover:text-[#1DDCD3] transition-colors duration-200 cursor-pointer mb-2 block mx-auto"
+            >
+              Xfluence
+            </button>
             <h2 className="text-xl font-semibold text-[#1a1f2e]">
               {getFormTitle()}
             </h2>
