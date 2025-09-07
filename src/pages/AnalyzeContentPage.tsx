@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { BarChart3, Upload, Zap, Target, FileText, CheckCircle, TrendingUp, Video, AlertCircle } from 'lucide-react';
+import { BarChart3, Upload, Target, CheckCircle, TrendingUp, Video, AlertCircle } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/SimpleAuthContext';
 import BrandSidebar from '@/components/brand/BrandSidebar';
@@ -20,7 +20,7 @@ const AnalyzeContentPage = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<any>(null);
   const [recentAnalyses, setRecentAnalyses] = useState<any[]>([]);
-  const [videoUrl, setVideoUrl] = useState<string>('');
+
   const [contentPurpose, setContentPurpose] = useState<string>('');
   const [targetAudience, setTargetAudience] = useState<string>('');
   const [brandGuidelines, setBrandGuidelines] = useState<string>('');
@@ -87,7 +87,7 @@ const AnalyzeContentPage = () => {
       const filePath = `content-analysis/${fileName}`;
 
       // Upload to Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('content-analysis')
         .upload(filePath, file);
 
@@ -161,9 +161,15 @@ const AnalyzeContentPage = () => {
         // Reload recent analyses from database to get the saved record
         await loadRecentAnalyses();
         
+        const viralScore = data.analysis.viralScore || data.analysis.overallScore || 0;
+        const scoreText = data.analysis.viralScore ? `${viralScore}/10` : `${data.analysis.overallScore || 0}/100`;
+        const status = viralScore >= 7 ? "High viral potential!" : 
+                     viralScore >= 5 ? "Moderate potential" : 
+                     viralScore >= 3 ? "Low potential" : "Needs major improvements";
+        
         toast({
           title: "Analysis Complete",
-          description: `Video scored ${data.analysis.overallScore}/100 - ${data.analysis.recommendation}`,
+          description: `Video scored ${scoreText} - ${status}`,
         });
       } else {
         throw new Error(data.error || 'Analysis failed');
@@ -372,53 +378,93 @@ const AnalyzeContentPage = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <TrendingUp className="w-5 h-5 text-green-500" />
-                      Overall Score
+                      Viral Score
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-center">
                       <div className="text-4xl font-bold text-green-600 mb-2">
-                        {analysis.overallScore}/100
+                        {analysis.viralScore || analysis.overallScore || 0}/10
                       </div>
                       <Badge 
-                        variant={analysis.overallScore >= 80 ? "default" : analysis.overallScore >= 60 ? "secondary" : "destructive"}
+                        variant={(analysis.viralScore || analysis.overallScore || 0) >= 7 ? "default" : (analysis.viralScore || analysis.overallScore || 0) >= 5 ? "secondary" : "destructive"}
                         className="text-sm"
                       >
-                        {analysis.recommendation === 'approved' ? "Approved" : 
-                         analysis.recommendation === 'revision' ? "Needs Revision" : "Rejected"}
+                        {(analysis.viralScore || analysis.overallScore || 0) >= 7 ? "High Viral Potential" : 
+                         (analysis.viralScore || analysis.overallScore || 0) >= 5 ? "Moderate Potential" : "Low Potential"}
                       </Badge>
+                      {analysis.verdict && (
+                        <p className="text-sm text-gray-600 mt-3 text-left">
+                          {cleanMarkdownText(analysis.verdict)}
+                        </p>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="hover:shadow-lg transition-shadow">
                   <CardHeader>
-                    <CardTitle>Category Scores</CardTitle>
+                    <CardTitle>Viral Audit Scores</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Brand Alignment</span>
-                        <span className="font-medium">{analysis.scores?.brand_alignment || 0}%</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Visual Quality</span>
-                        <span className="font-medium">{analysis.scores?.visual_quality || 0}%</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Content Relevance</span>
-                        <span className="font-medium">{analysis.scores?.content_relevance || 0}%</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Engagement Potential</span>
-                        <span className="font-medium">{analysis.scores?.engagement_potential || 0}%</span>
-                      </div>
+                      {analysis.viralAudit && (
+                        <>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Audio Strategy</span>
+                            <span className="font-medium">{analysis.viralAudit.audioStrategy?.score || 0}/5</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Hook Effectiveness</span>
+                            <span className="font-medium">{analysis.viralAudit.hookEffectiveness?.score || 0}/5</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Scroll Stopping Power</span>
+                            <span className="font-medium">{analysis.viralAudit.scrollStoppingPower?.score || 0}/5</span>
+                          </div>
+                        </>
+                      )}
+                      {analysis.scoreBreakdown && (
+                        <>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Hook Potential</span>
+                            <span className="font-medium">{analysis.scoreBreakdown.hookPotential || 0}/5</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Trend Alignment</span>
+                            <span className="font-medium">{analysis.scoreBreakdown.trendAlignment || 0}/5</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Platform Integration</span>
+                            <span className="font-medium">{analysis.scoreBreakdown.platformIntegration || 0}/5</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Retention Optimization</span>
+                            <span className="font-medium">{analysis.scoreBreakdown.retentionOptimization || 0}/5</span>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Strengths and Suggestions */}
+              {/* Critical Action */}
+              {analysis.criticalAction && (
+                <Card className="border-orange-200 bg-orange-50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-orange-800">
+                      <AlertCircle className="w-5 h-5" />
+                      Critical Action Required
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-orange-700">{cleanMarkdownText(analysis.criticalAction)}</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Strengths and Modifications */}
               <div className="grid md:grid-cols-2 gap-6">
                 <Card className="hover:shadow-lg transition-shadow">
                   <CardHeader>
@@ -428,14 +474,27 @@ const AnalyzeContentPage = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ul className="space-y-2">
-                      {analysis.strengths?.map((strength: string, index: number) => (
-                        <li key={index} className="flex items-start gap-2 text-sm">
-                          <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                          {cleanMarkdownText(strength)}
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="space-y-4">
+                      {analysis.strengths && analysis.strengths.length > 0 ? (
+                        analysis.strengths.map((strength: any, index: number) => (
+                          <div key={index} className="border-l-4 border-green-500 pl-4">
+                            <h4 className="font-medium text-green-800 mb-1">
+                              {typeof strength === 'string' ? cleanMarkdownText(strength) : strength.title}
+                            </h4>
+                            {typeof strength === 'object' && strength.description && (
+                              <p className="text-sm text-gray-600 mb-2">{cleanMarkdownText(strength.description)}</p>
+                            )}
+                            {typeof strength === 'object' && strength.impact && (
+                              <p className="text-xs text-green-600 italic">{cleanMarkdownText(strength.impact)}</p>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-4">
+                          <p className="text-sm text-gray-500">No strengths identified</p>
+                        </div>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -443,42 +502,135 @@ const AnalyzeContentPage = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Target className="w-5 h-5 text-blue-500" />
-                      AI Suggestions
+                      Modifications Needed
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ul className="space-y-2">
-                      {analysis.suggestions?.map((suggestion: string, index: number) => (
-                        <li key={index} className="flex items-start gap-2 text-sm">
-                          <Target className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                          {cleanMarkdownText(suggestion)}
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="space-y-4">
+                      {(analysis.modifications || analysis.suggestions) && (analysis.modifications || analysis.suggestions).length > 0 ? (
+                        (analysis.modifications || analysis.suggestions).map((modification: any, index: number) => (
+                          <div key={index} className="border-l-4 border-blue-500 pl-4">
+                            <div className="flex items-start gap-2 mb-1">
+                              <h4 className="font-medium text-blue-800 flex-1">
+                                {typeof modification === 'string' ? cleanMarkdownText(modification) : modification.title}
+                              </h4>
+                              {typeof modification === 'object' && modification.priority && (
+                                <Badge 
+                                  className={`text-xs font-medium px-2 py-1 ${
+                                    modification.priority === 'high' 
+                                      ? 'bg-red-100 text-red-800 border-red-200' 
+                                      : modification.priority === 'medium' 
+                                      ? 'bg-yellow-100 text-yellow-800 border-yellow-200' 
+                                      : 'bg-gray-100 text-gray-800 border-gray-200'
+                                  }`}
+                                  variant="outline"
+                                >
+                                  {modification.priority.toUpperCase()}
+                                </Badge>
+                              )}
+                            </div>
+                            {typeof modification === 'object' && modification.description && (
+                              <p className="text-sm text-gray-600 mb-2">{cleanMarkdownText(modification.description)}</p>
+                            )}
+                            {typeof modification === 'object' && modification.expectedImpact && (
+                              <p className="text-xs text-blue-600 italic">{cleanMarkdownText(modification.expectedImpact)}</p>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-4">
+                          <p className="text-sm text-gray-500">No modifications needed</p>
+                        </div>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Technical Quality */}
-              {analysis.technicalQuality && (
+              {/* Retention Breakdown */}
+              {analysis.retentionBreakdown && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Technical Quality Assessment</CardTitle>
+                    <CardTitle>Retention Analysis</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid md:grid-cols-3 gap-4">
-                      <div>
-                        <span className="text-sm font-medium">Resolution:</span>
-                        <p className="text-sm text-gray-600">{analysis.technicalQuality.resolution}</p>
-                      </div>
-                      <div>
-                        <span className="text-sm font-medium">Composition:</span>
-                        <p className="text-sm text-gray-600">{analysis.technicalQuality.composition}</p>
-                      </div>
-                      <div>
-                        <span className="text-sm font-medium">Lighting:</span>
-                        <p className="text-sm text-gray-600">{analysis.technicalQuality.lighting}</p>
-                      </div>
+                    <div className="grid md:grid-cols-3 gap-6">
+                      {Object.entries(analysis.retentionBreakdown).map(([key, value]: [string, any]) => (
+                        <div key={key} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
+                            <span className="text-lg font-bold text-blue-600">{value.score}/5</span>
+                          </div>
+                          <p className="text-xs text-gray-600">{cleanMarkdownText(value.description)}</p>
+                          <p className="text-xs text-blue-600 italic">{cleanMarkdownText(value.details)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Platform Optimization */}
+              {analysis.platformOptimization && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Platform Optimization</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid md:grid-cols-3 gap-6">
+                      {Object.entries(analysis.platformOptimization).map(([key, value]: [string, any]) => (
+                        <div key={key} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
+                            <span className="text-lg font-bold text-purple-600">{value.score}/5</span>
+                          </div>
+                          <p className="text-xs text-gray-600">{cleanMarkdownText(value.description)}</p>
+                          <p className="text-xs text-purple-600 italic">{cleanMarkdownText(value.details)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Virality Essentials */}
+              {analysis.viralityEssentials && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      Virality Checklist
+                      <Badge variant="outline">
+                        {analysis.viralityEssentials.categories?.reduce((passed: number, cat: any) => 
+                          passed + cat.criteria.filter((c: any) => c.passed).length, 0
+                        ) || 0} / {analysis.viralityEssentials.categories?.reduce((total: number, cat: any) => 
+                          total + cat.criteria.length, 0
+                        ) || 0} Passed
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {analysis.viralityEssentials.categories?.map((category: any, index: number) => (
+                        <div key={index} className="border rounded-lg p-4">
+                          <h4 className="font-medium mb-3 flex items-center justify-between">
+                            {category.name}
+                            <Badge variant="outline" className="text-xs">
+                              Weight: {category.weight}
+                            </Badge>
+                          </h4>
+                          <div className="space-y-2">
+                            {category.criteria.map((criterion: any, criterionIndex: number) => (
+                              <div key={criterionIndex} className="flex items-start gap-3">
+                                <div className={`w-4 h-4 rounded-full mt-0.5 ${criterion.passed ? 'bg-green-500' : 'bg-red-500'}`} />
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium">{criterion.name}</p>
+                                  <p className="text-xs text-gray-600">{criterion.advice}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </CardContent>
                 </Card>
@@ -506,27 +658,33 @@ const AnalyzeContentPage = () => {
                       </Button>
                     </div>
                   ) : (
-                    recentAnalyses.map((item, index) => (
-                      <div 
-                        key={item.id || index} 
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
-                        onClick={() => setAnalysis(item)}
-                      >
-                        <div>
-                          <span className="text-sm font-medium text-gray-900">{item.fileName}</span>
-                          <div className="text-xs text-gray-500">
-                            Score: {item.overallScore}/100 • {new Date(item.analysisDate).toLocaleDateString()}
+                    recentAnalyses.map((item, index) => {
+                      const viralScore = item.viralScore || item.overallScore || 0;
+                      const displayScore = item.viralScore ? `${viralScore}/10` : `${item.overallScore || 0}/100`;
+                      
+                      return (
+                        <div 
+                          key={item.id || index} 
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                          onClick={() => setAnalysis(item)}
+                        >
+                          <div>
+                            <span className="text-sm font-medium text-gray-900">{item.fileName}</span>
+                            <div className="text-xs text-gray-500">
+                              Score: {displayScore} • {new Date(item.analysisDate).toLocaleDateString()}
+                            </div>
+                            <div className="text-xs text-gray-400 mt-1">
+                              {viralScore >= 7 ? '🚀 High Viral Potential' : 
+                               viralScore >= 5 ? '⚡ Moderate Potential' : 
+                               viralScore >= 3 ? '⚠️ Low Potential' : '❌ Needs Major Work'}
+                            </div>
                           </div>
-                          <div className="text-xs text-gray-400 mt-1">
-                            {item.recommendation === 'approved' ? '✅ Approved' : 
-                             item.recommendation === 'revision' ? '⚠️ Needs Revision' : '❌ Rejected'}
-                          </div>
+                          <Badge variant={viralScore >= 7 ? "default" : viralScore >= 5 ? "secondary" : "destructive"}>
+                            {viralScore >= 7 ? "High" : viralScore >= 5 ? "Medium" : "Low"}
+                          </Badge>
                         </div>
-                        <Badge variant={item.overallScore >= 80 ? "default" : item.overallScore >= 60 ? "secondary" : "destructive"}>
-                          {item.overallScore >= 80 ? "Excellent" : item.overallScore >= 60 ? "Good" : "Poor"}
-                        </Badge>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </CardContent>
