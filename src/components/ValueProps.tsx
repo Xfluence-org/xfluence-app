@@ -1,60 +1,77 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { Zap, DollarSign, TrendingUp } from 'lucide-react';
 
 const ValueProps = () => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    const element = document.getElementById('value-props-section');
+    if (element) {
+      observer.observe(element);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  const benefits = [
+    {
+      icon: Zap,
+      title: "Save 70% Time",
+      description: "Automate your entire influencer marketing workflow with AI-powered campaign management and optimization."
+    },
+    {
+      icon: DollarSign,
+      title: "Cut 50% Costs",
+      description: "Reduce marketing expenses with smart budget allocation and automated processes that eliminate manual work."
+    },
+    {
+      icon: TrendingUp,
+      title: "Boost ROI 30%+",
+      description: "Increase return on investment with data-driven insights and viral content optimization strategies."
+    }
+  ];
+
   return (
-    <section className="py-20 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-16">
-          <h2 className="font-bold text-4xl md:text-5xl text-black mb-4">
-            Why Choose Xfluence?
+    <section id="value-props-section" className="py-20 sm:py-32 px-4 sm:px-6 bg-gray-50">
+      <div className="max-w-7xl mx-auto">
+        <div className={`text-center mb-16 transition-all duration-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <h2 className="font-inter font-bold text-3xl sm:text-4xl md:text-5xl text-gray-900 mb-4">
+            Why Choose XFLUENCE?
           </h2>
-          <p className="text-xl text-gray-600">
+          <p className="font-inter text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
             Quantifiable results that transform your marketing
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-white rounded-2xl p-8 shadow-lg">
-            <div className="mb-6">
-              <span className="inline-block bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium uppercase tracking-wide">
-                VIRALITY & ENGAGEMENT
-              </span>
+          {benefits.map((benefit, index) => (
+            <div 
+              key={index}
+              className={`bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 ${
+                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              }`}
+              style={{transitionDelay: `${index * 0.1}s`}}
+            >
+              <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg mb-6">
+                <benefit.icon className="w-6 h-6 text-blue-600" />
+              </div>
+              <h3 className="font-inter font-bold text-xl text-gray-900 mb-4">
+                {benefit.title}
+              </h3>
+              <p className="font-inter text-gray-600 leading-relaxed">
+                {benefit.description}
+              </p>
             </div>
-            <h3 className="font-bold text-2xl text-black mb-4">
-              Virality & Engagement
-            </h3>
-            <p className="text-gray-600 leading-relaxed">
-              AI analyzes videos/audio for tweaks, breaks down niches/tasks—boost engagement 40%
-            </p>
-          </div>
-
-          <div className="bg-white rounded-2xl p-8 shadow-lg">
-            <div className="mb-6">
-              <span className="inline-block bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-medium uppercase tracking-wide">
-                CAMPAIGN & CONTENT STRATEGY OPTIMIZATION
-              </span>
-            </div>
-            <h3 className="font-bold text-2xl text-black mb-4">
-              Campaign & Content Strategy Optimization
-            </h3>
-            <p className="text-gray-600 leading-relaxed">
-              Build campaigns, AI chatbot for queries, real-time alerts—cut planning time 60%
-            </p>
-          </div>
-
-          <div className="bg-white rounded-2xl p-8 shadow-lg">
-            <div className="mb-6">
-              <span className="inline-block bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium uppercase tracking-wide">
-                FIND AND MANAGE INFLUENCERS
-              </span>
-            </div>
-            <h3 className="font-bold text-2xl text-black mb-4">
-              Find and Manage Influencers
-            </h3>
-            <p className="text-gray-600 leading-relaxed">
-              Find nano, micro and macro influencers, optimize in real-time—improve ROI 30%
-            </p>
-          </div>
+          ))}
         </div>
       </div>
     </section>
