@@ -250,7 +250,7 @@ Provide honest, constructive feedback that helps the user improve their content 
     const analysisText = resSummary.summary;
     console.log('Analysis result:', resSummary);
 
-    // Parse analysis results
+    // Parse analysis results with comprehensive UI-compatible structure
     const parseAnalysis = (text) => {
       const scores = {};
       const strengths = [];
@@ -269,6 +269,9 @@ Provide honest, constructive feedback that helps the user improve their content 
       const overallMatch = text.match(/Overall Score.*?(\d+)\/100/i);
       const overallScore = overallMatch ? parseInt(overallMatch[1]) : 
         Math.round((scores.brand_alignment + scores.visual_quality + scores.content_relevance + scores.engagement_potential) / 4);
+
+      // Calculate viral score (0-10 scale) based on overall score
+      const viralScore = Math.round((overallScore / 100) * 10);
 
       // Extract strengths
       const strengthsSection = text.match(/Strengths[\s\S]*?(?=AI Suggestions|Overall|$)/i);
@@ -298,19 +301,124 @@ Provide honest, constructive feedback that helps the user improve their content 
         }
       }
 
+      // Generate verdict based on score
+      const verdict = overallScore >= 85 ? 
+        "Excellent content with high viral potential! Your video demonstrates strong alignment with your strategy and is well-optimized for engagement." :
+        overallScore >= 70 ? 
+        "Good content with solid potential. Some refinements could significantly boost performance." :
+        overallScore >= 50 ?
+        "Decent foundation but needs improvement in key areas to maximize impact." :
+        "Significant improvements needed to align with your content strategy and boost viral potential.";
+
+      // Generate critical action if score is low
+      const criticalAction = overallScore < 60 ? 
+        "Priority: Focus on improving the weakest scoring areas first. Consider revising your hook and ensuring better alignment with your target audience's preferences." : null;
+
       const recommendation = overallScore >= 85 ? 'approved' : overallScore >= 70 ? 'revision' : 'rejected';
 
+      // Create comprehensive UI-compatible structure
       return {
         overallScore,
+        viralScore,
+        verdict,
+        criticalAction,
         scores,
+        scoreBreakdown: {
+          hookPotential: Math.round(scores.engagement_potential / 5),
+          trendAlignment: Math.round(scores.content_relevance / 5), 
+          platformIntegration: Math.round(scores.visual_quality / 5),
+          retentionOptimization: Math.round((scores.engagement_potential + scores.content_relevance) / 10)
+        },
+        viralAudit: {
+          audioStrategy: { score: Math.round(scores.brand_alignment / 5) },
+          hookEffectiveness: { score: Math.round(scores.engagement_potential / 5) },
+          scrollStoppingPower: { score: Math.round(scores.visual_quality / 5) }
+        },
         strengths: strengths.length > 0 ? strengths : [
-          "Professional video quality",
-          "Clear visual presentation",
-          "Good content structure"
+          "Professional video quality and clear visual presentation",
+          "Good content structure and narrative flow", 
+          "Appropriate targeting for intended audience"
         ],
         suggestions: suggestions.length > 0 ? suggestions : [
-          "Consider optimizing for better engagement"
+          "Consider optimizing hook for better initial engagement",
+          "Enhance visual elements to improve scroll-stopping power",
+          "Align content more closely with trending topics in your niche"
         ],
+        modifications: suggestions.length > 0 ? suggestions : [
+          "Consider optimizing hook for better initial engagement",
+          "Enhance visual elements to improve scroll-stopping power", 
+          "Align content more closely with trending topics in your niche"
+        ],
+        retentionBreakdown: {
+          opening: {
+            score: Math.round(scores.engagement_potential / 5),
+            description: "How well the opening captures attention",
+            details: "Strong openings are crucial for initial engagement"
+          },
+          middle: {
+            score: Math.round(scores.content_relevance / 5), 
+            description: "Content delivery and narrative flow",
+            details: "Maintaining interest throughout the content"
+          },
+          closing: {
+            score: Math.round(scores.brand_alignment / 5),
+            description: "Conclusion and call-to-action effectiveness", 
+            details: "Strong endings drive action and sharing"
+          }
+        },
+        platformOptimization: {
+          instagram: {
+            score: Math.round(scores.visual_quality / 5),
+            description: "Optimized for Instagram's algorithm and user behavior",
+            details: "Visual quality and format alignment"
+          },
+          tiktok: {
+            score: Math.round(scores.engagement_potential / 5),
+            description: "Trendy, engaging format suitable for TikTok",
+            details: "Hook effectiveness and trend alignment" 
+          },
+          youtube: {
+            score: Math.round(scores.content_relevance / 5),
+            description: "Content depth and value for YouTube audience",
+            details: "Educational or entertaining value"
+          }
+        },
+        viralityEssentials: {
+          categories: [
+            {
+              name: "Content Strategy",
+              weight: "High",
+              criteria: [
+                {
+                  name: "Clear value proposition",
+                  passed: scores.content_relevance >= 70,
+                  advice: "Ensure your content provides clear value to viewers"
+                },
+                {
+                  name: "Target audience alignment", 
+                  passed: scores.brand_alignment >= 60,
+                  advice: "Content should resonate with your intended audience"
+                }
+              ]
+            },
+            {
+              name: "Technical Quality",
+              weight: "Medium", 
+              criteria: [
+                {
+                  name: "Visual/Audio quality",
+                  passed: scores.visual_quality >= 70,
+                  advice: "High production values improve engagement"
+                },
+                {
+                  name: "Optimal video length",
+                  passed: scores.engagement_potential >= 60,
+                  advice: "Video length should match platform best practices"
+                }
+              ]
+            }
+          ]
+        },
         recommendation,
         contentType: 'video',
         userStrategy: {
