@@ -25,18 +25,24 @@ const ValueProps = () => {
   const benefits = [
     {
       icon: Zap,
-      title: "Save 70% Time",
-      description: "Automate your entire influencer marketing workflow with AI-powered campaign management and optimization."
+      title: "Virality & Engagement",
+      description: "AI analyzes videos/audio for tweaks, breaks down niches/tasks—boost engagement 40%",
+      badge: "VIRALITY & ENGAGEMENT",
+      badgeColor: "bg-blue-100 text-blue-700 border-blue-200"
     },
     {
       icon: DollarSign,
-      title: "Cut 50% Costs",
-      description: "Reduce marketing expenses with smart budget allocation and automated processes that eliminate manual work."
+      title: "Campaign & Content Strategy Optimization",
+      description: "Build campaigns, AI chatbot for queries, real-time alerts—cut planning time 60%",
+      badge: "CAMPAIGN & CONTENT STRATEGY OPTIMIZATION",
+      badgeColor: "bg-purple-100 text-purple-700 border-purple-200"
     },
     {
       icon: TrendingUp,
-      title: "Boost ROI 30%+",
-      description: "Increase return on investment with data-driven insights and viral content optimization strategies."
+      title: "Find and Manage Influencers",
+      description: "Find nano, micro and macro influencers, optimize in real-time—improve ROI 30%",
+      badge: "FIND AND MANAGE INFLUENCERS",
+      badgeColor: "bg-green-100 text-green-700 border-green-200"
     }
   ];
 
@@ -45,7 +51,7 @@ const ValueProps = () => {
       <div className="max-w-7xl mx-auto">
         <div className={`text-center mb-16 transition-all duration-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <h2 className="font-inter font-bold text-3xl sm:text-4xl md:text-5xl text-gray-900 mb-4">
-            Why Choose XFLUENCE?
+            Why Choose Xfluence?
           </h2>
           <p className="font-inter text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
             Quantifiable results that transform your marketing
@@ -61,8 +67,8 @@ const ValueProps = () => {
               }`}
               style={{transitionDelay: `${index * 0.1}s`}}
             >
-              <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg mb-6">
-                <benefit.icon className="w-6 h-6 text-blue-600" />
+              <div className={`inline-flex items-center rounded-md px-3 py-1 text-xs font-medium mb-6 ${benefit.badgeColor}`}>
+                {benefit.badge}
               </div>
               <h3 className="font-inter font-bold text-xl text-gray-900 mb-4">
                 {benefit.title}

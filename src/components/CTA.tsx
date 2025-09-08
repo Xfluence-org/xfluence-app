@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 const CTA = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const [email, setEmail] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,39 +24,51 @@ const CTA = () => {
     return () => observer.disconnect();
   }, []);
 
-  return (
-    <section id="cta-section" className="py-20 sm:py-32 px-4 sm:px-6 bg-gradient-to-br from-blue-50 to-purple-50 relative overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute top-0 left-0 w-full h-full opacity-10">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-blue-200 rounded-full animate-float"></div>
-        <div className="absolute bottom-20 right-10 w-24 h-24 bg-purple-200 rounded-full animate-float-delayed"></div>
-        <div className="absolute top-1/2 left-1/3 w-16 h-16 bg-cyan-200 rounded-full animate-float-delayed-2"></div>
-      </div>
+  const handleStartFree = () => {
+    if (email) {
+      navigate(`/auth?mode=signup&email=${encodeURIComponent(email)}`);
+    } else {
+      navigate('/auth?mode=signup');
+    }
+  };
 
-      <div className="max-w-4xl mx-auto text-center relative z-10">
+  return (
+    <section id="cta-section" className="relative py-20 sm:py-32 px-4 sm:px-6 bg-gradient-to-br from-blue-600 to-purple-600 overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-20 left-10 w-20 h-20 bg-white/10 rounded-full animate-float"></div>
+        <div className="absolute bottom-20 right-10 w-16 h-16 bg-white/10 rounded-full animate-float" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-1/2 left-1/4 w-12 h-12 bg-white/10 rounded-full animate-float" style={{animationDelay: '4s'}}></div>
+      </div>
+      
+      <div className="relative max-w-4xl mx-auto text-center">
         <div className={`transition-all duration-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <h2 className="font-inter font-bold text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-gray-900 mb-6 sm:mb-8 px-4">
-            Ready to Transform Your Marketing?
+          <h2 className="font-inter font-bold text-3xl sm:text-4xl md:text-5xl text-white mb-6">
+            Ready to Supercharge Your Marketing?
           </h2>
-          
-          <p className="font-inter text-base sm:text-lg md:text-xl text-gray-600 mb-8 sm:mb-12 px-4 max-w-2xl mx-auto leading-relaxed">
-            Join thousands of brands and creators who are already using AI to scale their influence and drive real results.
+          <p className="font-inter text-lg sm:text-xl text-white/90 mb-10 max-w-2xl mx-auto">
+            Join the AI marketing revolution and start seeing results in days, not months
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center px-4">
-            <button 
-              onClick={() => navigate('/auth?mode=signup')}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-inter font-bold text-sm sm:text-base md:text-lg hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl w-full sm:w-auto max-w-sm sm:max-w-none"
-            >
-              Get Started Free
-            </button>
-            
-            <button 
-              onClick={() => navigate('/auth')}
-              className="border-2 border-gray-300 text-gray-700 hover:border-gray-400 hover:text-gray-900 px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-inter font-semibold text-sm sm:text-base md:text-lg transition-all duration-300 w-full sm:w-auto max-w-sm sm:max-w-none"
-            >
-              Sign In
-            </button>
+          <div className="bg-white rounded-2xl p-8 max-w-md mx-auto shadow-2xl">
+            <div className="flex flex-col space-y-4">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg font-inter text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <button 
+                onClick={handleStartFree}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg font-inter font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg"
+              >
+                Start Free
+              </button>
+              <p className="text-gray-500 text-sm">
+                No credit card required
+              </p>
+            </div>
           </div>
         </div>
       </div>
