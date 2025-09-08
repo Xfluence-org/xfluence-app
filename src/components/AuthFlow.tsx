@@ -45,7 +45,8 @@ const AuthFlow = () => {
       if (location.state?.returnTo) {
         navigate(location.state.returnTo, { replace: true });
       } else {
-        // Redirect all users to analyze content page
+        // Redirect all users to analyze-content since it works for all user types
+        // and is one of the few enabled features in Phase 1
         navigate('/analyze-content', { replace: true });
       }
     }

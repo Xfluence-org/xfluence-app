@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import BrandSidebar from '@/components/brand/BrandSidebar';
 import { useAuth } from '@/contexts/SimpleAuthContext';
-import { Bot, Send, Sparkles, User } from 'lucide-react';
+import { Bot, Send, Sparkles, User, Plus, MessageSquare, Trash2, Edit2 } from 'lucide-react';
 import { aiAssistantService } from '@/services/aiAssistant';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -16,6 +16,13 @@ interface Message {
   content: string;
   sender: 'user' | 'assistant';
   timestamp: Date;
+}
+
+interface ChatSession {
+  id: string;
+  title: string;
+  updated_at: string;
+  created_at: string;
 }
 
 const BrandAIAssistantPage = () => {
@@ -31,9 +38,18 @@ const BrandAIAssistantPage = () => {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [currentCampaignId, setCurrentCampaignId] = useState<string | undefined>();
+  const [currentSessionId, setCurrentSessionId] = useState<string | undefined>();
+  const [recentChats, setRecentChats] = useState<ChatSession[]>([]);
+  const [isLoadingChats, setIsLoadingChats] = useState(true);
+  const [editingChatId, setEditingChatId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
+  // Load recent chats on component mount
+  useEffect(() => {
+    loadRecentChats();
+  }, []);
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -45,6 +61,110 @@ const BrandAIAssistantPage = () => {
       }, 100);
     }
   }, [messages, isTyping]);
+
+  const loadRecentChats = async () => {
+    setIsLoadingChats(true);
+    try {
+      const chats = await aiAssistantService.getRecentChats();
+      setRecentChats(chats);
+    } catch (error) {
+      console.error('Error loading recent chats:', error);
+    } finally {
+      setIsLoadingChats(false);
+    }
+  };
+
+  const startNewChat = () => {
+    setCurrentSessionId(undefined);
+    setMessages([
+      {
+        id: '1',
+        content: 'Hello! I\'m your AI Marketing Assistant. I can help you with campaign strategies, influencer recommendations, content ideas, and market insights. How can I assist you today?',
+        sender: 'assistant',
+        timestamp: new Date()
+      }
+    ]);
+  };
+
+  const loadChatHistory = async (sessionId: string) => {
+    try {
+      const history = await aiAssistantService.getChatHistory(sessionId);
+      const formattedMessages: Message[] = history.map((msg, index) => ({
+        id: msg.id || index.toString(),
+        content: msg.content,
+        sender: msg.role === 'user' ? 'user' : 'assistant',
+        timestamp: new Date(msg.created_at)
+      }));
+
+      // Add welcome message if no history
+      if (formattedMessages.length === 0) {
+        formattedMessages.unshift({
+          id: '1',
+          content: 'Hello! I\'m your AI Marketing Assistant. I can help you with campaign strategies, influencer recommendations, content ideas, and market insights. How can I assist you today?',
+          sender: 'assistant',
+          timestamp: new Date()
+        });
+      }
+
+      setMessages(formattedMessages);
+      setCurrentSessionId(sessionId);
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load chat history",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const deleteChat = async (sessionId: string) => {
+    try {
+      const success = await aiAssistantService.deleteChat(sessionId);
+      if (success) {
+        setRecentChats(prev => prev.filter(chat => chat.id !== sessionId));
+        if (currentSessionId === sessionId) {
+          startNewChat();
+        }
+        toast({
+          title: "Success",
+          description: "Chat deleted successfully"
+        });
+      } else {
+        throw new Error('Failed to delete chat');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete chat",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const updateChatTitle = async (sessionId: string, newTitle: string) => {
+    try {
+      const success = await aiAssistantService.updateChatTitle(sessionId, newTitle);
+      if (success) {
+        setRecentChats(prev => prev.map(chat => 
+          chat.id === sessionId ? { ...chat, title: newTitle } : chat
+        ));
+        setEditingChatId(null);
+        toast({
+          title: "Success",
+          description: "Chat title updated"
+        });
+      } else {
+        throw new Error('Failed to update title');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update chat title",
+        variant: "destructive"
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -66,7 +186,118 @@ const BrandAIAssistantPage = () => {
     <div className="flex h-screen bg-background overflow-hidden">
       <BrandSidebar userName={profile?.name} />
       
-      <div className="flex-1 ml-64 flex flex-col h-screen overflow-hidden">
+      {/* Chat History Sidebar */}
+      <div className="w-80 ml-64 bg-card border-r border-border flex flex-col h-screen">
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-card-foreground">Recent Chats</h2>
+            <Button
+              onClick={startNewChat}
+              size="sm"
+              className="bg-brand-primary hover:bg-brand-primary/90 text-brand-primary-foreground"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              New Chat
+            </Button>
+          </div>
+        </div>
+        
+        <ScrollArea className="flex-1">
+          <div className="p-4 space-y-2">
+            {isLoadingChats ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary mx-auto"></div>
+                <p className="text-sm text-muted-foreground mt-2">Loading chats...</p>
+              </div>
+            ) : recentChats.length === 0 ? (
+              <div className="text-center py-8">
+                <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">No recent chats</p>
+                <p className="text-xs text-muted-foreground">Start a new conversation!</p>
+              </div>
+            ) : (
+              recentChats.map((chat) => (
+                <div
+                  key={chat.id}
+                  className={`group p-3 rounded-lg cursor-pointer transition-colors ${
+                    currentSessionId === chat.id
+                      ? 'bg-brand-primary/10 border border-brand-primary/20'
+                      : 'hover:bg-muted'
+                  }`}
+                  onClick={() => loadChatHistory(chat.id)}
+                >
+                  <div className="flex items-center justify-between">
+                    {editingChatId === chat.id ? (
+                      <Input
+                        value={editingTitle}
+                        onChange={(e) => setEditingTitle(e.target.value)}
+                        onBlur={() => {
+                          if (editingTitle.trim()) {
+                            updateChatTitle(chat.id, editingTitle.trim());
+                          } else {
+                            setEditingChatId(null);
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            if (editingTitle.trim()) {
+                              updateChatTitle(chat.id, editingTitle.trim());
+                            } else {
+                              setEditingChatId(null);
+                            }
+                          } else if (e.key === 'Escape') {
+                            setEditingChatId(null);
+                          }
+                        }}
+                        className="text-sm"
+                        autoFocus
+                      />
+                    ) : (
+                      <>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-card-foreground truncate">
+                            {chat.title}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(chat.updated_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingChatId(chat.id);
+                              setEditingTitle(chat.title);
+                            }}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Edit2 className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteChat(chat.id);
+                            }}
+                            className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </ScrollArea>
+      </div>
+      
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
         <div className="p-8 pb-4 flex-shrink-0">
           <div className="mb-6">
             <div className="flex items-center gap-3">
@@ -218,14 +449,28 @@ const BrandAIAssistantPage = () => {
                           [...messages.slice(1), newMessage] // Skip the initial greeting
                         );
                         
-                        // Call the AI assistant
+                        // Determine if this is a new chat (no current session)
+                        const isNewChat = !currentSessionId;
+                        
+                        // Call the AI assistant with session management
                         const response = await aiAssistantService.sendMessage(
                           conversationHistory,
-                          currentCampaignId
+                          currentSessionId,
+                          isNewChat
                         );
                         
-                        if (response.error) {
-                          throw new Error(response.error);
+                        if (response.error || !response.success) {
+                          throw new Error(response.error || 'Failed to get AI response');
+                        }
+                        
+                        // Update session ID if this was a new chat
+                        if (isNewChat && response.sessionId) {
+                          setCurrentSessionId(response.sessionId);
+                          
+                          // Generate title from first message and update recent chats
+                          const title = aiAssistantService.generateChatTitle(newMessage.content);
+                          await aiAssistantService.updateChatTitle(response.sessionId, title);
+                          await loadRecentChats(); // Refresh the chat list
                         }
                         
                         // Add AI response to messages
