@@ -11,6 +11,7 @@ import Sidebar from '@/components/dashboard/Sidebar';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+// To fix Vercel
 interface InfluencerSearchParams {
   city: string;
   category: string;
