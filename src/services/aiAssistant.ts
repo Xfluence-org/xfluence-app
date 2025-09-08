@@ -70,7 +70,7 @@ export const aiAssistantService = {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('chat_sessions')
         .select('id, title, updated_at, created_at')
         .gte('updated_at', sevenDaysAgo.toISOString())
@@ -92,7 +92,7 @@ export const aiAssistantService = {
   // Load chat history for a specific session
   async getChatHistory(sessionId: string): Promise<ChatMessage[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('chat_messages')
         .select('id, role, content, created_at')
         .eq('session_id', sessionId)
@@ -113,7 +113,7 @@ export const aiAssistantService = {
   // Delete a chat session
   async deleteChat(sessionId: string): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('chat_sessions')
         .delete()
         .eq('id', sessionId);
@@ -133,7 +133,7 @@ export const aiAssistantService = {
   // Update chat session title
   async updateChatTitle(sessionId: string, title: string): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('chat_sessions')
         .update({ title })
         .eq('id', sessionId);

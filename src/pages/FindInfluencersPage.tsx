@@ -72,7 +72,7 @@ const FindInfluencersPage = () => {
         return;
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('saved_influencer_searches')
         .select('*')
         .eq('user_id', user.id)
@@ -95,7 +95,7 @@ const FindInfluencersPage = () => {
         return;
       }
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('saved_influencer_searches')
         .insert({
           user_id: user.id,
