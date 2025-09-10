@@ -97,3 +97,13 @@ VITE_SUPABASE_ANON_KEY=your-production-anon-key
 - ✅ **Dev/Staging**: Local development only (no deployment)
 
 This keeps costs low while maintaining a proper development workflow!
+
+Quick Commands For Building
+# Start dev work
+npm run workflow:dev
+
+# Test integration  
+npm run workflow:staging
+
+# Deploy to production
+npm run workflow:deploy
