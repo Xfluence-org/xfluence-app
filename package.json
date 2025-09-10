@@ -8,7 +8,10 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "workflow:dev": "git checkout dev && git pull origin dev && npm run dev",
+    "workflow:staging": "git checkout staging && git pull origin staging && npm run dev",
+    "workflow:deploy": "echo '🚀 Deploying to production...' && git checkout main && git pull origin main && git merge staging && git push origin main"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
