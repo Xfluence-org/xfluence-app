@@ -1,0 +1,66 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, staging, dev]
+  pull_request:
+    branches: [main, staging, dev]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - run: npm ci
+      - run: npm run build
+      - run: npm test --if-present
+
+  deploy-supabase-functions:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      
+      - name: Deploy Dev Functions
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          # Rename functions with dev prefix before deploy
+          cd supabase/functions
+          for dir in */; do
+            if [[ ! "$dir" =~ -dev$ ]]; then
+              mv "$dir" "${dir%-/}-dev/"
+            fi
+          done
+          supabase functions deploy --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      
+      - name: Deploy Staging Functions
+        if: github.ref == 'refs/heads/staging'
+        run: |
+          # Rename functions with staging prefix before deploy
+          cd supabase/functions
+          for dir in */; do
+            if [[ ! "$dir" =~ -staging$ ]]; then
+              mv "$dir" "${dir%-/}-staging/"
+            fi
+          done
+          supabase functions deploy --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      
+      - name: Deploy Production Functions
+        if: github.ref == 'refs/heads/main'
+        run: |
+          supabase functions deploy --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}

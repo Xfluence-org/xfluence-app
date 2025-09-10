@@ -1,12 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.1';
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
 };
-
 // ===== Function to get index ID by name =====
 async function getIndexIdByName(indexName, apiKey) {
   try {
@@ -22,7 +20,7 @@ async function getIndexIdByName(indexName, apiKey) {
     }
     const data = await response.json();
     const indexes = data.data || [];
-    for (const idx of indexes) {
+    for (const idx of indexes){
       if ((idx.name || idx.index_name) === indexName) {
         return idx._id || idx.id;
       }
@@ -33,12 +31,11 @@ async function getIndexIdByName(indexName, apiKey) {
     return null;
   }
 }
-
 // ===== Function to monitor task status =====
 async function waitForTaskCompletion(taskId, apiKey) {
   const maxAttempts = 60; // 5 minutes max
   const sleepInterval = 5000; // 5 seconds
-  for (let i = 0; i < maxAttempts; i++) {
+  for(let i = 0; i < maxAttempts; i++){
     try {
       const response = await fetch(`https://api.twelvelabs.io/v1.3/tasks/${taskId}`, {
         headers: {
@@ -58,58 +55,42 @@ async function waitForTaskCompletion(taskId, apiKey) {
         throw new Error(`Indexing failed with status ${task.status}`);
       }
       // Wait before next check
-      await new Promise((resolve) => setTimeout(resolve, sleepInterval));
+      await new Promise((resolve)=>setTimeout(resolve, sleepInterval));
     } catch (error) {
       console.error(`Task monitoring error (attempt ${i + 1}):`, error);
       if (i === maxAttempts - 1) throw error;
-      await new Promise((resolve) => setTimeout(resolve, sleepInterval));
+      await new Promise((resolve)=>setTimeout(resolve, sleepInterval));
     }
   }
   throw new Error("Task completion timeout");
 }
-
-serve(async (req) => {
+serve(async (req)=>{
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       headers: corsHeaders
     });
   }
-
   try {
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const twelveLabs_API = Deno.env.get("TWELVE_LABS_API_KEY");
-
     if (!twelveLabs_API || !supabaseUrl || !supabaseKey) {
       throw new Error("Missing required environment variables");
     }
-
     const supabase = createClient(supabaseUrl, supabaseKey);
-
     // Verify user authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('Authorization header is required');
     }
-
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
       throw new Error('Invalid or expired token');
     }
-
     // Parse request body - now expects user-provided strategy inputs
-    const { 
-      videoUrl, 
-      contentPurpose, 
-      targetAudience, 
-      brandGuidelines, 
-      creativeApproach,
-      platformGoals,
-      fileName 
-    } = await req.json();
-
+    const { videoUrl, contentPurpose, targetAudience, brandGuidelines, creativeApproach, platformGoals, fileName } = await req.json();
     console.log('Standalone video analysis request:', {
       videoUrl,
       contentPurpose,
@@ -119,29 +100,23 @@ serve(async (req) => {
       platformGoals,
       fileName
     });
-
     // Validate required inputs
     if (!videoUrl || !contentPurpose || !targetAudience) {
       throw new Error('Missing required fields: videoUrl, contentPurpose, and targetAudience are required');
     }
-
     // Set your desired index name
     const desiredIndexName = "my-second-index";
-
     // Automatically fetch the index ID by its name
     const indexId = await getIndexIdByName(desiredIndexName, twelveLabs_API);
     if (!indexId) {
       throw new Error(`No index found with name '${desiredIndexName}'.`);
     }
-
     console.log(`Using existing index: ${desiredIndexName} (id=${indexId})`);
-
     // Upload video to the fetched index using FormData
     const formData = new FormData();
     formData.append('index_id', indexId);
     formData.append('video_url', videoUrl);
     formData.append('language', 'en');
-
     const taskResponse = await fetch("https://api.twelvelabs.io/v1.3/tasks", {
       method: "POST",
       headers: {
@@ -149,85 +124,95 @@ serve(async (req) => {
       },
       body: formData
     });
-
     if (!taskResponse.ok) {
       const errorText = await taskResponse.text();
       throw new Error(`Task creation failed: ${taskResponse.status} - ${errorText}`);
     }
-
     const task = await taskResponse.json();
     const twelveLabsTaskId = task._id;
     console.log(`Task id=${twelveLabsTaskId}, Video id=${task.video_id}`);
-
     // Monitor indexing
     console.log("Monitoring task completion...");
     const completedTask = await waitForTaskCompletion(twelveLabsTaskId, twelveLabs_API);
     if (completedTask.status !== "ready") {
       throw new Error(`Indexing failed with status ${completedTask.status}`);
     }
-
     console.log(`The unique identifier of your video is ${completedTask.video_id}.`);
-
-    // Generate analysis using user-provided strategy inputs
-    const analysisPrompt = `AI Content Analysis - Comprehensive Video Evaluation
-
-Analyze this video content against the user-defined strategy and goals:
-
-USER-PROVIDED STRATEGY:
-1. CONTENT PURPOSE: "${contentPurpose}"
-2. TARGET AUDIENCE: "${targetAudience}"
-3. BRAND GUIDELINES: "${brandGuidelines || 'Not specified'}"
-4. CREATIVE APPROACH: "${creativeApproach || 'Not specified'}"
-5. PLATFORM GOALS: "${platformGoals || 'General engagement'}"
-
-Provide a detailed analysis following EXACTLY this format:
-
-Brand Alignment [X]% 
-- Assess how well the video aligns with the stated brand guidelines and creative approach
-- Rate based on consistency with user's brand vision
-
-Visual Quality [X]%
-- Evaluate technical execution (resolution, stability, lighting)
-- Assess professional production standards
-- Consider platform optimization
-
-Content Relevance [X]%
-- Measure alignment with stated content purpose
-- Evaluate target audience appropriateness
-- Assess message clarity and effectiveness
-
-Engagement Potential [X]%
-- Predict performance based on platform goals
-- Evaluate hook effectiveness and retention factors
-- Assess call-to-action clarity (if applicable)
-
-Strengths
-- [Strength 1] - [Specific example and why it works for the target audience]
-- [Strength 2] - [Specific example and alignment with content purpose]
-- [Strength 3] - [Specific example and technical/creative merit]
-
-AI Suggestions
-- [Suggestion 1] - [Specific improvement with expected impact]
-- [Suggestion 2] - [Strategic adjustment based on user's goals]
-- [Suggestion 3] - [Technical or creative enhancement]
-
-Overall Score: [X]/100
-
-Scoring Breakdown:
-- Brand Alignment: [X]/25 points
-- Visual Quality: [X]/25 points  
-- Content Relevance: [X]/25 points
-- Engagement Potential: [X]/25 points
-
-Key Insights:
-- How well does this video serve the stated content purpose?
-- Is the target audience likely to engage with this content?
-- What specific improvements would maximize impact for the user's goals?
-
-Provide honest, constructive feedback that helps the user improve their content strategy.`;
-
-    console.log('Analysis Prompt:', analysisPrompt);
-
+    // Generate viral analysis using user-provided strategy inputs
+    const viralAnalysisPrompt =  `
+    ROLE: You are an expert AI Viral Strategist for Instagram Reels. Your sole purpose is to analyze a video and provide a hyper-specific, tactical JSON report on modifications for maximum virality. Ignore all generic advice. Your output must be nothing but a valid JSON object.
+    
+    USER CONTEXT:
+    - Content Purpose: "${contentPurpose}"
+    - Brand Guidelines: "${brandGuidelines || 'Not specified'}"
+    - Platform Goal: VIRAL GROWTH ON INSTAGRAM
+    
+    TASK: Analyze the provided video frame-by-frame and second-by-second. Your analysis must be formatted as a JSON object that matches the following TypeScript interface exactly. Return ONLY the raw JSON.
+    
+    interface ViralAnalysis {
+      viralAudit: {
+        hookEffectiveness: { score: number; description: string; details: string };
+        scrollStoppingPower: { score: number; description: string; details: string };
+        audioStrategy: { score: number; description: string; details: string };
+      };
+      retentionBreakdown: {
+        pacing: { score: number; description: string; details: string };
+        valueProposition: { score: number; description: string; details: string };
+        midVideoHook: { score: number; description: string; details: string };
+      };
+      platformOptimization: {
+        format: { score: number; description: string; details: string };
+        onScreenText: { score: number; description: string; details: string };
+        callToAction: { score: number; description: string; details: string };
+      };
+      strengths: Array<{ title: string; description: string; impact: string }>;
+      modifications: Array<{ title: string; description: string; priority: "high" | "medium" | "low"; expectedImpact: string }>;
+      viralScore: number;
+      scoreBreakdown: { hookPotential: number; retentionOptimization: number; platformIntegration: number; trendAlignment: number };
+      verdict: string;
+      criticalAction: string;
+      targetAudienceProfile: {
+        inferredDemographics: { ageRange: string; genderLeaning: string; interests: string[] };
+        contentPreferences: { style: string; pacing: string; tone: string };
+        observedEngagementTriggers: string[];
+        potentialAudienceConflicts: string[];
+      };
+      viralityEssentials: {
+        overallScore: number;
+        issues: number;
+        categories: Array<{
+          name: string;
+          weight: number;
+          criteria: Array<{
+            name: string;
+            passed: boolean;
+            advice: string;
+          }>;
+        }>;
+      };
+    }
+    
+    ANALYSIS INSTRUCTIONS:
+    1. DYNAMIC SCORING: Generate all scores based on your analysis of the provided video. Do not use hard-coded example numbers.
+    2. SPECIFIC FEEDBACK: For every field, provide specific, actionable feedback based on what you observe in the video.
+    3. TARGET AUDIENCE PROFILE: Based on the video's content, style, and messaging, infer who the actual target audience appears to be. Describe their demographics, content preferences, and what triggers their engagement.
+    4. TRENDING REFERENCES: Suggest specific trending audio tracks, visual effects, and editing styles currently popular on Instagram Reels.
+    5. CRITICAL ACTION: Identify the single most important change that would maximize viral potential.
+    6. VIRALITY ESSENTIALS: Evaluate the video against the core pillars of virality. Calculate an overall score and count the number of failed criteria. Only include criteria that can be assessed from the video content itself.
+    
+    CORE ANALYSIS FRAMEWORK:
+    - **Hook (0-3s):** Analyze the opening seconds for scroll-stopping potential. Suggest a stronger hook formula if needed.
+    - **Audio:** Evaluate the audio track. Recommend a specific trending sound if the current one is not optimal.
+    - **Pacing:** Analyze shot duration and editing rhythm. Recommend specific pacing improvements.
+    - **Visuals:** Assess video quality, lighting, and composition.
+    - **On-Screen Text:** Determine if key messages are clear for sound-off viewers. Suggest specific text to add.
+    - **CTA:** Evaluate the call-to-action. Provide a stronger, conflict-driven alternative.
+    - **Platform Optimization:** Check for correct format (9:16 vertical) and safe zone compliance.
+    - **Audience Alignment:** Analyze who the video content would actually appeal to versus the stated target audience.
+    
+    Output nothing but the JSON object.
+    `;
+    console.log('Viral Analysis Prompt:', viralAnalysisPrompt);
     const summaryResponse = await fetch("https://api.twelvelabs.io/v1.3/summarize", {
       method: "POST",
       headers: {
@@ -237,223 +222,144 @@ Provide honest, constructive feedback that helps the user improve their content 
       body: JSON.stringify({
         video_id: completedTask.video_id,
         type: "summary",
-        prompt: analysisPrompt
+        prompt: viralAnalysisPrompt
       })
     });
-
     if (!summaryResponse.ok) {
       const errorText = await summaryResponse.text();
       throw new Error(`Summary generation failed: ${summaryResponse.status} - ${errorText}`);
     }
-
     const resSummary = await summaryResponse.json();
     const analysisText = resSummary.summary;
     console.log('Analysis result:', resSummary);
-
-    // Parse analysis results with comprehensive UI-compatible structure
-    const parseAnalysis = (text) => {
-      const scores = {};
-      const strengths = [];
-      const suggestions = [];
-
-      const brandMatch = text.match(/Brand Alignment\s*\[?(\d+)\]?%/i);
-      const visualMatch = text.match(/Visual Quality\s*\[?(\d+)\]?%/i);
-      const relevanceMatch = text.match(/Content Relevance\s*\[?(\d+)\]?%/i);
-      const engagementMatch = text.match(/Engagement Potential\s*\[?(\d+)\]?%/i);
-
-      scores.brand_alignment = brandMatch ? parseInt(brandMatch[1]) : 0;
-      scores.visual_quality = visualMatch ? parseInt(visualMatch[1]) : 0;
-      scores.content_relevance = relevanceMatch ? parseInt(relevanceMatch[1]) : 0;
-      scores.engagement_potential = engagementMatch ? parseInt(engagementMatch[1]) : 0;
-
-      const overallMatch = text.match(/Overall Score.*?(\d+)\/100/i);
-      const overallScore = overallMatch ? parseInt(overallMatch[1]) : 
-        Math.round((scores.brand_alignment + scores.visual_quality + scores.content_relevance + scores.engagement_potential) / 4);
-
-      // Calculate viral score (0-10 scale) based on overall score
-      const viralScore = Math.round((overallScore / 100) * 10);
-
-      // Extract strengths
-      const strengthsSection = text.match(/Strengths[\s\S]*?(?=AI Suggestions|Overall|$)/i);
-      if (strengthsSection) {
-        const matches = strengthsSection[0].match(/[-•]\s*([^\n]+)/g);
-        if (matches) {
-          matches.forEach((match) => {
-            const strength = match.replace(/^[-•]\s*/, '').trim();
-            if (strength && !strength.toLowerCase().includes('strengths')) {
-              strengths.push(strength);
-            }
-          });
+    // Parse viral analysis results from JSON response
+    const parseViralAnalysis = (jsonText) => {
+      try {
+        // Clean the response text to extract JSON
+        const cleanedText = jsonText.trim();
+        
+        // Try to find JSON object in the response
+        const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          throw new Error('No JSON object found in response');
         }
-      }
-
-      // Extract suggestions
-      const suggestionsSection = text.match(/AI Suggestions[\s\S]*?(?=Overall|Key Insights|$)/i);
-      if (suggestionsSection) {
-        const matches = suggestionsSection[0].match(/[-•]\s*([^\n]+)/g);
-        if (matches) {
-          matches.forEach((match) => {
-            const suggestion = match.replace(/^[-•]\s*/, '').trim();
-            if (suggestion && !suggestion.toLowerCase().includes('suggestions')) {
-              suggestions.push(suggestion);
-            }
-          });
-        }
-      }
-
-      // Generate verdict based on score
-      const verdict = overallScore >= 85 ? 
-        "Excellent content with high viral potential! Your video demonstrates strong alignment with your strategy and is well-optimized for engagement." :
-        overallScore >= 70 ? 
-        "Good content with solid potential. Some refinements could significantly boost performance." :
-        overallScore >= 50 ?
-        "Decent foundation but needs improvement in key areas to maximize impact." :
-        "Significant improvements needed to align with your content strategy and boost viral potential.";
-
-      // Generate critical action if score is low
-      const criticalAction = overallScore < 60 ? 
-        "Priority: Focus on improving the weakest scoring areas first. Consider revising your hook and ensuring better alignment with your target audience's preferences." : null;
-
-      const recommendation = overallScore >= 85 ? 'approved' : overallScore >= 70 ? 'revision' : 'rejected';
-
-      // Create comprehensive UI-compatible structure
-      return {
-        overallScore,
-        viralScore,
-        verdict,
-        criticalAction,
-        scores,
-        scoreBreakdown: {
-          hookPotential: Math.round(scores.engagement_potential / 5),
-          trendAlignment: Math.round(scores.content_relevance / 5), 
-          platformIntegration: Math.round(scores.visual_quality / 5),
-          retentionOptimization: Math.round((scores.engagement_potential + scores.content_relevance) / 10)
-        },
-        viralAudit: {
-          audioStrategy: { score: Math.round(scores.brand_alignment / 5) },
-          hookEffectiveness: { score: Math.round(scores.engagement_potential / 5) },
-          scrollStoppingPower: { score: Math.round(scores.visual_quality / 5) }
-        },
-        strengths: strengths.length > 0 ? strengths : [
-          "Professional video quality and clear visual presentation",
-          "Good content structure and narrative flow", 
-          "Appropriate targeting for intended audience"
-        ],
-        suggestions: suggestions.length > 0 ? suggestions : [
-          "Consider optimizing hook for better initial engagement",
-          "Enhance visual elements to improve scroll-stopping power",
-          "Align content more closely with trending topics in your niche"
-        ],
-        modifications: suggestions.length > 0 ? suggestions : [
-          "Consider optimizing hook for better initial engagement",
-          "Enhance visual elements to improve scroll-stopping power", 
-          "Align content more closely with trending topics in your niche"
-        ],
-        retentionBreakdown: {
-          opening: {
-            score: Math.round(scores.engagement_potential / 5),
-            description: "How well the opening captures attention",
-            details: "Strong openings are crucial for initial engagement"
+        
+        const viralAnalysisData = JSON.parse(jsonMatch[0]);
+        
+        // Validate and return the viral analysis structure
+        return {
+          viralAudit: viralAnalysisData.viralAudit || {
+            hookEffectiveness: { score: 0, description: "", details: "" },
+            scrollStoppingPower: { score: 0, description: "", details: "" },
+            audioStrategy: { score: 0, description: "", details: "" }
           },
-          middle: {
-            score: Math.round(scores.content_relevance / 5), 
-            description: "Content delivery and narrative flow",
-            details: "Maintaining interest throughout the content"
+          retentionBreakdown: viralAnalysisData.retentionBreakdown || {
+            pacing: { score: 0, description: "", details: "" },
+            valueProposition: { score: 0, description: "", details: "" },
+            midVideoHook: { score: 0, description: "", details: "" }
           },
-          closing: {
-            score: Math.round(scores.brand_alignment / 5),
-            description: "Conclusion and call-to-action effectiveness", 
-            details: "Strong endings drive action and sharing"
+          platformOptimization: viralAnalysisData.platformOptimization || {
+            format: { score: 0, description: "", details: "" },
+            onScreenText: { score: 0, description: "", details: "" },
+            callToAction: { score: 0, description: "", details: "" }
+          },
+          strengths: viralAnalysisData.strengths || [],
+          modifications: viralAnalysisData.modifications || [],
+          viralScore: viralAnalysisData.viralScore || 0,
+          scoreBreakdown: viralAnalysisData.scoreBreakdown || {
+            hookPotential: 0,
+            retentionOptimization: 0,
+            platformIntegration: 0,
+            trendAlignment: 0
+          },
+          verdict: viralAnalysisData.verdict || "Analysis failed",
+          criticalAction: viralAnalysisData.criticalAction || "Review video content",
+          viralityEssentials: viralAnalysisData.viralityEssentials || {
+            overallScore: 0,
+            issues: 0,
+            categories: []
+          },
+          userStrategy: {
+            contentPurpose,
+            targetAudience,
+            brandGuidelines,
+            creativeApproach,
+            platformGoals
           }
-        },
-        platformOptimization: {
-          instagram: {
-            score: Math.round(scores.visual_quality / 5),
-            description: "Optimized for Instagram's algorithm and user behavior",
-            details: "Visual quality and format alignment"
+        };
+      } catch (error) {
+        console.error('Error parsing viral analysis JSON:', error);
+        
+        // Fallback to basic structure if JSON parsing fails
+        return {
+          viralAudit: {
+            hookEffectiveness: { score: 0, description: "Analysis failed", details: "Unable to parse hook effectiveness" },
+            scrollStoppingPower: { score: 0, description: "Analysis failed", details: "Unable to parse scroll stopping power" },
+            audioStrategy: { score: 0, description: "Analysis failed", details: "Unable to parse audio strategy" }
           },
-          tiktok: {
-            score: Math.round(scores.engagement_potential / 5),
-            description: "Trendy, engaging format suitable for TikTok",
-            details: "Hook effectiveness and trend alignment" 
+          retentionBreakdown: {
+            pacing: { score: 0, description: "Analysis failed", details: "Unable to parse pacing" },
+            valueProposition: { score: 0, description: "Analysis failed", details: "Unable to parse value proposition" },
+            midVideoHook: { score: 0, description: "Analysis failed", details: "Unable to parse mid-video hook" }
           },
-          youtube: {
-            score: Math.round(scores.content_relevance / 5),
-            description: "Content depth and value for YouTube audience",
-            details: "Educational or entertaining value"
+          platformOptimization: {
+            format: { score: 0, description: "Analysis failed", details: "Unable to parse format optimization" },
+            onScreenText: { score: 0, description: "Analysis failed", details: "Unable to parse on-screen text" },
+            callToAction: { score: 0, description: "Analysis failed", details: "Unable to parse call to action" }
+          },
+          strengths: [],
+          modifications: [],
+          viralScore: 0,
+          scoreBreakdown: {
+            hookPotential: 0,
+            retentionOptimization: 0,
+            platformIntegration: 0,
+            trendAlignment: 0
+          },
+          verdict: "Analysis failed",
+          criticalAction: "Review video content",
+          viralityEssentials: {
+            overallScore: 0,
+            issues: 0,
+            categories: []
+          },
+          userStrategy: {
+            contentPurpose,
+            targetAudience,
+            brandGuidelines,
+            creativeApproach,
+            platformGoals
           }
-        },
-        viralityEssentials: {
-          categories: [
-            {
-              name: "Content Strategy",
-              weight: "High",
-              criteria: [
-                {
-                  name: "Clear value proposition",
-                  passed: scores.content_relevance >= 70,
-                  advice: "Ensure your content provides clear value to viewers"
-                },
-                {
-                  name: "Target audience alignment", 
-                  passed: scores.brand_alignment >= 60,
-                  advice: "Content should resonate with your intended audience"
-                }
-              ]
-            },
-            {
-              name: "Technical Quality",
-              weight: "Medium", 
-              criteria: [
-                {
-                  name: "Visual/Audio quality",
-                  passed: scores.visual_quality >= 70,
-                  advice: "High production values improve engagement"
-                },
-                {
-                  name: "Optimal video length",
-                  passed: scores.engagement_potential >= 60,
-                  advice: "Video length should match platform best practices"
-                }
-              ]
-            }
-          ]
-        },
-        recommendation,
-        contentType: 'video',
-        userStrategy: {
-          contentPurpose,
-          targetAudience,
-          brandGuidelines,
-          creativeApproach,
-          platformGoals
-        }
-      };
+        };
+      }
     };
-
-    const parsedAnalysis = parseAnalysis(analysisText);
-
-    // Save analysis to content_analyses table
-    const { error: saveError } = await supabase.from('content_analyses').insert({
+    const parsedViralAnalysis = parseViralAnalysis(analysisText);
+    // Save viral analysis to database
+    const { data: savedAnalysis, error: saveError } = await supabase.from('content_analyses').insert({
       user_id: user.id,
-      file_name: fileName,
-      analysis_result: parsedAnalysis,
       video_url: videoUrl,
+      file_name: fileName,
+      user_strategy: {
+        contentPurpose,
+        targetAudience,
+        brandGuidelines,
+        creativeApproach,
+        platformGoals
+      },
+      analysis_result: parsedViralAnalysis,
       twelve_labs_task_id: twelveLabsTaskId,
       twelve_labs_video_id: completedTask.video_id
-    });
-
+    }).select().single();
     if (saveError) {
       console.error('Error saving analysis:', saveError);
-      // Don't fail the request, just log the error
+    // Don't fail the request, just log the error
     }
-
     // Log interaction for analytics
     await supabase.from('llm_interactions').insert({
       user_id: user.id,
-      call_type: 'standalone_content_analysis',
+      call_type: 'viral_content_analysis',
       input_messages: JSON.stringify({
-        prompt: analysisPrompt,
+        prompt: viralAnalysisPrompt,
         video_url: videoUrl,
         user_strategy: {
           contentPurpose,
@@ -467,26 +373,24 @@ Provide honest, constructive feedback that helps the user improve their content 
       }),
       raw_output: JSON.stringify({
         raw_analysis: analysisText,
-        parsed_analysis: parsedAnalysis
+        parsed_analysis: parsedViralAnalysis
       })
     });
-
-    console.log('Standalone analysis complete');
-
+    console.log('Viral analysis complete and saved');
     return new Response(JSON.stringify({
       success: true,
       taskId: twelveLabsTaskId,
       videoId: completedTask.video_id,
       indexId: indexId,
-      analysis: parsedAnalysis,
-      rawAnalysis: analysisText
+      analysis: parsedViralAnalysis,
+      rawAnalysis: analysisText,
+      savedAnalysisId: savedAnalysis?.id
     }), {
       headers: {
         ...corsHeaders,
         "Content-Type": "application/json"
       }
     });
-
   } catch (error) {
     console.error("Error:", error.message);
     return new Response(JSON.stringify({
@@ -502,5 +406,4 @@ Provide honest, constructive feedback that helps the user improve their content 
     });
   }
 });
-
-console.log("🚀 Standalone Video Analysis Server Running...");
+console.log("🚀 Viral Video Analysis Server Running...");
