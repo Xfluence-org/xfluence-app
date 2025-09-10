@@ -61,19 +61,27 @@ git push origin staging
 
 #### Production deployment:
 ```bash
-# Merge staging to main (triggers auto-deployment)
+# Merge staging to main (triggers frontend deployment)
 git checkout main
 git pull origin main
 git merge staging
 git push origin main
 
-# 🚀 This automatically deploys to production via GitHub Actions + Vercel
+# 🚀 This automatically deploys frontend via Vercel
+# 📋 Deploy Supabase functions manually via GUI
 ```
 
-## Local Supabase Functions
+## Supabase Functions Deployment
 
-For local function development:
+**Important**: Functions are deployed manually via Supabase GUI to maintain your existing workflow.
 
+### Manual Function Deployment:
+1. **Go to Supabase Dashboard** → Your Project
+2. **Navigate to Edge Functions**
+3. **Deploy functions** using the GUI interface
+4. **Test functions** in the dashboard
+
+### Local Function Development:
 ```bash
 # Start Supabase locally (optional)
 supabase start
@@ -92,11 +100,12 @@ VITE_SUPABASE_ANON_KEY=your-production-anon-key
 
 ## CI/CD Pipeline
 
-- ✅ **All branches**: Run tests on push/PR
-- ✅ **Main only**: Deploy to production (Supabase functions + Vercel)
+- ✅ **All branches**: Run frontend tests on push/PR
+- ✅ **Main only**: Auto-deploy frontend via Vercel
 - ✅ **Dev/Staging**: Local development only (no deployment)
+- 📋 **Supabase Functions**: Manual deployment via GUI (preserves your workflow)
 
-This keeps costs low while maintaining a proper development workflow!
+This keeps costs low while maintaining your existing function deployment process!
 
 Quick Commands For Building
 # Start dev work

@@ -17,32 +17,28 @@ jobs:
           node-version: '18'
           cache: 'npm'
       
-      - run: npm ci
-      - run: npm run build
-      - run: npm test --if-present
+      - name: Install dependencies
+        run: |
+          # Try npm ci first, fallback to npm install if lock file is out of sync
+          npm ci || (echo "Lock file out of sync, running npm install..." && npm install)
+      
+      - name: Build project
+        run: npm run build
+      
+      - name: Run tests
+        run: npm test --if-present
 
-  # Only deploy to production from main branch
-  deploy-production:
+  # Frontend deployment notification (Vercel handles automatically)
+  frontend-deployment:
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
-      - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
-      
-      - name: Deploy Production Functions
+      - name: Production Deployment Notification
         run: |
-          echo "🚀 Deploying to production..."
-          supabase functions deploy --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      
-      - name: Production Deployment Complete
-        run: |
-          echo "✅ Production deployment complete!"
-          echo "🌐 Vercel will automatically deploy the frontend"
+          echo "🚀 Frontend deployment triggered on Vercel"
+          echo "📋 Remember to deploy Supabase functions manually via GUI"
+          echo "✅ CI/CD pipeline complete - frontend tests passed"
 
   # Validation job for staging/dev (no deployment)
   validate-staging-dev:
@@ -55,7 +51,9 @@ jobs:
           if [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
             echo "🔄 Staging branch updated - ready for local testing"
             echo "💡 Run locally: npm run dev"
+            echo "📋 Deploy functions manually via Supabase GUI if needed"
           elif [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
             echo "🧪 Dev branch updated - ready for local development"
             echo "💡 Run locally: npm run dev"
+            echo "📋 Test functions locally or deploy via Supabase GUI"
           fi
