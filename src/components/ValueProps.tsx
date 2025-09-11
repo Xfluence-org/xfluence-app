@@ -25,15 +25,18 @@ const ValueProps = () => {
   const benefits = [
     {
       icon: Zap,
-      title: "AI Video Content Analysis"
+      title: "AI Video Content Analysis",
+      screenshot: "/lovable-uploads/c14bfb63-379b-4cac-8cac-269a8a1b3850.png"
     },
     {
       icon: DollarSign,
-      title: "AI Marketing Assistant"
+      title: "AI Marketing Assistant",
+      screenshot: "/lovable-uploads/0cddfdaa-33de-428e-a4df-9b253a76aa6b.png"
     },
     {
       icon: TrendingUp,
-      title: "Content Strategy Intelligence"
+      title: "Content Strategy Intelligence",
+      screenshot: "/lovable-uploads/c14bfb63-379b-4cac-8cac-269a8a1b3850.png"
     }
   ];
 
@@ -49,24 +52,36 @@ const ValueProps = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="space-y-12">
           {benefits.map((benefit, index) => (
             <div 
               key={index}
-              className={`bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 min-h-[300px] flex flex-col items-center justify-center ${
+              className={`grid grid-cols-1 lg:grid-cols-2 gap-8 items-center transition-all duration-800 ${
                 isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-              }`}
-              style={{transitionDelay: `${index * 0.1}s`}}
+              } ${index % 2 === 1 ? 'lg:grid-flow-col-dense' : ''}`}
+              style={{transitionDelay: `${index * 0.2}s`}}
             >
-              <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg mb-6">
-                <benefit.icon className="w-6 h-6 text-blue-600" />
+              {/* Screenshot */}
+              <div className={`${index % 2 === 1 ? 'lg:col-start-2' : ''}`}>
+                <div className="bg-white rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <img 
+                    src={benefit.screenshot} 
+                    alt={benefit.title}
+                    className="w-full h-auto rounded-lg"
+                  />
+                </div>
               </div>
-              <h3 className="font-inter font-bold text-xl text-gray-900 text-center">
-                {benefit.title}
-              </h3>
-              {/* Space reserved for screenshots */}
-              <div className="flex-1 w-full mt-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center">
-                <span className="text-gray-400 text-sm">Screenshot placeholder</span>
+              
+              {/* Content */}
+              <div className={`${index % 2 === 1 ? 'lg:col-start-1' : ''}`}>
+                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg mb-6">
+                    <benefit.icon className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <h3 className="font-inter font-bold text-2xl text-gray-900 mb-4">
+                    {benefit.title}
+                  </h3>
+                </div>
               </div>
             </div>
           ))}
