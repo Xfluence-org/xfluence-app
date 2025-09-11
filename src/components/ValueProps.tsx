@@ -42,31 +42,49 @@ const ValueProps = () => {
 
   return (
     <section id="value-props-section" className="py-20 sm:py-32 px-4 sm:px-6 bg-gray-50">
-      <div className="max-w-4xl mx-auto text-center">
-        <div className={`transition-all duration-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <h2 className="font-inter font-bold text-3xl sm:text-4xl md:text-5xl text-gray-900 mb-6">
+      <div className="max-w-7xl mx-auto">
+        <div className={`text-center mb-16 transition-all duration-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <h2 className="font-inter font-bold text-3xl sm:text-4xl md:text-5xl text-gray-900 mb-4">
             Why Choose XFLUENCE?
           </h2>
-          <p className="font-inter text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto mb-8">
+          <p className="font-inter text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
             Simply share your goals and brand vision → Get exact edits to maximize reach!
           </p>
-          
-          <div className="bg-white rounded-2xl p-8 sm:p-12 shadow-xl hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-100 to-purple-100 rounded-xl mb-6 mx-auto">
-              <Zap className="w-8 h-8 text-blue-600" />
+        </div>
+
+        <div className="space-y-12">
+          {benefits.map((benefit, index) => (
+            <div 
+              key={index}
+              className={`grid grid-cols-1 lg:grid-cols-2 gap-8 items-center transition-all duration-800 ${
+                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              } ${index % 2 === 1 ? 'lg:grid-flow-col-dense' : ''}`}
+              style={{transitionDelay: `${index * 0.2}s`}}
+            >
+              {/* Screenshot */}
+              <div className={`${index % 2 === 1 ? 'lg:col-start-2' : ''}`}>
+                <div className="bg-white rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <img 
+                    src={benefit.screenshot} 
+                    alt={benefit.title}
+                    className="w-full h-auto rounded-lg"
+                  />
+                </div>
+              </div>
+              
+              {/* Content */}
+              <div className={`${index % 2 === 1 ? 'lg:col-start-1' : ''}`}>
+                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg mb-6">
+                    <benefit.icon className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <h3 className="font-inter font-bold text-2xl text-gray-900 mb-4">
+                    {benefit.title}
+                  </h3>
+                </div>
+              </div>
             </div>
-            <h3 className="font-inter font-bold text-2xl sm:text-3xl text-gray-900 mb-4">
-              AI-Powered Content Intelligence
-            </h3>
-            <p className="font-inter text-lg text-gray-600 mb-8">
-              Discover advanced video analysis, marketing assistance, and content strategy tools designed to maximize your reach and engagement.
-            </p>
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
-              <p className="font-inter font-semibold text-blue-800 text-lg">
-                🚀 Much more to explore when you sign up!
-              </p>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </section>
