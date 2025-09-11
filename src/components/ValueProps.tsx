@@ -32,11 +32,6 @@ const ValueProps = () => {
       icon: DollarSign,
       title: "AI Marketing Assistant",
       screenshot: "/lovable-uploads/0cddfdaa-33de-428e-a4df-9b253a76aa6b.png"
-    },
-    {
-      icon: TrendingUp,
-      title: "Content Strategy Intelligence",
-      screenshot: "/lovable-uploads/c14bfb63-379b-4cac-8cac-269a8a1b3850.png"
     }
   ];
 
