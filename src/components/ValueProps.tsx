@@ -25,18 +25,18 @@ const ValueProps = () => {
   const benefits = [
     {
       icon: Zap,
-      title: "Viral Analysis",
-      description: "Decodes reels for viral strategies in minutes."
+      title: "AI Video Content Analysis",
+      description: "Upload your content and get AI-powered insights with personalized strategy analysis in 2-5 minutes."
     },
     {
       icon: DollarSign,
-      title: "Smart Optimization",
-      description: "Automates approvals, boosts ROI 30%+."
+      title: "AI Marketing Assistant",
+      description: "Your intelligent partner for campaign strategies, influencer recommendations, and market insights."
     },
     {
       icon: TrendingUp,
-      title: "Trend Insights",
-      description: "Unlocks niche trends for your brand."
+      title: "Content Strategy Intelligence",
+      description: "Define your content purpose, target audience, and brand guidelines for tailored recommendations."
     }
   ];
 
