@@ -25,18 +25,18 @@ const ValueProps = () => {
   const benefits = [
     {
       icon: Zap,
-      title: "Save 70% Time",
-      description: "Automate your entire influencer marketing workflow with AI-powered campaign management and optimization."
+      title: "Viral Analysis",
+      description: "Decodes reels for viral strategies in minutes."
     },
     {
       icon: DollarSign,
-      title: "Cut 50% Costs",
-      description: "Reduce marketing expenses with smart budget allocation and automated processes that eliminate manual work."
+      title: "Smart Optimization",
+      description: "Automates approvals, boosts ROI 30%+."
     },
     {
       icon: TrendingUp,
-      title: "Boost ROI 30%+",
-      description: "Increase return on investment with data-driven insights and viral content optimization strategies."
+      title: "Trend Insights",
+      description: "Unlocks niche trends for your brand."
     }
   ];
 

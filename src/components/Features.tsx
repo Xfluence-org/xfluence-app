@@ -25,39 +25,27 @@ const Features = () => {
   const features = [
     {
       icon: Search,
-      title: "AI-Powered Influencer Discovery",
+      title: "Analyzes reels for viral campaigns",
       emoji: "🔍",
-      description: "Find the perfect influencers across all platforms with advanced AI matching algorithms."
+      description: "AI decodes what makes content viral and applies insights to your campaigns."
     },
     {
       icon: Target,
-      title: "Viral Content Analysis",
+      title: "Optimizes with real-time alerts",
       emoji: "🎯",
-      description: "Analyze content performance and get AI-powered recommendations for viral growth."
+      description: "Smart optimization that adapts and alerts you to maximize performance."
     },
     {
       icon: Bot,
-      title: "Automated Campaign Management",
+      title: "Generates trend-based strategies",
       emoji: "🤖",
-      description: "Streamline your entire campaign workflow with intelligent automation tools."
+      description: "Creates viral strategies based on current trends and niche insights."
     },
     {
       icon: BarChart3,
-      title: "Real-time Performance Tracking",
+      title: "Automates approvals & tracking",
       emoji: "📊",
-      description: "Monitor campaign performance with comprehensive analytics and real-time insights."
-    },
-    {
-      icon: Lightbulb,
-      title: "Smart Budget Optimization",
-      emoji: "💡",
-      description: "Optimize your marketing spend with AI-driven budget allocation strategies."
-    },
-    {
-      icon: MessageCircle,
-      title: "Agentic Chatbot Assistant",
-      emoji: "💬",
-      description: "Get instant answers and strategic guidance from your AI marketing assistant."
+      description: "Streamlines the entire workflow from approval to performance tracking."
     }
   ];
 
@@ -73,7 +61,7 @@ const Features = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {features.map((feature, index) => (
             <div 
               key={index}

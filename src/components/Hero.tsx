@@ -41,15 +41,15 @@ const Hero = () => {
       <div className="max-w-6xl mx-auto text-center w-full">
         {/* Main Title */}
         <h1 className="font-inter font-bold text-2xl xs:text-3xl sm:text-4xl md:text-6xl lg:text-7xl text-gray-900 leading-tight mb-4 sm:mb-6 animate-fade-in-up px-2" style={{animationDelay: '0.1s'}}>
-          <span className="block xs:inline">Unlock Viral Growth</span>{' '}
-          <span className="block xs:inline">with Your</span><br className="hidden xs:block" />
-          <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent block xs:inline">AI Marketing Agent</span>
+          <span className="block xs:inline">Build Viral Content</span>{' '}
+          <span className="block xs:inline">Campaigns in Minutes</span><br className="hidden xs:block" />
+          <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent block xs:inline">with AI Agent</span>
         </h1>
         
         {/* Subheadline */}
         <div className="mb-6 sm:mb-8 animate-fade-in-up" style={{animationDelay: '0.2s'}}>
           <p className="font-inter text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 mb-4 sm:mb-6 px-3 sm:px-2 max-w-4xl mx-auto leading-relaxed">
-            Finds Influencers. Analyzes Reels for Viral Tweaks. Creates & Optimizes Campaigns — with an agentic chatbot—save <span className="font-semibold text-blue-600">70% time, 50% cost</span> and boost <span className="font-semibold text-green-600">ROI by 30%+</span>.
+            AI analyzes reels, crafts viral strategies. Save <span className="font-semibold text-blue-600">50-70% time</span>, boost <span className="font-semibold text-green-600">ROI 30%+</span>.
           </p>
         </div>
 
@@ -75,8 +75,8 @@ const Hero = () => {
             onClick={() => navigate('/auth?mode=signup')}
             className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 xs:px-6 sm:px-8 py-3 xs:py-4 rounded-xl xs:rounded-2xl font-inter font-bold text-sm xs:text-base sm:text-lg hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl w-full xs:w-auto max-w-sm xs:max-w-none mx-auto block xs:inline-block"
           >
-            <span className="block xs:hidden">Get Started Free</span>
-            <span className="hidden xs:block">Get Started Free - No Credit Card Required</span>
+            <span className="block xs:hidden">Start Free Trial</span>
+            <span className="hidden xs:block">Start Free Trial - No Credit Card Required</span>
           </button>
         </div>
 

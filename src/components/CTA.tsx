@@ -35,7 +35,7 @@ const CTA = () => {
       <div className="max-w-4xl mx-auto text-center relative z-10">
         <div className={`transition-all duration-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <h2 className="font-inter font-bold text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-gray-900 mb-6 sm:mb-8 px-4">
-            Ready to Transform Your Marketing?
+            Launch Viral Campaigns Today
           </h2>
           
           <p className="font-inter text-base sm:text-lg md:text-xl text-gray-600 mb-8 sm:mb-12 px-4 max-w-2xl mx-auto leading-relaxed">
@@ -47,7 +47,7 @@ const CTA = () => {
               onClick={() => navigate('/auth?mode=signup')}
               className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-inter font-bold text-sm sm:text-base md:text-lg hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl w-full sm:w-auto max-w-sm sm:max-w-none"
             >
-              Get Started Free
+              Sign Up Free
             </button>
             
             <button 
