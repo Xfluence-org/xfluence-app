@@ -48,7 +48,7 @@ const ValueProps = () => {
             Why Choose XFLUENCE?
           </h2>
           <p className="font-inter text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
-            Quantifiable results that transform your marketing
+            Simply share your goals and brand vision → Get exact edits to maximize reach!
           </p>
         </div>
 
