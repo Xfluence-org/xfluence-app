@@ -216,158 +216,244 @@ const AnalyzeContentPage = () => {
             </p>
           </div>
 
-          {/* Hero Section */}
-          <Card className="mb-8 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0">
-            <CardContent className="p-8">
+          {/* Content Analysis Form */}
+          <Card className="mb-8">
+            <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
               <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold mb-2">AI Video Content Analysis</h2>
-                  <p className="text-purple-100 mb-6">
+                <div>
+                  <CardTitle className="text-2xl mb-2">AI Video Content Analysis</CardTitle>
+                  <p className="text-purple-100">
                     Get AI-powered insights on your video content with personalized strategy analysis
                   </p>
-                  
-                  {/* Video Upload */}
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-purple-100 mb-2">
-                      Upload Video
-                    </label>
+                </div>
+                <Video className="w-16 h-16 text-purple-200" />
+              </div>
+            </CardHeader>
+            <CardContent className="p-6">
+              {/* Progress Indicator */}
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-sm font-medium text-gray-700">Analysis Setup Progress</span>
+                  <span className="text-sm text-gray-500">
+                    {(selectedFile ? 1 : 0) + (contentPurpose && targetAudience ? 1 : 0)}/2 steps completed
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
+                    style={{ 
+                      width: `${((selectedFile ? 1 : 0) + (contentPurpose && targetAudience ? 1 : 0)) * 50}%` 
+                    }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Step 1: Video Upload */}
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <span className="bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">1</span>
+                  Upload Your Video
+                </h3>
+                
+                {!selectedFile ? (
+                  <div className="border-2 border-dashed border-purple-200 rounded-lg p-6 hover:border-purple-300 transition-colors">
+                    <div className="text-center">
+                      <Upload className="w-12 h-12 text-purple-400 mx-auto mb-4" />
+                      <Input
+                        type="file"
+                        onChange={handleFileSelect}
+                        accept="video/*"
+                        className="max-w-md mx-auto file:bg-purple-100 file:text-purple-600 file:border-0 file:rounded-md file:px-3 file:py-1"
+                      />
+                      <p className="text-sm text-gray-500 mt-2">
+                        Supported formats: MP4, MOV, AVI, WMV (Max 100MB)
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="border-2 border-green-200 bg-green-50 rounded-lg p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="bg-green-100 p-3 rounded-lg">
+                          <Video className="w-8 h-8 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">{selectedFile.name}</p>
+                          <p className="text-sm text-gray-500">
+                            {selectedFile.type} • {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                            <span className="text-sm text-green-600">Video uploaded successfully</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => document.querySelector<HTMLInputElement>('input[type="file"]')?.click()}>
+                          Change
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={resetUpload}>
+                          Remove
+                        </Button>
+                      </div>
+                    </div>
+                    {/* Hidden file input for changing file */}
                     <Input
                       type="file"
                       onChange={handleFileSelect}
                       accept="video/*"
-                      className="bg-white text-purple-600 file:bg-purple-100 file:text-purple-600 file:border-0 file:rounded-md file:px-3 file:py-1"
+                      className="hidden"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Step 2: Strategy Information */}
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <span className={`rounded-full w-6 h-6 flex items-center justify-center text-sm ${
+                    contentPurpose && targetAudience ? 'bg-green-500 text-white' : 'bg-purple-500 text-white'
+                  }`}>
+                    {contentPurpose && targetAudience ? '✓' : '2'}
+                  </span>
+                  Content Strategy Information
+                  {contentPurpose && targetAudience && (
+                    <Badge variant="outline" className="ml-2 text-green-600 border-green-200">
+                      Complete
+                    </Badge>
+                  )}
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Provide details about your content strategy for personalized AI analysis and recommendations.
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Content Purpose <span className="text-red-500">*</span>
+                    </label>
+                    <Textarea
+                      value={contentPurpose}
+                      onChange={(e) => setContentPurpose(e.target.value)}
+                      placeholder="e.g., Promote new product launch, increase brand awareness, drive website traffic..."
+                      className="min-h-[80px]"
                     />
                   </div>
 
-                  {/* Analyze Button */}
-                  {selectedFile && contentPurpose && targetAudience && (
-                    <Button 
-                      onClick={handleAnalyze}
-                      disabled={isAnalyzing}
-                      className="bg-purple-700 hover:bg-purple-800 text-white"
-                    >
-                      {isAnalyzing ? 'Analyzing...' : 'Analyze Video'}
-                    </Button>
-                  )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Target Audience <span className="text-red-500">*</span>
+                    </label>
+                    <Textarea
+                      value={targetAudience}
+                      onChange={(e) => setTargetAudience(e.target.value)}
+                      placeholder="e.g., Young professionals aged 25-35, fitness enthusiasts, tech-savvy millennials..."
+                      className="min-h-[80px]"
+                    />
+                  </div>
 
-                  {/* Requirements Notice */}
-                  <div className="mt-4 p-3 bg-purple-600/30 rounded-lg">
-                    <div className="flex items-start gap-2">
-                      <AlertCircle className="w-4 h-4 text-purple-200 mt-0.5" />
-                      <div className="text-sm text-purple-100">
-                        <p className="font-medium">Requirements:</p>
-                        <ul className="list-disc list-inside mt-1 space-y-1">
-                          <li>Video files only (MP4, MOV, AVI, etc.)</li>
-                          <li>Provide content purpose and target audience (required)</li>
-                          <li>Analysis takes 2-5 minutes depending on video length</li>
-                        </ul>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Brand Guidelines
+                    </label>
+                    <Textarea
+                      value={brandGuidelines}
+                      onChange={(e) => setBrandGuidelines(e.target.value)}
+                      placeholder="e.g., Professional tone, vibrant colors, modern aesthetic, family-friendly content..."
+                      className="min-h-[80px]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Creative Approach
+                    </label>
+                    <Textarea
+                      value={creativeApproach}
+                      onChange={(e) => setCreativeApproach(e.target.value)}
+                      placeholder="e.g., Storytelling format, behind-the-scenes, tutorial style, user-generated content..."
+                      className="min-h-[80px]"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Platform Goals
+                    </label>
+                    <Textarea
+                      value={platformGoals}
+                      onChange={(e) => setPlatformGoals(e.target.value)}
+                      placeholder="e.g., Increase engagement rate, drive conversions, build community, generate leads..."
+                      className="min-h-[60px]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 3: Analysis Action */}
+              <div className="border-t pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                      <span className="bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">3</span>
+                      Start Analysis
+                    </h3>
+                    <div className="flex items-center gap-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-3 h-3 rounded-full ${selectedFile ? 'bg-green-500' : 'bg-gray-300'}`} />
+                        <span className={selectedFile ? 'text-green-600' : 'text-gray-500'}>
+                          Video uploaded
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-3 h-3 rounded-full ${contentPurpose && targetAudience ? 'bg-green-500' : 'bg-gray-300'}`} />
+                        <span className={contentPurpose && targetAudience ? 'text-green-600' : 'text-gray-500'}>
+                          Required fields completed
+                        </span>
                       </div>
                     </div>
                   </div>
-                </div>
-                <Video className="w-24 h-24 text-purple-200" />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Strategy Input Form */}
-          <Card className="mb-8">
-            <CardContent className="p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Content Strategy Information</h3>
-              <p className="text-gray-600 mb-6">
-                Provide details about your content strategy so our AI can give you personalized analysis and recommendations.
-              </p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Content Purpose <span className="text-red-500">*</span>
-                  </label>
-                  <Textarea
-                    value={contentPurpose}
-                    onChange={(e) => setContentPurpose(e.target.value)}
-                    placeholder="e.g., Promote new product launch, increase brand awareness, drive website traffic..."
-                    className="min-h-[80px]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Target Audience <span className="text-red-500">*</span>
-                  </label>
-                  <Textarea
-                    value={targetAudience}
-                    onChange={(e) => setTargetAudience(e.target.value)}
-                    placeholder="e.g., Young professionals aged 25-35, fitness enthusiasts, tech-savvy millennials..."
-                    className="min-h-[80px]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Brand Guidelines
-                  </label>
-                  <Textarea
-                    value={brandGuidelines}
-                    onChange={(e) => setBrandGuidelines(e.target.value)}
-                    placeholder="e.g., Professional tone, vibrant colors, modern aesthetic, family-friendly content..."
-                    className="min-h-[80px]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Creative Approach
-                  </label>
-                  <Textarea
-                    value={creativeApproach}
-                    onChange={(e) => setCreativeApproach(e.target.value)}
-                    placeholder="e.g., Storytelling format, behind-the-scenes, tutorial style, user-generated content..."
-                    className="min-h-[80px]"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Platform Goals
-                  </label>
-                  <Textarea
-                    value={platformGoals}
-                    onChange={(e) => setPlatformGoals(e.target.value)}
-                    placeholder="e.g., Increase engagement rate, drive conversions, build community, generate leads..."
-                    className="min-h-[60px]"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Selected File Preview */}
-          {selectedFile && (
-            <Card className="mb-8 border-purple-200">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Video className="w-8 h-8 text-purple-600" />
-                    <div>
-                      <p className="font-medium text-gray-900">{selectedFile.name}</p>
-                      <p className="text-sm text-gray-500">
-                        {selectedFile.type} • {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                      </p>
-                      {contentPurpose && targetAudience && (
-                        <p className="text-sm text-green-600 mt-1">
-                          ✓ Ready for AI analysis
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <Button variant="outline" onClick={resetUpload}>
-                    Remove
+                  
+                  <Button 
+                    onClick={handleAnalyze}
+                    disabled={isAnalyzing || !selectedFile || !contentPurpose || !targetAudience}
+                    size="lg"
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-3"
+                  >
+                    {isAnalyzing ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <BarChart3 className="w-4 h-4 mr-2" />
+                        Analyze Video
+                      </>
+                    )}
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+
+                {/* Requirements Notice */}
+                <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-purple-500 mt-0.5" />
+                    <div className="text-sm text-purple-700">
+                      <p className="font-medium mb-2">Analysis Requirements:</p>
+                      <ul className="list-disc list-inside space-y-1">
+                        <li>Video files only (MP4, MOV, AVI, etc.)</li>
+                        <li>Content purpose and target audience are required</li>
+                        <li>Analysis takes 2-5 minutes depending on video length</li>
+                        <li>Ensure stable internet connection during analysis</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Selected File Preview - Now integrated above */}
 
           {/* Analysis Results */}
           {analysis && (
