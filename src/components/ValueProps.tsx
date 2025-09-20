@@ -25,18 +25,13 @@ const ValueProps = () => {
   const benefits = [
     {
       icon: Zap,
-      title: "Save 70% Time",
-      description: "Automate your entire influencer marketing workflow with AI-powered campaign management and optimization."
+      title: "AI Video Content Analysis",
+      screenshot: "/lovable-uploads/c14bfb63-379b-4cac-8cac-269a8a1b3850.png"
     },
     {
       icon: DollarSign,
-      title: "Cut 50% Costs",
-      description: "Reduce marketing expenses with smart budget allocation and automated processes that eliminate manual work."
-    },
-    {
-      icon: TrendingUp,
-      title: "Boost ROI 30%+",
-      description: "Increase return on investment with data-driven insights and viral content optimization strategies."
+      title: "AI Marketing Assistant",
+      screenshot: "/lovable-uploads/0cddfdaa-33de-428e-a4df-9b253a76aa6b.png"
     }
   ];
 
@@ -48,28 +43,41 @@ const ValueProps = () => {
             Why Choose XFLUENCE?
           </h2>
           <p className="font-inter text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
-            Quantifiable results that transform your marketing
+            Simply share your goals and brand vision → Get exact edits to maximize reach!
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="space-y-12">
           {benefits.map((benefit, index) => (
             <div 
               key={index}
-              className={`bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 ${
+              className={`grid grid-cols-1 lg:grid-cols-2 gap-8 items-center transition-all duration-800 ${
                 isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-              }`}
-              style={{transitionDelay: `${index * 0.1}s`}}
+              } ${index % 2 === 1 ? 'lg:grid-flow-col-dense' : ''}`}
+              style={{transitionDelay: `${index * 0.2}s`}}
             >
-              <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg mb-6">
-                <benefit.icon className="w-6 h-6 text-blue-600" />
+              {/* Screenshot */}
+              <div className={`${index % 2 === 1 ? 'lg:col-start-2' : ''}`}>
+                <div className="bg-white rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <img 
+                    src={benefit.screenshot} 
+                    alt={benefit.title}
+                    className="w-full h-auto rounded-lg"
+                  />
+                </div>
               </div>
-              <h3 className="font-inter font-bold text-xl text-gray-900 mb-4">
-                {benefit.title}
-              </h3>
-              <p className="font-inter text-gray-600 leading-relaxed">
-                {benefit.description}
-              </p>
+              
+              {/* Content */}
+              <div className={`${index % 2 === 1 ? 'lg:col-start-1' : ''}`}>
+                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg mb-6">
+                    <benefit.icon className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <h3 className="font-inter font-bold text-2xl text-gray-900 mb-4">
+                    {benefit.title}
+                  </h3>
+                </div>
+              </div>
             </div>
           ))}
         </div>
