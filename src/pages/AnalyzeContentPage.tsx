@@ -229,30 +229,65 @@ const AnalyzeContentPage = () => {
                 <Video className="w-16 h-16 text-purple-200" />
               </div>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent className={`p-6 relative ${isAnalyzing ? 'pointer-events-none' : ''}`}>
+              {/* Loading Overlay */}
+              {isAnalyzing && (
+                <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 rounded-lg flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent mx-auto mb-4"></div>
+                    <h3 className="text-lg font-semibold text-purple-600 mb-2">Analyzing Your Video</h3>
+                    <p className="text-sm text-gray-600 max-w-md">
+                      Our AI is processing your video content and strategy. This may take 2-5 minutes depending on video length.
+                    </p>
+                    <div className="mt-4 flex items-center justify-center gap-2">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Progress Indicator */}
-              <div className="mb-8">
+              <div className={`mb-8 transition-all duration-300 ${isAnalyzing ? 'opacity-50' : ''}`}>
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm font-medium text-gray-700">Analysis Setup Progress</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    {isAnalyzing ? 'Analysis in Progress...' : 'Analysis Setup Progress'}
+                  </span>
                   <span className="text-sm text-gray-500">
-                    {(selectedFile ? 1 : 0) + (contentPurpose && targetAudience ? 1 : 0)}/2 steps completed
+                    {isAnalyzing ? 'Processing...' : `${(selectedFile ? 1 : 0) + (contentPurpose && targetAudience ? 1 : 0)}/2 steps completed`}
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      isAnalyzing 
+                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 animate-pulse w-full' 
+                        : 'bg-gradient-to-r from-purple-500 to-pink-500'
+                    }`}
                     style={{ 
-                      width: `${((selectedFile ? 1 : 0) + (contentPurpose && targetAudience ? 1 : 0)) * 50}%` 
+                      width: isAnalyzing ? '100%' : `${((selectedFile ? 1 : 0) + (contentPurpose && targetAudience ? 1 : 0)) * 50}%` 
                     }}
                   ></div>
                 </div>
               </div>
 
               {/* Step 1: Video Upload */}
-              <div className="mb-8">
+              <div className={`mb-8 transition-all duration-300 ${isAnalyzing ? 'opacity-50' : ''}`}>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">1</span>
+                  <span className={`rounded-full w-6 h-6 flex items-center justify-center text-sm transition-all duration-300 ${
+                    isAnalyzing 
+                      ? 'bg-purple-500 text-white animate-pulse' 
+                      : 'bg-purple-500 text-white'
+                  }`}>
+                    {isAnalyzing ? <div className="animate-spin rounded-full h-3 w-3 border border-white border-t-transparent"></div> : '1'}
+                  </span>
                   Upload Your Video
+                  {isAnalyzing && (
+                    <Badge variant="outline" className="ml-2 text-purple-600 border-purple-200 animate-pulse">
+                      Processing...
+                    </Badge>
+                  )}
                 </h3>
                 
                 {!selectedFile ? (
@@ -271,11 +306,23 @@ const AnalyzeContentPage = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="border-2 border-green-200 bg-green-50 rounded-lg p-6">
+                  <div className={`border-2 rounded-lg p-6 transition-all duration-300 ${
+                    isAnalyzing 
+                      ? 'border-purple-200 bg-purple-50 animate-pulse' 
+                      : 'border-green-200 bg-green-50'
+                  }`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <div className="bg-green-100 p-3 rounded-lg">
-                          <Video className="w-8 h-8 text-green-600" />
+                        <div className={`p-3 rounded-lg transition-all duration-300 ${
+                          isAnalyzing 
+                            ? 'bg-purple-100 animate-pulse' 
+                            : 'bg-green-100'
+                        }`}>
+                          <Video className={`w-8 h-8 transition-all duration-300 ${
+                            isAnalyzing 
+                              ? 'text-purple-600 animate-pulse' 
+                              : 'text-green-600'
+                          }`} />
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">{selectedFile.name}</p>
@@ -283,16 +330,35 @@ const AnalyzeContentPage = () => {
                             {selectedFile.type} • {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                           </p>
                           <div className="flex items-center gap-2 mt-1">
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                            <span className="text-sm text-green-600">Video uploaded successfully</span>
+                            {isAnalyzing ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border border-purple-500 border-t-transparent"></div>
+                                <span className="text-sm text-purple-600 animate-pulse">Analyzing video content...</span>
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                                <span className="text-sm text-green-600">Video uploaded successfully</span>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => document.querySelector<HTMLInputElement>('input[type="file"]')?.click()}>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          disabled={isAnalyzing}
+                          onClick={() => document.querySelector<HTMLInputElement>('input[type="file"]')?.click()}
+                        >
                           Change
                         </Button>
-                        <Button variant="outline" size="sm" onClick={resetUpload}>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          disabled={isAnalyzing}
+                          onClick={resetUpload}
+                        >
                           Remove
                         </Button>
                       </div>
@@ -309,15 +375,25 @@ const AnalyzeContentPage = () => {
               </div>
 
               {/* Step 2: Strategy Information */}
-              <div className="mb-8">
+              <div className={`mb-8 transition-all duration-300 ${isAnalyzing ? 'opacity-50' : ''}`}>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <span className={`rounded-full w-6 h-6 flex items-center justify-center text-sm ${
-                    contentPurpose && targetAudience ? 'bg-green-500 text-white' : 'bg-purple-500 text-white'
+                  <span className={`rounded-full w-6 h-6 flex items-center justify-center text-sm transition-all duration-300 ${
+                    isAnalyzing 
+                      ? 'bg-purple-500 text-white animate-pulse' 
+                      : contentPurpose && targetAudience 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-purple-500 text-white'
                   }`}>
-                    {contentPurpose && targetAudience ? '✓' : '2'}
+                    {isAnalyzing ? (
+                      <div className="animate-spin rounded-full h-3 w-3 border border-white border-t-transparent"></div>
+                    ) : contentPurpose && targetAudience ? '✓' : '2'}
                   </span>
                   Content Strategy Information
-                  {contentPurpose && targetAudience && (
+                  {isAnalyzing ? (
+                    <Badge variant="outline" className="ml-2 text-purple-600 border-purple-200 animate-pulse">
+                      Analyzing...
+                    </Badge>
+                  ) : contentPurpose && targetAudience && (
                     <Badge variant="outline" className="ml-2 text-green-600 border-green-200">
                       Complete
                     </Badge>
@@ -327,7 +403,7 @@ const AnalyzeContentPage = () => {
                   Provide details about your content strategy for personalized AI analysis and recommendations.
                 </p>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 transition-all duration-300 ${isAnalyzing ? 'opacity-50' : ''}`}>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Content Purpose <span className="text-red-500">*</span>
@@ -336,7 +412,8 @@ const AnalyzeContentPage = () => {
                       value={contentPurpose}
                       onChange={(e) => setContentPurpose(e.target.value)}
                       placeholder="e.g., Promote new product launch, increase brand awareness, drive website traffic..."
-                      className="min-h-[80px]"
+                      className={`min-h-[80px] transition-all duration-300 ${isAnalyzing ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                      disabled={isAnalyzing}
                     />
                   </div>
 
@@ -348,7 +425,8 @@ const AnalyzeContentPage = () => {
                       value={targetAudience}
                       onChange={(e) => setTargetAudience(e.target.value)}
                       placeholder="e.g., Young professionals aged 25-35, fitness enthusiasts, tech-savvy millennials..."
-                      className="min-h-[80px]"
+                      className={`min-h-[80px] transition-all duration-300 ${isAnalyzing ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                      disabled={isAnalyzing}
                     />
                   </div>
 
@@ -360,7 +438,8 @@ const AnalyzeContentPage = () => {
                       value={brandGuidelines}
                       onChange={(e) => setBrandGuidelines(e.target.value)}
                       placeholder="e.g., Professional tone, vibrant colors, modern aesthetic, family-friendly content..."
-                      className="min-h-[80px]"
+                      className={`min-h-[80px] transition-all duration-300 ${isAnalyzing ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                      disabled={isAnalyzing}
                     />
                   </div>
 
@@ -372,7 +451,8 @@ const AnalyzeContentPage = () => {
                       value={creativeApproach}
                       onChange={(e) => setCreativeApproach(e.target.value)}
                       placeholder="e.g., Storytelling format, behind-the-scenes, tutorial style, user-generated content..."
-                      className="min-h-[80px]"
+                      className={`min-h-[80px] transition-all duration-300 ${isAnalyzing ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                      disabled={isAnalyzing}
                     />
                   </div>
 
@@ -384,31 +464,69 @@ const AnalyzeContentPage = () => {
                       value={platformGoals}
                       onChange={(e) => setPlatformGoals(e.target.value)}
                       placeholder="e.g., Increase engagement rate, drive conversions, build community, generate leads..."
-                      className="min-h-[60px]"
+                      className={`min-h-[60px] transition-all duration-300 ${isAnalyzing ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                      disabled={isAnalyzing}
                     />
                   </div>
                 </div>
               </div>
 
               {/* Step 3: Analysis Action */}
-              <div className="border-t pt-6">
+              <div className={`border-t pt-6 transition-all duration-300 ${isAnalyzing ? 'opacity-50' : ''}`}>
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                      <span className="bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">3</span>
-                      Start Analysis
+                      <span className={`rounded-full w-6 h-6 flex items-center justify-center text-sm transition-all duration-300 ${
+                        isAnalyzing 
+                          ? 'bg-purple-500 text-white animate-pulse' 
+                          : 'bg-purple-500 text-white'
+                      }`}>
+                        {isAnalyzing ? (
+                          <div className="animate-spin rounded-full h-3 w-3 border border-white border-t-transparent"></div>
+                        ) : '3'}
+                      </span>
+                      {isAnalyzing ? 'Analysis in Progress' : 'Start Analysis'}
+                      {isAnalyzing && (
+                        <Badge variant="outline" className="ml-2 text-purple-600 border-purple-200 animate-pulse">
+                          Processing...
+                        </Badge>
+                      )}
                     </h3>
                     <div className="flex items-center gap-4 text-sm">
                       <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${selectedFile ? 'bg-green-500' : 'bg-gray-300'}`} />
-                        <span className={selectedFile ? 'text-green-600' : 'text-gray-500'}>
-                          Video uploaded
+                        <div className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                          isAnalyzing 
+                            ? 'bg-purple-500 animate-pulse' 
+                            : selectedFile 
+                              ? 'bg-green-500' 
+                              : 'bg-gray-300'
+                        }`} />
+                        <span className={`transition-all duration-300 ${
+                          isAnalyzing 
+                            ? 'text-purple-600' 
+                            : selectedFile 
+                              ? 'text-green-600' 
+                              : 'text-gray-500'
+                        }`}>
+                          {isAnalyzing ? 'Processing video...' : 'Video uploaded'}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${contentPurpose && targetAudience ? 'bg-green-500' : 'bg-gray-300'}`} />
-                        <span className={contentPurpose && targetAudience ? 'text-green-600' : 'text-gray-500'}>
-                          Required fields completed
+                        <div className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                          isAnalyzing 
+                            ? 'bg-purple-500 animate-pulse' 
+                            : contentPurpose && targetAudience 
+                              ? 'bg-green-500' 
+                              : 'bg-gray-300'
+                        }`} />
+                        <span className={`transition-all duration-300 ${
+                          isAnalyzing 
+                            ? 'text-purple-600' 
+                            : contentPurpose && targetAudience 
+                              ? 'text-green-600' 
+                              : 'text-gray-500'
+                        }`}>
+                          {isAnalyzing ? 'Analyzing strategy...' : 'Required fields completed'}
                         </span>
                       </div>
                     </div>
@@ -418,7 +536,11 @@ const AnalyzeContentPage = () => {
                     onClick={handleAnalyze}
                     disabled={isAnalyzing || !selectedFile || !contentPurpose || !targetAudience}
                     size="lg"
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-3"
+                    className={`px-8 py-3 transition-all duration-300 ${
+                      isAnalyzing 
+                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 animate-pulse cursor-not-allowed' 
+                        : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'
+                    } text-white`}
                   >
                     {isAnalyzing ? (
                       <>
@@ -434,18 +556,40 @@ const AnalyzeContentPage = () => {
                   </Button>
                 </div>
 
-                {/* Requirements Notice */}
-                <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                {/* Requirements/Status Notice */}
+                <div className={`mt-4 p-4 rounded-lg border transition-all duration-300 ${
+                  isAnalyzing 
+                    ? 'bg-purple-100 border-purple-300 animate-pulse' 
+                    : 'bg-purple-50 border-purple-200'
+                }`}>
                   <div className="flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-purple-500 mt-0.5" />
+                    {isAnalyzing ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-purple-500 border-t-transparent mt-0.5"></div>
+                    ) : (
+                      <AlertCircle className="w-5 h-5 text-purple-500 mt-0.5" />
+                    )}
                     <div className="text-sm text-purple-700">
-                      <p className="font-medium mb-2">Analysis Requirements:</p>
-                      <ul className="list-disc list-inside space-y-1">
-                        <li>Video files only (MP4, MOV, AVI, etc.)</li>
-                        <li>Content purpose and target audience are required</li>
-                        <li>Analysis takes 2-5 minutes depending on video length</li>
-                        <li>Ensure stable internet connection during analysis</li>
-                      </ul>
+                      {isAnalyzing ? (
+                        <>
+                          <p className="font-medium mb-2">Analysis in Progress:</p>
+                          <ul className="list-disc list-inside space-y-1">
+                            <li>Processing video content with AI</li>
+                            <li>Analyzing against your strategy inputs</li>
+                            <li>Generating personalized recommendations</li>
+                            <li>Please keep this tab open and maintain internet connection</li>
+                          </ul>
+                        </>
+                      ) : (
+                        <>
+                          <p className="font-medium mb-2">Analysis Requirements:</p>
+                          <ul className="list-disc list-inside space-y-1">
+                            <li>Video files only (MP4, MOV, AVI, etc.)</li>
+                            <li>Content purpose and target audience are required</li>
+                            <li>Analysis takes 2-5 minutes depending on video length</li>
+                            <li>Ensure stable internet connection during analysis</li>
+                          </ul>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
