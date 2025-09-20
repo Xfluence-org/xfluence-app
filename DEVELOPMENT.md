@@ -52,7 +52,7 @@ git checkout staging
 git pull origin staging
 git merge dev
 
-# Test locally
+# Test locallly
 npm run dev
 
 # Push staging if tests pass
