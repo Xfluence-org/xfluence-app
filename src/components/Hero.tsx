@@ -1,42 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { Mail, CheckCircle, Users, Zap, TrendingUp } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, Zap, CreditCard, Shield, MessageCircle, Users } from 'lucide-react';
 
 const Hero = () => {
   const [email, setEmail] = useState('');
+  const [selectedType, setSelectedType] = useState('Brand');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Image arrays for shuffling functionality
-  const heroImages = [
-    "/lovable-uploads/1b6b9dee-e5bf-4834-81d6-9ff6cf1ed994.png",
-    "/lovable-uploads/e921a15f-22ba-42d3-840a-9568f01d4eb6.png",
-    "/lovable-uploads/13ad78f3-7e52-42bf-80fc-e2cf8f5585c1.png",
-    "/lovable-uploads/c9acc983-77f8-4de0-b798-3e8ef038295d.png",
-    "/lovable-uploads/8429852c-3cc1-4b53-ab16-1f8196c4f701.png",
-    "/lovable-uploads/74c9bc19-9dbb-45fa-95ec-5c0755a37373.png",
-    "/lovable-uploads/84ff2ed5-b518-4c79-83d1-8eda724c6ced.png",
-    "/lovable-uploads/952f8b94-5fc0-4c36-be50-bae5f557b637.png",
-    "/lovable-uploads/85880b75-32f9-4ec0-8b40-84d1ca1b580f.png",
-    "/lovable-uploads/aabe7527-0cf1-4319-bbec-b39064ea1f80.png",
-    "/lovable-uploads/4c828b3d-c753-4782-a180-ca4938e68974.png"
-  ];
-
-  const [currentImageIndexes, setCurrentImageIndexes] = useState({
-    leftStack: 0,
-    rightStack: Math.floor(heroImages.length / 2)
-  });
-
-  // Shuffle images every 3 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentImageIndexes(prev => ({
-        leftStack: (prev.leftStack + 1) % heroImages.length,
-        rightStack: (prev.rightStack + 1) % heroImages.length
-      }));
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [heroImages.length]);
 
   const handleWaitlistSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +14,6 @@ const Hero = () => {
     setIsSubmitting(true);
     
     try {
-      // Using Formspree (free service) - replace with your Formspree endpoint
       const response = await fetch('https://formspree.io/f/xpqqjvka', {
         method: 'POST',
         headers: {
@@ -53,132 +21,228 @@ const Hero = () => {
         },
         body: JSON.stringify({
           email: email,
-          source: 'waitlist',
+          userType: selectedType,
+          source: 'hero_waitlist',
           timestamp: new Date().toISOString(),
-          userAgent: navigator.userAgent
         }),
       });
 
       if (response.ok) {
         setIsSubmitted(true);
         setEmail('');
-        // Track in localStorage for analytics
-        localStorage.setItem('waitlist_joined', 'true');
-        localStorage.setItem('waitlist_email', email);
       } else {
         throw new Error('Failed to submit');
       }
     } catch (error) {
-      // Fallback: Open email client
-      window.location.href = `mailto:hello@yourcompany.com?subject=Waitlist Signup&body=Please add me to the waitlist: ${email}`;
+      window.location.href = `mailto:xfluence@xfluence.org?subject=Waitlist Signup - ${selectedType}&body=Please add me to the waitlist: ${email}`;
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <section className="min-h-screen grid-background flex flex-col items-center justify-center px-3 sm:px-6 pt-24 sm:pt-28">
-      <div className="max-w-6xl mx-auto text-center w-full">
-        {/* Coming Soon Badge */}
-        <div className="mb-6 animate-fade-in-up" style={{animationDelay: '0.1s'}}>
-          <span className="inline-flex items-center rounded-full px-4 py-2 text-sm font-medium bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 border border-blue-200">
-            <Zap className="w-4 h-4 mr-2" />
-            Coming Soon - Join the Waitlist
-          </span>
-        </div>
-
-        {/* Main Title */}
-        <h1 className="font-inter font-bold text-2xl xs:text-3xl sm:text-4xl md:text-6xl lg:text-7xl text-gray-900 leading-tight mb-4 sm:mb-6 animate-fade-in-up px-2" style={{animationDelay: '0.2s'}}>
-          <span className="block xs:inline">Build Viral Content</span>{' '}
-          <span className="block xs:inline">Campaigns in Minutes </span>
-          <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent inline">with AI Agent</span>
-        </h1>
-        
-        {/* Subheadline */}
-        <div className="mb-8 sm:mb-10 animate-fade-in-up" style={{animationDelay: '0.3s'}}>
-          <p className="font-inter text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 mb-6 px-3 sm:px-2 max-w-4xl mx-auto leading-relaxed">
-            AI analyzes reels, crafts viral strategies. Save <span className="font-semibold text-blue-600">50-70% time</span>, boost <span className="font-semibold text-green-600">ROI 30%+</span>.
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Hero Section */}
+      <section className="pt-32 pb-20 px-4 sm:px-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="font-inter font-bold text-4xl sm:text-5xl md:text-6xl text-gray-900 mb-6">
+            The Network for<br />
+            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Creator Campaigns
+            </span>
+          </h1>
+          
+          <p className="text-lg sm:text-xl text-gray-600 mb-12 max-w-2xl mx-auto">
+            Where brands, agencies, and creators find the right partners for every campaign.
           </p>
-          <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto">
-            Be the first to access our revolutionary AI-powered content creation platform.
-          </p>
-        </div>
 
-        {/* Audience Tags */}
-        <div className="flex flex-wrap justify-center gap-1.5 xs:gap-2 sm:gap-3 mb-8 sm:mb-10 animate-fade-in-up px-3" style={{animationDelay: '0.4s'}}>
-          <span className="inline-flex items-center rounded-md px-3 py-2 text-sm font-medium ring-1 ring-inset bg-blue-50 text-blue-700 ring-blue-200">
-            <Users className="w-4 h-4 mr-1" />
-            For Brands
-          </span>
-          <span className="inline-flex items-center rounded-md px-3 py-2 text-sm font-medium ring-1 ring-inset bg-green-50 text-green-700 ring-green-200">
-            <TrendingUp className="w-4 h-4 mr-1" />
-            For Agencies
-          </span>
-          <span className="inline-flex items-center rounded-md px-3 py-2 text-sm font-medium ring-1 ring-inset bg-orange-50 text-orange-700 ring-orange-200">
-            <Zap className="w-4 h-4 mr-1" />
-            For Creators
-          </span>
-        </div>
+          {/* User Type Tabs */}
+          <div className="flex justify-center mb-8">
+            <div className="flex bg-white/80 backdrop-blur-sm rounded-xl p-1 shadow-lg border border-white/20">
+              {['For Brands', 'For Agencies', 'For Creators'].map((type, index) => {
+                const typeKey = type.replace('For ', '');
+                const colors = [
+                  'text-blue-600 bg-blue-50 border-blue-200',
+                  'text-emerald-600 bg-emerald-50 border-emerald-200',
+                  'text-purple-600 bg-purple-50 border-purple-200'
+                ];
+                const activeColors = [
+                  'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg',
+                  'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg',
+                  'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg'
+                ];
+                return (
+                  <button
+                    key={type}
+                    onClick={() => setSelectedType(typeKey)}
+                    className={`px-6 py-3 rounded-lg text-sm font-medium transition-all duration-300 ${
+                      selectedType === typeKey
+                        ? activeColors[index]
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    {type}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-        {/* Waitlist Form */}
-        {!isSubmitted ? (
-          <div className="mb-8 sm:mb-12 animate-fade-in-up max-w-md mx-auto px-3" style={{animationDelay: '0.5s'}}>
-            <form onSubmit={handleWaitlistSubmit} className="space-y-4">
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="flex-1">
+          {/* User Type Selection */}
+          <div className="flex justify-center mb-8">
+            <div className="flex bg-white/80 backdrop-blur-sm rounded-xl p-1 shadow-lg border border-white/20">
+              {['Brand', 'Agency', 'Creator'].map((type, index) => {
+                const gradients = [
+                  'from-blue-500 to-blue-600',
+                  'from-emerald-500 to-emerald-600',
+                  'from-purple-500 to-purple-600'
+                ];
+                return (
+                  <button
+                    key={type}
+                    onClick={() => setSelectedType(type)}
+                    className={`px-6 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                      selectedType === type
+                        ? `bg-gradient-to-r ${gradients[index]} text-white shadow-md`
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    {type}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Waitlist Form */}
+          {!isSubmitted ? (
+            <div className="max-w-md mx-auto">
+              <form onSubmit={handleWaitlistSubmit} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-white/20">
+                <div className="flex gap-3">
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email address"
+                    placeholder="Enter your email"
                     required
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                    className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/90 backdrop-blur-sm"
                   />
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || !email}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-300 disabled:opacity-50 shadow-lg hover:shadow-xl"
+                  >
+                    {isSubmitting ? 'Joining...' : 'Join Waitlist'}
+                  </button>
                 </div>
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !email}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-inter font-bold text-base hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                >
-                  {isSubmitting ? (
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  ) : (
-                    <>
-                      <Mail className="w-5 h-5 mr-2" />
-                      Join Waitlist
-                    </>
-                  )}
-                </button>
-              </div>
-              <p className="text-sm text-gray-500 text-center">
-                Get notified when we launch
-              </p>
-            </form>
+                <p className="text-sm text-gray-500 mt-4 text-center">
+                  No credit card required
+                </p>
+              </form>
+            </div>
+          ) : (
+            <div className="max-w-md mx-auto bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-8 shadow-xl">
+              <h3 className="text-lg font-semibold text-green-800 mb-2">Welcome to the waitlist!</h3>
+              <p className="text-green-700">We'll notify you when Xfluence launches.</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Why Choose Xfluence Section */}
+      <section className="py-20 px-4 sm:px-6 bg-white/60 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="font-inter font-bold text-3xl sm:text-4xl text-gray-900 mb-4">
+              Why Choose <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Xfluence?</span>
+            </h2>
+            <p className="text-lg text-gray-600">
+              A marketplace built for everyone in the creator economy
+            </p>
           </div>
-        ) : (
-          <div className="mb-8 sm:mb-12 animate-fade-in-up max-w-md mx-auto px-3" style={{animationDelay: '0.5s'}}>
-            <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
-              <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-green-800 mb-2">You're on the list!</h3>
-              <p className="text-green-700 mb-4">
-                We'll notify you as soon as we launch. Get ready for the future of content creation!
-              </p>
-              <div className="flex items-center justify-center gap-2 text-sm text-green-600">
-                <Users className="w-4 h-4" />
-                <span>Position #{Math.floor(Math.random() * 500) + 100} in queue</span>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* For Brands */}
+            <div className="text-center group">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-8 mb-6 border border-blue-100 hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+                <span className="inline-block bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium mb-6 shadow-lg">
+                  FOR BRANDS
+                </span>
+                <h3 className="font-semibold text-xl text-gray-900 mb-4">For Brands</h3>
+                <p className="text-gray-600">
+                  Find verified creators who match your brand voice. Browse portfolios, check engagement rates, and hire directly.
+                </p>
+              </div>
+            </div>
+
+            {/* For Agencies */}
+            <div className="text-center group">
+              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-8 mb-6 border border-emerald-100 hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+                <span className="inline-block bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-4 py-2 rounded-full text-sm font-medium mb-6 shadow-lg">
+                  FOR AGENCIES
+                </span>
+                <h3 className="font-semibold text-xl text-gray-900 mb-4">For Agencies</h3>
+                <p className="text-gray-600">
+                  Manage multiple campaigns and creators in one place. Scale your influencer partnerships efficiently.
+                </p>
+              </div>
+            </div>
+
+            {/* For Creators */}
+            <div className="text-center group">
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-8 mb-6 border border-purple-100 hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+                <span className="inline-block bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-2 rounded-full text-sm font-medium mb-6 shadow-lg">
+                  FOR CREATORS
+                </span>
+                <h3 className="font-semibold text-xl text-gray-900 mb-4">For Creators</h3>
+                <p className="text-gray-600">
+                  Get discovered by brands looking for your niche. Set your rates, showcase your work, and grow your business.
+                </p>
               </div>
             </div>
           </div>
-        )}
-
-        {/* Social Proof */}
-        <div className="animate-fade-in-up" style={{animationDelay: '0.6s'}}>
-          <p className="text-sm text-gray-500 mb-4">
-            Join the waitlist for early access
-          </p>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* What You Get Section */}
+      <section className="py-20 px-4 sm:px-6 bg-gradient-to-br from-gray-50 to-blue-50">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="font-inter font-bold text-3xl sm:text-4xl text-gray-900 mb-4">
+              What You <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Get</span>
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {[
+              { icon: Search, text: "Discover creators by niche & audience", color: "blue" },
+              { icon: Shield, text: "Verified profiles & engagement data", color: "emerald" },
+              { icon: Zap, text: "Fast matching in hours, not weeks", color: "purple" },
+              { icon: MessageCircle, text: "Direct communication with creators", color: "blue" },
+              { icon: CreditCard, text: "Secure payments & contracts", color: "emerald" },
+              { icon: Users, text: "Manage all partnerships in one place", color: "purple" }
+            ].map((item, index) => {
+              const colorClasses = {
+                blue: "bg-gradient-to-br from-blue-100 to-blue-200 text-blue-600 border-blue-200",
+                emerald: "bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-600 border-emerald-200",
+                purple: "bg-gradient-to-br from-purple-100 to-purple-200 text-purple-600 border-purple-200"
+              };
+              
+              return (
+                <div key={index} className="flex items-start gap-4 group">
+                  <div className={`p-3 rounded-xl border shadow-sm group-hover:shadow-md transition-all duration-300 ${colorClasses[item.color as keyof typeof colorClasses]}`}>
+                    <item.icon className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900 mb-1">{item.text}</h3>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    </div>
   );
 };
 
